@@ -130,6 +130,11 @@ class getData_bussinesStd(object):
         # promotor holding link has only compId, no compFormat
         compId = re.findall('\d+', stockLinkId)
         self.promotorLink = 'http://www.business-standard.com/stocks/share-holding-pattern/'+str(int(compId[0]))
+        """
+        Lets not bombard the free websites with requestes. Sleep 1 seconds after
+        each query.
+        """
+        time.sleep(1)
         
     def getPromotorHoldings(self):
         try:            
@@ -644,11 +649,6 @@ def Beat():
                                 
         textFile.write("=======================================\n")
         index += 1
-        """
-        Lets not bombard the free websites with requestes. Sleep 2 seconds after
-        each query.
-        """
-        time.sleep(2)
     textFile.close()               
         
     #print stock_dict
@@ -792,11 +792,6 @@ def getCompleteReport(EPSY1, EPSY2, EPSY3, EPSCurrQtr, EPSQtrAlone):
             textFile.flush()
             metStocks_CANSLIM.append(stockSymbol)
         index += 1
-        """
-        Lets not bombard the free websites with requestes. Sleep 2 seconds after
-        each query.
-        """
-        time.sleep(2)
     
     print("%d stocks meets 4 qtr criteria\n" % len(metStocks_4qtrs))
     print metStocks_4qtrs
