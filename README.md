@@ -1,2 +1,2 @@
-# ScreenerAndCharting
-Fundamental screener and technical charting
+# screener
+A stock screener to filter good stocks
