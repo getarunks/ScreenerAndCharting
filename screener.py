@@ -6,6 +6,8 @@ import urllib2
 from urllib2 import urlopen
 import sqlite3
 
+def mySleep(t):
+    time.sleep(t)
 """
 This class extracts json data saved from google screener to panda data frame.
 DF is having columns of SYMBOL and CompanyName
@@ -133,8 +135,8 @@ class getData_bussinesStd(object):
         """
         Lets not bombard the free websites with requestes. Sleep 1 seconds after
         each query.
-        """
-        time.sleep(1)
+        """        
+        mySleep(1)
         
     def getPromotorHoldings(self):
         try:            
@@ -260,8 +262,15 @@ class getData_bussinesStd(object):
              
     def getEPSdata(self):
         try:
-            self.EPS_Quaterly_1_Source = urllib2.urlopen(self.EPS_Quaterly_1).read()
-            self.EPS_Quaterly_2_Source = urllib2.urlopen(self.EPS_Quaterly_2).read()
+            try:
+                self.EPS_Quaterly_1_Source = urllib2.urlopen(self.EPS_Quaterly_1).read()
+                self.EPS_Quaterly_2_Source = urllib2.urlopen(self.EPS_Quaterly_2).read()
+            except Exception,e:
+                #Try once again
+                print 'open failed. try again after 2 seconds', str(e)
+                mySleep(2)
+                self.EPS_Quaterly_1_Source = urllib2.urlopen(self.EPS_Quaterly_1).read()
+                self.EPS_Quaterly_2_Source = urllib2.urlopen(self.EPS_Quaterly_2).read()
 
             sourceCode = self.EPS_Quaterly_1_Source
             Q1 = float(sourceCode.split('EPS (Rs)</td>')[1].split('<td class="">')[1].split('</td>')[0])
@@ -313,7 +322,13 @@ class getData_bussinesStd(object):
             self.result_dict['EPSQ3Change'] = (Q3 - Q3YoY)/Q3YoY*100
             self.result_dict['EPSQ4Change'] = (Q4 - Q4YoY)/Q4YoY*100
 
-            source = urlopen(self.finacialOverview_link).read()
+            try:
+                source = urlopen(self.finacialOverview_link).read()
+            except Exception,e:
+                #Try once again
+                print 'open failed. try again after 2 seconds', str(e)
+                mySleep(2)
+                source = urlopen(self.finacialOverview_link).read() 
             try:
                 Y1 = float(source.split('Earning Per Share (Rs)</td>')[1].split('<td class="">')[1].split('</td>')[0])
                 Y2 = float(source.split('Earning Per Share (Rs)</td>')[1].split('<td class="">')[2].split('</td>')[0])
@@ -324,12 +339,25 @@ class getData_bussinesStd(object):
                 self.result_dict['Y2Name'] = source.split(string)[1].split('<td class="tdh">')[2].split('</td>')[0]
                 self.result_dict['Y3Name'] = source.split(string)[1].split('<td class="tdh">')[3].split('</td>')[0]
                 
-                source = urlopen(self.finacialOverview_link1).read()
+                try:
+                    source = urlopen(self.finacialOverview_link1).read()
+                except Exception,e:
+                #Try once again
+                    print 'open failed. try again after 2 seconds', str(e)
+                    mySleep(2)
+                    source = urlopen(self.finacialOverview_link1).read()
+                    
                 Y4 = float(source.split('Earning Per Share (Rs)</td>')[1].split('<td class="">')[1].split('</td>')[0])
                 self.result_dict['Y4Name'] = source.split(string)[1].split('<td class="tdh">')[1].split('</td>')[0]                
             except Exception,e:
                 print 'failed when spliting finacialoverview link trying finacialPL link',str(e)
-                source = urlopen(self.finacialPL_link).read()
+                try:
+                    source = urlopen(self.finacialPL_link).read()
+                except Exception,e:
+                #Try once again
+                    print 'open failed. try again after 2 seconds', str(e)
+                    mySleep(2)
+                    source = urlopen(self.finacialPL_link).read()
                 string = '<td class="tdL" colspan="0">Earning Per Share (Rs.)</td>'
                 Y1 = float(source.split(string)[1].split('<td class="amount">')[1].split('</td>')[0])
                 Y2 = float(source.split(string)[1].split('<td class="amount">')[2].split('</td>')[0])
@@ -340,7 +368,13 @@ class getData_bussinesStd(object):
                 self.result_dict['Y2Name'] = source.split(string)[1].split('<td class="tdh">')[2].split('</td>')[0]
                 self.result_dict['Y3Name'] = source.split(string)[1].split('<td class="tdh">')[3].split('</td>')[0]
                 
-                source = urlopen(self.finacialPL_link1).read()               
+                try:
+                    source = urlopen(self.finacialPL_link1).read()               
+                except Exception,e:
+                #Try once again
+                    print 'open failed. try again after 2 seconds', str(e)
+                    mySleep(2)
+                    source = urlopen(self.finacialPL_link1).read() 
                 string = '<td class="tdL" colspan="0">Earning Per Share (Rs.)</td>'
                 Y4 = float(source.split(string)[1].split('<td class="amount">')[1].split('</td>')[0])
                 string = 'Figures in Rs crore</td>'
@@ -365,7 +399,7 @@ class getData_bussinesStd(object):
             return True;
             
         except Exception,e:
-            print 'faild in getEPSdataReport_bussinesStd loop',str(e)
+            print 'failed in getEPSdata Report_bussinesStd loop',str(e)
             return False
             
     def getRatios(self):
@@ -438,9 +472,11 @@ stockListBeat = ['AIAENG', 'AARTIIND', 'AJMERA', 'APOLLOTYRE', 'ASAHISONG', 'ASI
                  'NOCIL','NDL','NITINSPIN','NOIDATOLL','OMKARCHEM','PIIND','PCJEWELLER','PAGEIND','PANCARBON','PANCHSHEEL','PATINTLOG',\
                  'RANEHOLDIN','RELCAPITAL','REPCOHOME','SKMEGGPROD','SANGAMIND','SITASHREE','SRIPIPES','SSWL','TTKHLTCARE','TVSMOTOR',\
                  'TVSSRICHAK','TALWALKARS','TATAELXSI','VINDHYATEL','VOLTAS','YESBANK']
-
-#stockListBeat = ['AIAENG', 'AARTIIND']
-"""              
+"""
+stockListBeat = ['3MINDIA','8KMILES','AARTIIND','AMARAJABAT','APLLTD','ASIANPAINT','BAJFINANCE','CANFINHOME','CHOLAFIN','COSMOFILMS',
+'DABUR','EICHERMOT','ESSELPACK','FAGBEARING','GARWALLROP','GILLETTE','HERITGFOOD','HMVL','HONDAPOWER','IGARASHI','INDUSINDBK', 'JAMNAAUTO','KEI','KAJARIACER','MARUTI','NDL',
+'PCJEWELLER','SKSMICRO','SANDESH','SANGAMIND',u'TVSSRICHAK','TATAELXSI', 'APARINDS','BPCL','CANTABIL','DISHMAN', 'GMBREW','GAYAPROJ','HARITASEAT','HONAUT','ICIL',u'LICHSGFIN','LAOPALA','ORIENTABRA','PIDILITIND','RAJESHEXPO',
+'RUCHIRA','TORNTPHARM','TRIDENT','VGUARD' ,'VTL','WABCOINDIA', 'BRITANNIA','INDTERRAIN','TVTODAY']
 def createDB():
     sqlite_file = 'stock_db.sqlite'
     
@@ -485,7 +521,7 @@ class EPSData:
         self.qtrYoYEPS = []        
         self.qtrChange = []
     
-stockListBeat = [u'APLLTD', u'APOLLOTYRE',]
+
 #def runBeatTheMarket():
 def Beat():
 
@@ -494,10 +530,13 @@ def Beat():
     stock_dict_EPSData = {}
     
     length = len(stockListBeat)
+    print 'Total no of stock: ', length
+    mySleep(1)
     epsData_array = [EPSData() for i in range(length+1)]
     
     index = 0
     for stock in stockListBeat:
+        print ("Analysing %s index = %d" % (stock, index))
         cf = compFormat_bussinesStd(stock)
         cf.get_compFormat()
         if cf.result == 'NODATA':
