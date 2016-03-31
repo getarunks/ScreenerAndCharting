@@ -7,7 +7,8 @@ from urllib2 import urlopen
 import sqlite3
 
 def mySleep(t):
-    time.sleep(t)
+    #time.sleep(t)
+    print(" ")    
 """
 This class extracts json data saved from google screener to panda data frame.
 DF is having columns of SYMBOL and CompanyName
@@ -473,10 +474,33 @@ stockListBeat = ['AIAENG', 'AARTIIND', 'AJMERA', 'APOLLOTYRE', 'ASAHISONG', 'ASI
                  'RANEHOLDIN','RELCAPITAL','REPCOHOME','SKMEGGPROD','SANGAMIND','SITASHREE','SRIPIPES','SSWL','TTKHLTCARE','TVSMOTOR',\
                  'TVSSRICHAK','TALWALKARS','TATAELXSI','VINDHYATEL','VOLTAS','YESBANK']
 """
+"""
 stockListBeat = ['3MINDIA','8KMILES','AARTIIND','AMARAJABAT','APLLTD','ASIANPAINT','BAJFINANCE','CANFINHOME','CHOLAFIN','COSMOFILMS',
 'DABUR','EICHERMOT','ESSELPACK','FAGBEARING','GARWALLROP','GILLETTE','HERITGFOOD','HMVL','HONDAPOWER','IGARASHI','INDUSINDBK', 'JAMNAAUTO','KEI','KAJARIACER','MARUTI','NDL',
 'PCJEWELLER','SKSMICRO','SANDESH','SANGAMIND',u'TVSSRICHAK','TATAELXSI', 'APARINDS','BPCL','CANTABIL','DISHMAN', 'GMBREW','GAYAPROJ','HARITASEAT','HONAUT','ICIL',u'LICHSGFIN','LAOPALA','ORIENTABRA','PIDILITIND','RAJESHEXPO',
 'RUCHIRA','TORNTPHARM','TRIDENT','VGUARD' ,'VTL','WABCOINDIA', 'BRITANNIA','INDTERRAIN','TVTODAY']
+
+stockListBeat = [u'3MINDIA', u'8KMILES', u'ABGSHIP', u'AARTIIND', u'AGRODUTCH', u'AJMERA', u'APLLTD', u'ALPINEHOU', u'AMARAJABAT', u'APOLLOTYRE', u'ARROWCOAT', 
+u'ASIANPAINT', u'ASSAMCO', u'ASAL', u'BAJAJCORP', u'BAJFINANCE', u'BALAMINES', u'BHUSANSTL', u'BIRLACOT', u'BLUEDART', u'CNOVAPETRO', u'COUNCODOS',
+ u'CANFINHOME', u'CAPLIPOINT', u'CARBORUNIV', u'CEATLTD', u'CERA', u'CEREBRAINT', u'CHOLAFIN', u'COSMOFILMS', u'DSKULKARNI', u'DABUR', u'DENORA', 
+ u'DREDGECORP', u'EICHERMOT', u'ELECON', u'ESL', u'EMMBI', u'ESSELPACK', u'EUROMULTI', u'FAGBEARING', u'FIEMIND', u'GARWALLROP', u'GEECEE', u'GILLETTE', 
+ u'GSKCONS', u'GLENMARK', u'HDFCBANK', u'HATSUN', u'HERITGFOOD', u'HIMATSEIDE', u'HMVL', u'HONDAPOWER', u'INOXLEISUR', u'ISMTLTD', u'IVP', u'IGARASHI', 
+ u'INDTERRAIN', u'INDUSINDBK', u'JMCPROJECT', u'JAIBALAJI', u'JAMNAAUTO', u'JINDWORLD', u'JOCIL', u'JYOTISTRUC', u'KEI', u'KAJARIACER', u'KSL', u'LUMAXAUTO',
+ u'MRF', u'MANINDS', u'MARUTI', u'MBECL', u'NOCIL', u'NDL', u'NBCC', u'NELCAST', u'NICCO', u'NILKAMAL', u'ORIENTLTD', u'PIIND', u'PCJEWELLER', u'PPAP', 
+ u'PAGEIND', u'PANCARBON', u'PANCHSHEEL', u'PARABDRUGS', u'PATINTLOG', u'PENIND', u'POWERGRID', u'PRADIP', u'PRECWIRE', u'RAJRAYON', u'RAMCOCEM', u'RELCAPITAL',
+ u'RELIANCE', u'REMSONSIND', u'REPCOHOME', u'RMMIL', u'SKSMICRO', u'SAKUMA', u'SALZERELEC', u'SANDESH', u'SANGAMIND', u'SANOFI', u'SCI', u'SREEL', u'SRIPIPES', 
+ u'SBBJ', u'SSWL', u'STERTOOLS', u'STRTECH', u'SUPREMEIND', u'TAKE', u'TTKHLTCARE', u'TVSMOTOR', u'TVSSRICHAK', u'TALWALKARS', u'TNPL', u'TATAELXSI', u'TECPRO', 
+ u'THEMISMED', u'TORNTPOWER', u'USHAMART', u'VINDHYATEL', u'VISASTEEL', u'YESBANK', u'ABB', u'AXISCADES', u'AMRUTANJAN', u'APARINDS', u'ARIHANT', u'ASIANELEC', u'AUTOAXLES', u'BASF', u'BANCOINDIA', u'BATLIBOI', u'BEDMUTHA', u'BEPL', u'BPCL', 
+u'BIOCON', u'BRIGADE', u'BUTTERFLY', u'CTE', u'CANTABIL', u'CAPF', u'CASTROLIND', u'CELESTIAL', u'CIGNITITEC', u'DEEPIND', u'DEEPAKFERT', u'DISHMAN', u'EDELWEISS', 
+u'FORTIS', u'GMBREW', u'GICHSGFIN', u'GKWLIMITED', u'GULFPETRO', u'GRUH', u'GAYAPROJ', u'GENUSPOWER', u'GEODESIC', u'GILLANDERS', u'GLOBUSSPR', u'GESHIP', u'GREAVESCOT',
+ u'AUSTRAL', u'HARITASEAT', u'HITECHPLAS', u'HONAUT', u'ICIL', u'JPASSOCIAT', u'LICHSGFIN', u'LAOPALA', u'LUMAXIND', u'MAANALU', u'MHRIL', u'NHPC', u'NILAINFRA', u'OCL', 
+ u'ONWARDTEC', u'ORIENTABRA', u'PFS', u'PANACEABIO', u'PATELENG', u'PGIL', u'PHILIPCARB', u'PHOENIXLTD', u'PIDILITIND', u'PRAENG', u'PGHH', u'RSWM', u'RAJESHEXPO', u'RBL',
+ u'RUCHIRA', u'SELMCL', u'SQSBFSI', u'SIMPLEX', u'SIL', u'SUPERSPIN', u'TCPLTD', u'TPLPLASTEH', u'TVSELECT', u'TNTELE', u'TEXINFRA', u'TINPLATE', u'TORNTPHARM', u'TRIDENT',
+ u'UFLEX', u'UTTAMVALUE', u'VGUARD', u'VTL', u'WABCOINDIA'] 
+ """
+ #canslim stocks
+stockListBeat = [u'APLLTD', u'BAJFINANCE','BRITANNIA', 'CHOLAFIN', 'EICHERMOT', 'HMVL', 'INDTERRAIN', 'ICIL', 'KAJARIACER', 'NDL', 'TVTODAY', 'APOLLOTYRE', 'CERA', 'DLINKINDIA', 'GULFPETRO', 'GLENMARK', 'HIMATSEIDE', 'KABRAEXTRU', 'KSL', 'LINCOLN', 'MTEDUCARE', 'MARUTI', 'SAMBHAAV', 'SAREGAMA', 'SYMPHONY', 'TIDEWATER', 'VINDHYATEL']
+
 def createDB():
     sqlite_file = 'stock_db.sqlite'
     
@@ -520,12 +544,26 @@ class EPSData:
         self.qtrEPS = []
         self.qtrYoYEPS = []        
         self.qtrChange = []
-    
+
+"""
+Filter only if following 4 conditions are met
+1. current quater EPS growth > previous quater EPS growth
+2. Annual EPS > 5
+3. Current Annual EPS Growth >= 0
+4. Average EPS growth of latest two quaters > 40%
+"""   
+def check_criteria(epsData_array, averageEPSgrowth, EPS, index):
+    if (epsData_array[index].qtrChange[0] < epsData_array[index].qtrChange[1]) or (EPS < 5) or \
+        (averageEPSgrowth < 40) or (epsData_array[index].yearChange[0] < 0):
+        print 'skipping ',epsData_array[index].qtrChange[0], ' < ', epsData_array[index].qtrChange[1]
+        return 0
+
+    return 1
 
 #def runBeatTheMarket():
 def Beat():
 
-    stock_dict = {}
+    stock_dict_EPSAnnual = {}
     stock_dict_EPSG = {}
     stock_dict_EPSData = {}
     
@@ -534,9 +572,9 @@ def Beat():
     mySleep(1)
     epsData_array = [EPSData() for i in range(length+1)]
     
-    index = 0
+    count = index = 0
     for stock in stockListBeat:
-        print ("Analysing %s index = %d" % (stock, index))
+        print ("Analysing %s index = %d filtered so far = %d" % (stock, count, index))
         cf = compFormat_bussinesStd(stock)
         cf.get_compFormat()
         if cf.result == 'NODATA':
@@ -585,25 +623,54 @@ def Beat():
         epsData_array[index].qtrChange.append(round(BSdata.result_dict['EPSQ1Change'], 2))
         epsData_array[index].qtrChange.append(round(BSdata.result_dict['EPSQ2Change'], 2))
         epsData_array[index].qtrChange.append(round(BSdata.result_dict['EPSQ3Change'], 2))
-        epsData_array[index].qtrChange.append(round(BSdata.result_dict['EPSQ4Change'], 2))
-
+        epsData_array[index].qtrChange.append(round(BSdata.result_dict['EPSQ4Change'], 2))      
         
-        stock_dict_EPSData[stock] = epsData_array[index]
         """ Add EPS for last four quaters
         """
         EPS = BSdata.result_dict['EPS_Q1'] +  BSdata.result_dict['EPS_Q1'] + \
                 BSdata.result_dict['EPS_Q3'] +  BSdata.result_dict['EPS_Q4']
+        """
         averageEPSgrowth = (BSdata.result_dict['EPSQ1Change'] + BSdata.result_dict['EPSQ2Change'] + \
                             BSdata.result_dict['EPSQ3Change'] + BSdata.result_dict['EPSQ4Change'])/4
+        """
+        averageEPSgrowth = (BSdata.result_dict['EPSQ1Change'] + BSdata.result_dict['EPSQ2Change'])/2
 
         print 'EPS: ' + str(EPS)
-
-        stock_dict[stock] = round(EPS,2)
+        print BSdata.result_dict['EPSQ1Change'], BSdata.result_dict['EPSQ2Change']
+        print 'Av EPS ' + str(averageEPSgrowth)
+        """
+        Filter only if following 4 conditions are met
+        1. current quater EPS growth > previous quater EPS growth
+        2. Annual EPS > 5
+        3. Current Annual EPS Growth >= 0
+        4. Average EPS growth of latest two quaters > 40%
+        
+        ret = check_criteria(epsData_array, averageEPSgrowth, EPS, index)
+        if ret == 0:
+            epsData_array[index].yearName = []
+            epsData_array[index].annualEPS = []
+            epsData_array[index].yearChange = []
+            epsData_array[index].qtrName = []
+            epsData_array[index].qtrEPS = []
+            epsData_array[index].qtrYoYEPS = []
+            epsData_array[index].qtrChange = []
+            count +=1
+            del cf, BSdata
+            continue
+        """
+        
+        stock_dict_EPSAnnual[stock] = round(EPS,2)
         stock_dict_EPSG[stock] = averageEPSgrowth
+        stock_dict_EPSData[stock] = epsData_array[index]
+        """
         sort_list = [(k,v) for v,k in sorted(
                     [(v,k) for k,v in stock_dict.items()], reverse=True)]
+        """    
+        sort_list = [(k,v) for v,k in sorted(
+                    [(v,k) for k,v in stock_dict_EPSG.items()], reverse=True)]
 
         index += 1
+        count += 1
         del cf, BSdata
                         
     print sort_list[0:30]
@@ -612,12 +679,13 @@ def Beat():
     index = 0
     for n in sort_list:
         textFile.write("=======================================\n")
-        epsData = stock_dict_EPSData[n[0]]
+        stock = n[0]
+        epsData = stock_dict_EPSData[stock]
         #print ("================Testing index %d %s" % (index, epsData_array[index].qtrChange[0]))
         print ("================Testing index %d %s %s" % (index, epsData.qtrChange[0], epsData.qtrChange[1]))
         #print("Testing: %s\n" % (epsData[index].qtrChange[0]))
-        textFile.write("Symbol: %s \tEPS: %s \tAv. EPS growth(last 4 Qtrs): %d%s\n" % \
-                        (n[0], n[1], stock_dict_EPSG[n[0]], '%'))
+        textFile.write("Symbol: %s \tEPS: %s \tAv. EPS growth(last 2 Qtrs): %d%s\n" % \
+                        (stock, stock_dict_EPSAnnual[stock], stock_dict_EPSG[stock], '%'))
         textFile.write("Annual EPS Data: %s\n" % (reportType))
         textFile.write("                          %15s%15s%15s%15s\n" % (epsData.yearName[0],
                                                                    epsData.yearName[1],
@@ -792,6 +860,13 @@ def getEPSG(stockSymbol, consolidated):
                                                      report.result_dict['EPSQ4Change']))
 
     return report
+    
+def getAll(stockSymbol, consolidated):
+    getEPSG(stockSymbol, consolidated)
+    getRatios(stockSymbol, consolidated)
+    getCashFlow(stockSymbol, consolidated)
+    getPH(stockSymbol)
+    
     
 def getCompleteReport(EPSY1, EPSY2, EPSY3, EPSCurrQtr, EPSQtrAlone):
     googleSceernerData = google_sceerner_json_DataExtract()
