@@ -862,7 +862,8 @@ def getEPSG(stockSymbol, consolidated):
                                                      report.result_dict['EPSQ2Change'], 
                                                      report.result_dict['EPSQ3Change'], 
                                                      report.result_dict['EPSQ4Change']))
-
+    onGoingAnnualEPS = float(report.result_dict['EPS_Q1']) + float(report.result_dict['EPS_Q2']) + float(report.result_dict['EPS_Q3']) +  float(report.result_dict['EPS_Q4'])
+    print("On going Annual EPS: %0.2f" % (onGoingAnnualEPS))
     return report
     
 def getAll(stockSymbol, consolidated):
