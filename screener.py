@@ -102,8 +102,7 @@ class compFormat_bussinesStd(object):
         # Let's find matching index first
         i = 0
         for n in temp_data_frame['SYMBOL']:
-            if n == self.stock:
-                print n + ' found at index: ' + str(i)
+            if n == self.stock:                
                 break
             else:
                 i = i + 1
@@ -766,8 +765,9 @@ def getCashFlow(stockSymbol, consolidated):
     cf.get_compFormat()
     if cf.result == 'NODATA':
         print 'No Data for: ' + stockSymbol
-        del cf
-        return
+        #del cf
+        #return
+        cf.result = input('Please enter stock id used in Bussiness std in \' \': ')
     
     reportType = getReportType(consolidated)
     report = getData_bussinesStd(cf.result, reportType)   
@@ -784,8 +784,9 @@ def getPH(stockSymbol):
     cf.get_compFormat()
     if cf.result == 'NODATA':
         print 'No Data for: ' + stockSymbol
-        del cf
-        return
+        #del cf
+        #return
+        cf.result = input('Please enter stock id used in Bussiness std in \' \': ')
         
     report = getData_bussinesStd(cf.result, 'doesntmatter')
     if report.getPromotorHoldings() == False:
@@ -802,8 +803,9 @@ def getRatios(stockSymbol, consolidated):
     cf.get_compFormat()
     if cf.result == 'NODATA':
         print 'No Data for: ' + stockSymbol
-        del cf
-        return
+        #del cf
+        #return
+        cf.result = input('Please enter stock id used in Bussiness std in \' \': ')
     
     reportType = getReportType(consolidated)        
     report = getData_bussinesStd(cf.result, reportType)   
@@ -819,8 +821,10 @@ def getEPSG(stockSymbol, consolidated):
     cf.get_compFormat()
     if cf.result == 'NODATA':
         print 'No Data for: ' + stockSymbol
-        del cf
-        return False
+        #cf.result = 'kellton-tech-4974'
+        cf.result = input('Please enter stock id used in Bussiness std in \' \': ')
+        #del cf
+        #return False
     
     reportType = getReportType(consolidated)        
     report = getData_bussinesStd(cf.result, reportType)   
@@ -862,10 +866,16 @@ def getEPSG(stockSymbol, consolidated):
     return report
     
 def getAll(stockSymbol, consolidated):
+    print("=============================")
     getEPSG(stockSymbol, consolidated)
+    print("=============================")
     getRatios(stockSymbol, consolidated)
+    print("=============================")
     getCashFlow(stockSymbol, consolidated)
+    print("=============================")
+    print("Promoter Holding Pattern:")
     getPH(stockSymbol)
+    print("=============================")
     
     
 def getCompleteReport(EPSY1, EPSY2, EPSY3, EPSCurrQtr, EPSQtrAlone):
