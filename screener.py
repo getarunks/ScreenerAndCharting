@@ -459,7 +459,7 @@ def getReportType(consolidated):
 ##### All command line function below
 
  #Add stock list here to run Beat command
-stockListBeat = [u'KWALITY']
+stockListBeat = [u'3MINDIA']
 
 def createDB():
     sqlite_file = 'stock_db.sqlite'
@@ -637,13 +637,46 @@ def Beat():
 
     textFile = open("BeatReport.txt", "w")
     index = 0
-    for n in sort_list:
-        textFile.write("=======================================\n")
+    for n in sort_list:        
         stock = n[0]
         epsData = stock_dict_EPSData[stock]
         #print ("================Testing index %d %s" % (index, epsData_array[index].qtrChange[0]))
         print ("================Testing index %d %s %s" % (index, epsData.qtrChange[0], epsData.qtrChange[1]))
         #print("Testing: %s\n" % (epsData[index].qtrChange[0]))
+        
+        ratioError = cashFlowError =PHError = 0
+        cf = compFormat_bussinesStd(n[0])
+        cf.get_compFormat()
+        if cf.result == 'NODATA':
+            print 'No Data for: ' + stock
+            cf.result = compFormatFailed(stock)
+            if cf.result == False:
+                del cf
+                return False
+
+        reportType = getReportType(0)
+        BSdata = getData_bussinesStd(cf.result, reportType)        
+        
+        if BSdata.getPromotorHoldings() == False:
+            print("%s: getPromotorHoldings returned False" % (stock))
+            PHError = 1               
+
+        # we are not interested if FII is not involved
+        if PHError != 1:
+            if (float(BSdata.result_dict['FIIQ1']) == 0) and (float(BSdata.result_dict['FIIQ2']) == 0):
+                index += 1                
+                continue
+        
+        if BSdata.getRatios() == False:
+            print("%s: getRatios returned False" % (stock))
+            textFile.write("Raito fetch error. please look manually\n")
+            ratioError = 1
+            
+        if BSdata.getCashFlowData() == False:
+            print("%s: getCashFlowData returned False" % (stock))
+            cashFlowError = 1 
+            
+        textFile.write("=======================================\n")
         textFile.write("Symbol: %s \tEPS: %s \tAv. EPS growth(last 2 Qtrs): %d%s\n" % \
                         (stock, stock_dict_EPSAnnual[stock], stock_dict_EPSG[stock], '%'))
         textFile.write("Annual EPS Data: %s\n" % (reportType))
@@ -676,17 +709,8 @@ def Beat():
                                                                    epsData.qtrChange[2],
                                                                    epsData.qtrChange[3])) 
         textFile.write("--------\n")
-        cf = compFormat_bussinesStd(n[0])
-        cf.get_compFormat()
-        if cf.result == 'NODATA':
-            print 'No Data for: ' + stock
-            del cf
-            return
-
-        reportType = getReportType(0)
-        BSdata = getData_bussinesStd(cf.result, reportType)
         
-        if BSdata.getRatios() == False:
+        if ratioError == 1:
             print 'getRatios returned False'
             textFile.write("Raito fetch error. please look manually\n")
         else:
@@ -696,12 +720,12 @@ def Beat():
             textFile.write("Debt-Equity             : %15s%15s%15s\n" % (BSdata.result_dict['DEyear1'], BSdata.result_dict['DEyear2'], BSdata.result_dict['DEyear3']))
             textFile.write("--------\n")
             
-        if BSdata.getCashFlowData() == False:
-            print 'getCashFlowData returned False'
-            return            
-        textFile.write("Cash from Ops(in Cr)    : %15s%15s%15s\n" % (BSdata.result_dict['CFYear1'], BSdata.result_dict['CFYear2'], BSdata.result_dict['CFYear3']))
+        if cashFlowError == 1:
+            textFile.write("Cash flow fetch erro. please look manually")
+        else:
+            textFile.write("Cash from Ops(in Cr)    : %15s%15s%15s\n" % (BSdata.result_dict['CFYear1'], BSdata.result_dict['CFYear2'], BSdata.result_dict['CFYear3']))
         
-        if BSdata.getPromotorHoldings() == False:
+        if PHError == 1:
             print 'getPromotorHoldings returned False'
             textFile.write("PromotorHoldings fetch error. please look manually\n")
         else:
@@ -716,12 +740,13 @@ def Beat():
                                 
         textFile.write("=======================================\n")
         index += 1
+        
     textFile.close()               
         
     #print stock_dict
     
-def compFormatFailed():
-    return input('Please enter stock id used in Bussiness std in \' \': ')
+def compFormatFailed(stockSymbol):
+    return input('Please enter Bussiness std stock ID for %s \' \': ' % (stockSymbol))
     return False
     
 def getCashFlow(stockSymbol, consolidated):
@@ -730,7 +755,7 @@ def getCashFlow(stockSymbol, consolidated):
     cf.get_compFormat()
     if cf.result == 'NODATA':
         print 'No Data for: ' + stockSymbol
-        cf.result = compFormatFailed()
+        cf.result = compFormatFailed(stockSymbol)
         if cf.result == False:
             del cf
             return False
@@ -750,7 +775,7 @@ def getPH(stockSymbol):
     cf.get_compFormat()
     if cf.result == 'NODATA':
         print 'No Data for: ' + stockSymbol
-        cf.result = compFormatFailed()
+        cf.result = compFormatFailed(stockSymbol)
         if cf.result == False:
             del cf
             return False
@@ -770,7 +795,7 @@ def getRatios(stockSymbol, consolidated):
     cf.get_compFormat()
     if cf.result == 'NODATA':
         print 'No Data for: ' + stockSymbol
-        cf.result = compFormatFailed()
+        cf.result = compFormatFailed(stockSymbol)
         if cf.result == False:
             del cf
             return False
@@ -789,7 +814,7 @@ def getEPSG(stockSymbol, consolidated):
     cf.get_compFormat()
     if cf.result == 'NODATA':
         print 'No Data for: ' + stockSymbol
-        cf.result = compFormatFailed()
+        cf.result = compFormatFailed(stockSymbol)
         if cf.result == False:
             del cf
             return False
