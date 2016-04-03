@@ -498,7 +498,7 @@ u'FORTIS', u'GMBREW', u'GICHSGFIN', u'GKWLIMITED', u'GULFPETRO', u'GRUH', u'GAYA
  u'UFLEX', u'UTTAMVALUE', u'VGUARD', u'VTL', u'WABCOINDIA'] 
  """
  #canslim stocks
-stockListBeat = [u'APLLTD', u'BAJFINANCE','BRITANNIA', 'CHOLAFIN', 'EICHERMOT', 'HMVL', 'INDTERRAIN', 'ICIL', 'KAJARIACER', 'NDL', 'TVTODAY', 'APOLLOTYRE', 'CERA', 'DLINKINDIA', 'GULFPETRO', 'GLENMARK', 'HIMATSEIDE', 'KABRAEXTRU', 'KSL', 'LINCOLN', 'MTEDUCARE', 'MARUTI', 'SAMBHAAV', 'SAREGAMA', 'SYMPHONY', 'TIDEWATER', 'VINDHYATEL']
+stockListBeat = [u'KWALITY']
 
 def createDB():
     sqlite_file = 'stock_db.sqlite'
@@ -759,15 +759,20 @@ def Beat():
         
     #print stock_dict
     
+def compFormatFailed():
+    return input('Please enter stock id used in Bussiness std in \' \': ')
+    return False
+    
 def getCashFlow(stockSymbol, consolidated):
     #print 'get_stock details for: ' +stockSymbol
     cf = compFormat_bussinesStd(stockSymbol)
     cf.get_compFormat()
     if cf.result == 'NODATA':
         print 'No Data for: ' + stockSymbol
-        #del cf
-        #return
-        cf.result = input('Please enter stock id used in Bussiness std in \' \': ')
+        cf.result = compFormatFailed()
+        if cf.result == False:
+            del cf
+            return False
     
     reportType = getReportType(consolidated)
     report = getData_bussinesStd(cf.result, reportType)   
@@ -784,9 +789,10 @@ def getPH(stockSymbol):
     cf.get_compFormat()
     if cf.result == 'NODATA':
         print 'No Data for: ' + stockSymbol
-        #del cf
-        #return
-        cf.result = input('Please enter stock id used in Bussiness std in \' \': ')
+        cf.result = compFormatFailed()
+        if cf.result == False:
+            del cf
+            return False
         
     report = getData_bussinesStd(cf.result, 'doesntmatter')
     if report.getPromotorHoldings() == False:
@@ -803,9 +809,10 @@ def getRatios(stockSymbol, consolidated):
     cf.get_compFormat()
     if cf.result == 'NODATA':
         print 'No Data for: ' + stockSymbol
-        #del cf
-        #return
-        cf.result = input('Please enter stock id used in Bussiness std in \' \': ')
+        cf.result = compFormatFailed()
+        if cf.result == False:
+            del cf
+            return False
     
     reportType = getReportType(consolidated)        
     report = getData_bussinesStd(cf.result, reportType)   
@@ -821,10 +828,10 @@ def getEPSG(stockSymbol, consolidated):
     cf.get_compFormat()
     if cf.result == 'NODATA':
         print 'No Data for: ' + stockSymbol
-        #cf.result = 'kellton-tech-4974'
-        cf.result = input('Please enter stock id used in Bussiness std in \' \': ')
-        #del cf
-        #return False
+        cf.result = compFormatFailed()
+        if cf.result == False:
+            del cf
+            return False
     
     reportType = getReportType(consolidated)        
     report = getData_bussinesStd(cf.result, reportType)   
@@ -889,12 +896,16 @@ def getCompleteReport(EPSY1, EPSY2, EPSY3, EPSCurrQtr, EPSQtrAlone):
     metStocks_CANSLIM = []    
     metStocks_4qtrs = []
     metStocks_3qtrs = []
+    failedStocks = []
     
     index = 0
+    condMetOnce = 0
     for stockSymbol in googleSceernerData.result_df['SYMBOL']:
-        print("Processing stock, index = %d", index)
+        print("Processing stock %s, index = %d out of %d\n" %  (stockSymbol, index, (len(googleSceernerData.result_df['SYMBOL']))))
         report = getEPSG(stockSymbol, 0)
         if report == False:
+            failedStocks.append(stockSymbol)
+            index +=1
             continue
         elif report.result_dict['EPSQ1Change'] >= float(EPSQtrAlone) and\
             report.result_dict['EPSQ2Change'] >= float(EPSQtrAlone) and\
@@ -904,19 +915,24 @@ def getCompleteReport(EPSY1, EPSY2, EPSY3, EPSCurrQtr, EPSQtrAlone):
             textFile.flush()
             metStocks_4qtrs.append(stockSymbol)
             print "meets requirement"
+            condMetOnce = 1
         elif report.result_dict['EPSQ1Change'] >= float(EPSQtrAlone) and\
             report.result_dict['EPSQ2Change'] >= float(EPSQtrAlone) and\
             report.result_dict['EPSQ3Change'] >= float(EPSQtrAlone):
             metStocks_3qtrs.append(stockSymbol)
+            condMetOnce = 1
             
         if report.result_dict['EPSY1Change'] >= float(EPSY1) and\
             report.result_dict['EPSY2Change'] >= float(EPSY2) and\
             report.result_dict['EPSY3Change'] >= float(EPSY3) and\
             report.result_dict['EPSQ1Change'] >= float(EPSCurrQtr):
-            textFile.write("%s meets CANSLIM funtamentals\n" % (stockSymbol))
-            textFile.flush()
-            metStocks_CANSLIM.append(stockSymbol)
+            #skip if already in one list
+            if condMetOnce == 0:
+                textFile.write("%s meets CANSLIM funtamentals\n" % (stockSymbol))
+                textFile.flush()
+                metStocks_CANSLIM.append(stockSymbol)
         index += 1
+        condMetOnce = 0
     
     print("%d stocks meets 4 qtr criteria\n" % len(metStocks_4qtrs))
     print metStocks_4qtrs
@@ -924,6 +940,8 @@ def getCompleteReport(EPSY1, EPSY2, EPSY3, EPSCurrQtr, EPSQtrAlone):
     print metStocks_3qtrs
     print("%d stocks meets CANSLIM criteria\n" % len(metStocks_CANSLIM))
     print metStocks_CANSLIM
+    print ("%d stocks failed to find in Bussiness std\n" % len(failedStocks))
+    print failedStocks
     
     textFile.write("Following stocks have %s growth for last 4 quaters:\n" % (EPSQtrAlone))
     json.dump(metStocks_4qtrs, textFile)
@@ -931,6 +949,8 @@ def getCompleteReport(EPSY1, EPSY2, EPSY3, EPSCurrQtr, EPSQtrAlone):
     json.dump(metStocks_3qtrs, textFile)
     textFile.write("Following stocks have met CANSLIM Y1: %s, Y2: %s, Y3: %s Cur Qtr %s:\n" % (EPSY1, EPSY2, EPSY3, EPSCurrQtr))   
     json.dump(metStocks_CANSLIM, textFile)    
+    textFile.write("Following stocks failed to find in Buss Std\n")
+    json.dump(failedStocks, textFile)
     textFile.close()
     
     del googleSceernerData
@@ -990,6 +1010,7 @@ class readInputParams:
         EPSQtrAlone = self.entry_EPSQtrAlone.get()
         print("in filter Y1 %s Y2 %s Y3 %s Curren %s QtrAlone %s" %(EPSY1, EPSY2, EPSY3, EPSCurrQtr, EPSQtrAlone))
         getCompleteReport(EPSY1, EPSY2, EPSY3, EPSCurrQtr, EPSQtrAlone)
+        print("CompleteReport Done..\n")
         
 if __name__ == '__main__':
     skip_main = 0
