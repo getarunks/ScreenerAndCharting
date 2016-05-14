@@ -521,7 +521,7 @@ def check_criteria(epsData_array, averageEPSgrowth, EPS, index):
     return 1
 
 #def runBeatTheMarket():
-def Beat():
+def Beat(showFIIonly):
 
     stock_dict_EPSAnnual = {}
     stock_dict_EPSG = {}
@@ -662,7 +662,7 @@ def Beat():
             PHError = 1               
 
         # we are not interested if FII is not involved
-        if PHError != 1:
+        if PHError != 1 and showFIIonly == 1:
             if (float(BSdata.result_dict['FIIQ1']) == 0) and (float(BSdata.result_dict['FIIQ2']) == 0):
                 index += 1                
                 continue
