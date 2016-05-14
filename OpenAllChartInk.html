@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<p> Enter Stock Tickers :</p>
+<input type="text" id="stockTicker">
+<button type="button" onclick="myFunction()">Open ChartInk links</button>
+<p id="message"></p>
+
+<script>
+function myFunction() {
+	var message, x, stocks_list;
+    message = document.getElementById("message");
+    message.innerHTML = "";
+	
+	var stocks_list = document.getElementById("stockTicker").value;
+	var stocks = stocks_list.split(",")
+	message.innerHTML += stocks;
+	
+	for (i=0; i< stocks.length -1; i++) {
+		var text = "http://chartink.com/stocks/" + stocks[i] + ".html";
+		text = text.replace (/"/g,"");
+		text = text.replace (/ /g,"");
+		window.open(text);
+	}
+}
+</script>
+</body>
+</html>
