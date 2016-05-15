@@ -619,6 +619,12 @@ def Beat(showFIIonly):
             continue
         """
         
+        """skip if TTM EPS data is negative"""
+        if EPS < 0:
+            count +=1
+            del cf, BSdata
+            continue;
+        
         stock_dict_EPSAnnual[stock] = round(EPS,2)
         stock_dict_EPSG[stock] = averageEPSgrowth
         stock_dict_EPSData[stock] = epsData_array[index]
