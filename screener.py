@@ -466,17 +466,66 @@ def getReportType(consolidated):
 ##### All command line function below
 
  #Add stock list here to run Beat command
-stockListBeat = [u'3MINDIA']
+stockListBeat = ["LUMAXAUTO", "PUNJABCHEM" ]
 
-def createDB():
+def deleteDB():
+    sqlite_file = 'stock_db.sqlite'
+    conn =sqlite3.connect(sqlite_file)
+    c = conn.cursor()
+    
+    c.execute("DROP TABLE STOCKDATA")
+
+def getDataDB(stock):
+    sqlite_file = 'stock_db.sqlite'
+    conn =sqlite3.connect(sqlite_file)
+    c = conn.cursor()
+    
+    sql = "SELECT * FROM STOCKDATA WHERE symbol=?"
+    
+    c.execute(sql, [(stock)])
+    row = c.fetchone()
+    if row == None:
+        print "No data"
+        return
+    
+    print row[0], row[1]
+
+def readDB():
     sqlite_file = 'stock_db.sqlite'
     
     conn =sqlite3.connect(sqlite_file)
     c = conn.cursor()
+    cursor = c.execute("SELECT symbol, Q1EPS  from STOCKDATA")
+    for row in cursor:
+        print "Symbol = " , row[0]
+        print "Q1EPS = ", row[1]
+
+def createDB():
+    sqlite_file = 'stock_db.sqlite'
+    epsdata = []
+    epsdata.append(2.3)
+    epsdata.append(3.4)
     
+    conn =sqlite3.connect(sqlite_file)
+    c = conn.cursor()
+    
+    """
     table_name = 'SYMBOLS'
     c.execute('CREATE TABLE {tn} ({nf} {ft} PRIMARY KEY)'\
             .format(tn=table_name,nf='SYMBOL', ft = 'TEXT'))
+    """
+    
+    c.execute("CREATE TABLE STOCKDATA \
+                    (symbol text, Q1EPS float) ")
+    c.execute("INSERT INTO STOCKDATA (symbol, Q1EPS)\
+                VALUES('ARUN', {epsdata})"\
+                .format(epsdata=epsdata[0]))
+    c.execute("INSERT INTO STOCKDATA (symbol, Q1EPS)\
+                VALUES('AMMI', {epsdata})"\
+                .format(epsdata=epsdata[1]))
+    conn.commit()
+    conn.close()
+    return
             
     for stock in stockListBeat:
         cf = compFormat_bussinesStd(stock)
