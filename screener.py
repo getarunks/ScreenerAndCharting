@@ -15,8 +15,8 @@ DF is having columns of SYMBOL and CompanyName
 """
 class google_sceerner_json_DataExtract(object):
     def __init__(self):
-        self.json_file = 'EPS5yearGreaterThanZeroNSE.txt'
-        #self.json_file = 'NIFTYAllStocks.txt'
+        #self.json_file = 'EPS5yearGreaterThanZeroNSE.txt'
+        self.json_file = 'NIFTYAllStocks.txt'
         self.result_df = pandas.DataFrame()
 
     def get_json_from_file(self):
@@ -42,6 +42,8 @@ class google_sceerner_json_DataExtract(object):
         #print temp_df
         self.result_df = temp_df
 
+compFormat_onlyOnce = 0
+BS_DataFrame = pandas.DataFrame()
 class compFormat_bussinesStd(object):
     def __init__(self, stock):
         self.stock = stock;
@@ -94,11 +96,16 @@ class compFormat_bussinesStd(object):
         return pandas.DataFrame(new_data_list)
         
     def get_compFormat(self):
-        #print self.stock
-        temp_data_frame = self.convert_json_to_df()
-        # save all the info to csv file for debugging
-        temp_data_frame.to_csv(r'bussiness-std.csv', index =False)
-
+        global BS_DataFrame, compFormat_onlyOnce
+        if compFormat_onlyOnce < 1 :
+            #print self.stock
+            temp_data_frame = self.convert_json_to_df()
+            # save all the info to csv file for debugging
+            temp_data_frame.to_csv(r'bussiness-std.csv', index =False)
+            BS_DataFrame = temp_data_frame 
+            compFormat_onlyOnce = 1
+        
+        temp_data_frame = BS_DataFrame
         # Let's find matching index first
         i = 0
         for n in temp_data_frame['SYMBOL']:
@@ -988,10 +995,10 @@ class readInputParams:
         self.filter_button.grid(row=4, column=1) 
         
         #set default values
-        self.entry_EPSY1.insert(0, 15)
-        self.entry_EPSY2.insert(0, 15)
-        self.entry_EPSY3.insert(0, 15)
-        self.entry_EPSCurrQtr.insert(0, 20)
+        self.entry_EPSY1.insert(0, 10)
+        self.entry_EPSY2.insert(0, 8)
+        self.entry_EPSY3.insert(0, 0)
+        self.entry_EPSCurrQtr.insert(0, 15)
         self.entry_EPSQtrAlone.insert(0, 10)
         
     def runFilter(self):
