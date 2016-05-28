@@ -1,0 +1,21 @@
+def getCompleteReport(EPSY1, EPSY2, EPSY3, EPSCurrQtr, EPSQtrAlone):
+	-> uses class google_sceerner_json_DataExtract to convert JSON data(eg: NIFTYAllStocks.txt) to list of stocks symbols
+	-> it is then written to a 'google-data.csv file.
+	-> parses through this big list(currently around 1800) of stocks and calls getEPG(stockSymbol, 0)
+		-> def getEPSG(stockSymbol, consolidated):
+			-> calls cf = compFormat_bussinesStd(stockSymbol). This is a class with works on the another json file downloaded from Bussiness Standard
+			   website. Basically it converts the stockSymbol to a linkID with is used to fetch the data from BS web site.
+			-> calls cf.get_compFormat() to get the corresponding linkID. Once success the linkID is in cf.result.
+			-> now initialises the class  report = getData_bussinesStd(cf.result, reportType). This is a class responsible to fetch data from BS web site.
+			-> calls report.getEPSdata(). 
+				-> reads EPS data from two quarterly links
+				-> reads EPS data from two yearly links
+				-> Minimum 4 reads. There are few error cases in which case it tries another link.
+		-> compare with eps data with filter criteria and put it in proper list.
+			textFile = open("FirstReport.txt", "w")
+			metStocks_CANSLIM = []    
+			metStocks_4qtrs = []
+			metStocks_3qtrs = []
+			failedStocks = []
+			All this data can be find in FirstReport.txt
+			
