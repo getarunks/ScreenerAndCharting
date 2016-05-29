@@ -746,6 +746,15 @@ class EPSData:
         self.qtrYoYEPS = []        
         self.qtrChange = []
 
+completeReportRunning = 0
+
+def compFormatFailed(stockSymbol):
+    global completeReportRunning
+    if completeReportRunning == 0:
+        return input('Please enter Bussiness std stock ID for %s \' \': ' % (stockSymbol))
+    else:
+        return False
+
 """
 Filter only if following 4 conditions are met
 1. current quater EPS growth > previous quater EPS growth
@@ -992,9 +1001,7 @@ def Beat(showFIIonly):
         
     #print stock_dict
     
-def compFormatFailed(stockSymbol):
-    return input('Please enter Bussiness std stock ID for %s \' \': ' % (stockSymbol))
-    return False
+
     
 def getCashFlow(stockSymbol, consolidated):
     #print 'get_stock details for: ' +stockSymbol
@@ -1131,7 +1138,9 @@ def getCompleteReport(EPSY1, EPSY2, EPSY3, EPSCurrQtr, EPSQtrAlone):
     metStocks_3qtrs = []
     metStocks_2qtrs = []
     failedStocks = []
+    global completeReportRunning
     
+    completeReportRunning = 1
     index = 0
     condMetOnce = 0
     for stockSymbol in googleSceernerData.result_df['SYMBOL']:
@@ -1206,6 +1215,7 @@ def getCompleteReport(EPSY1, EPSY2, EPSY3, EPSCurrQtr, EPSQtrAlone):
     textFile.write("\n")
     textFile.close()
     
+    completeReportRunning = 0
     del googleSceernerData
 
 from Tkinter import Tk, Label, Button, Entry
