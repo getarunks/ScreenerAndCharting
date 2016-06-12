@@ -127,12 +127,16 @@ BS_BlacklistStocks = [u'3RDROCK', u'ALSTOMTx26D', u'APOLSINHOT', u'AXISGOLD', u'
 def is_stock_blacklisted(stock):
     return stock in BS_BlacklistStocks
     
+dataBase_updated_stocks = 0
+dataBase_outdate_stocks = 0 
+
 class getData_bussinesStd(object):
     def __init__(self, stockLinkId, stockSymbol, reportType):
 	self.stockSymbol = stockSymbol
         self.linkId = stockLinkId
         self.reportType = reportType
-        self.sqlite_file = 'stock_db.sqlite'        
+        self.sqlite_file = 'stock_db.sqlite'
+        self.latestQtrName = 'Mar-2016'        
         self.cashFlow_link = 'http://www.business-standard.com/company/'+stockLinkId+'/cash-flow/1/'+reportType
         self.result_dict = {}
         self.ratio_link = 'http://www.business-standard.com/company/'+stockLinkId+'/financials-ratios/1/'+reportType
@@ -334,6 +338,7 @@ class getData_bussinesStd(object):
             return False            
              
     def getEPSdata(self):
+        global dataBase_outdate_stocks, dataBase_updated_stocks
         """ First will try to get data from data base if not fetch from website """
         try:
             conn =sqlite3.connect(self.sqlite_file)
@@ -341,8 +346,10 @@ class getData_bussinesStd(object):
             sql_cmd = "SELECT * FROM STOCKDATA WHERE symbol=?"
             c.execute(sql_cmd, [(self.stockSymbol)])
             row = c.fetchone()
-            if row != None:
-                print " Data found in DB for stock ", self.stockSymbol
+            
+            # fetch from web if data is none or outdated
+            if row != None and self.latestQtrName == row[self.DBindex_Q1Name]:
+                print "Latest Data found in DB for stock ", self.stockSymbol
                 self.result_dict['EPS_Q1'] = row[self.DBindex_EPS_Q1]
                 self.result_dict['EPS_Q2'] = row[self.DBindex_EPS_Q2]
                 self.result_dict['EPS_Q3'] = row[self.DBindex_EPS_Q3]
@@ -374,7 +381,8 @@ class getData_bussinesStd(object):
                 return True
             if is_stock_blacklisted(self.stockSymbol) == True:
                 return False
-            print "Geting data from website ===========================", self.stockSymbol
+            print "Get data from web old data in DB ==============", self.stockSymbol, row[self.DBindex_Q1Name]
+            dataBase_outdate_stocks += 1
             
         except Exception,e:
             print 'failed in getEPSdata trying to read DB',str(e)
@@ -523,6 +531,9 @@ class getData_bussinesStd(object):
                 Y1Name, Y2Name, Y3Name, Y4Name,\
                 EPS_Y1, EPS_Y2, EPS_Y3, EPS_Y4,\
                 EPSY1Change, EPSY2Change, EPSY3Change)")
+                
+            print "Updating symbol... ", self.stockSymbol
+            c.execute('''DELETE FROM STOCKDATA WHERE symbol = ?''', (self.stockSymbol,))
             
             c.execute('''INSERT INTO STOCKDATA(symbol, EPS_Q1, EPS_Q2, EPS_Q3, EPS_Q4, \
               EPS_Q1YoY, EPS_Q2YoY, EPS_Q3YoY, EPS_Q4YoY,\
@@ -540,8 +551,13 @@ class getData_bussinesStd(object):
               self.result_dict['EPS_Y1'], self.result_dict['EPS_Y2'], self.result_dict['EPS_Y3'], self.result_dict['EPS_Y4'],
               self.result_dict['EPSY1Change'], self.result_dict['EPSY2Change'], self.result_dict['EPSY3Change']))
               
+            if self.latestQtrName == self.result_dict['Q1Name']:
+                dataBase_updated_stocks += 1
+                
             conn.commit()
             conn.close()
+
+            print ("dataBase: out of outdated stocks = %d, updated = %d" % (dataBase_outdate_stocks, dataBase_updated_stocks))            
             
             return True;
             
@@ -1127,6 +1143,7 @@ def getAll(stockSymbol, consolidated):
     
     
 def getCompleteReport(EPSY1, EPSY2, EPSY3, EPSCurrQtr, EPSQtrAlone):
+    global dataBase_outdate_stocks,dataBase_update_stocks
     googleSceernerData = google_sceerner_json_DataExtract()
     googleSceernerData.retrieve_stock_data()
     googleSceernerData.result_df.to_csv(r'google-data.csv', index=False)
@@ -1213,6 +1230,10 @@ def getCompleteReport(EPSY1, EPSY2, EPSY3, EPSCurrQtr, EPSQtrAlone):
     textFile.write("Following stocks failed to find in Buss Std\n")
     json.dump(failedStocks, textFile)
     textFile.write("\n")
+    
+    print ("dataBase out of outdated stocks = %d, updated = %d\n" % (dataBase_outdate_stocks, dataBase_update_stocks))
+    textFile.write("dataBase out of outdated stocks = %d, updated = %d\n" % (dataBase_outdate_stocks, dataBase_update_stocks))
+    
     textFile.close()
     
     completeReportRunning = 0
