@@ -24,6 +24,7 @@ import matplotlib
 from matplotlib.finance import candlestick_ochl
 from urllib2 import urlopen
 import pickle
+import pandas as pd
 matplotlib.rcParams.update({'font.size':9})
 
 slowMA = '#5a6de3'
@@ -41,10 +42,15 @@ def expMovingAverage(values, window):
     a[:window] = a[window]
     return a
 
+"""
 def movingAverage(values,window):
     weights = np.repeat(1.0, window)/window    
     smas = np.convolve(values, weights, 'valid')
     return smas
+"""
+
+def movingAverage(value, period):
+    return pd.rolling_mean(value, period)
     
 def setAllSpineColor(ax, spineColor):
     ax.spines['bottom'].set_color(spineColor)
@@ -170,35 +176,31 @@ def graphData(stock, plotStock, dataDict):
                     print 'No FII data for date: ' , str(e)
                 otherDataList[x] = 0
             x+=1
-        MA1 = 30
-        MA2 = 90
+        MA1 = 5
+        MA2 = 150
         
         if len(date) > MA2:
             draw_MA = 1
-            #starting point(SP): MA2 should be largest MA
-            SP = len(date[MA2-1:])
-            print 'MA SP: ',SP
             label1 = str(MA1)+' SMA'
             label2 = str(MA2)+' SMA'
         else:
             #skip MA ploting if no of candles are less than the bigger MA
-            draw_MA = 0            
+            draw_MA = 0
             print 'skip MA'
            
         if draw_MA==1:
-            Av1 = movingAverage(closep, MA1)
-            Av2 = movingAverage(closep, MA2)
-        
+            date = np.flipud(date)
+            closepTemp = np.flipud(closep)    
+            Av1 = movingAverage(closepTemp, MA1)
+            Av2 = movingAverage(closepTemp, MA2)
+            
         fig = plt.figure(facecolor=blackThemeBG)
         mainChart = plt.subplot2grid((7,4), (0,0), rowspan=5, colspan=4, axisbg=blackThemeBG)
         candlestick_ochl(mainChart, candleArray, width=.75, colorup=blackThemeColorUp, colordown=blackThemeColorDown)
          
-        if draw_MA==1:
-            date1 = sorted(date)
-            Av1 = sorted(Av1)
-            Av2 = sorted(Av2)
-            mainChart.plot(date1[-SP:], Av1[-SP:], fastMA, label=label1, linewidth=1.5)  
-            mainChart.plot(date1[-SP:], Av2[-SP:], slowMA, label=label2, linewidth=1.5)
+        if draw_MA==1:                     
+            mainChart.plot(date[MA1:], Av1[MA1:], fastMA, label=label1, linewidth=1.5)  
+            mainChart.plot(date[MA2:], Av2[MA2:], slowMA, label=label2, linewidth=1.5)
  
         mainChart.grid(True, color='w')
         mainChart.xaxis.set_major_locator(mticker.MaxNLocator(10))
@@ -306,12 +308,12 @@ class readInputDates:
         self.entry_y2.grid(row=4, column=4)
         
         # set some default values
-        self.entry_stock.insert(0, '.NS')
-        self.entry_d1.insert(0, 1)
-        self.entry_m1.insert(0, 12)
-        self.entry_y1.insert(0, 2015)
-        self.entry_d2.insert(0, 1)
-        self.entry_m2.insert(0, 1)
+        self.entry_stock.insert(0, 'BUTTERFLY.NS')
+        self.entry_d1.insert(0, 20)
+        self.entry_m1.insert(0, 5)
+        self.entry_y1.insert(0, 2016)
+        self.entry_d2.insert(0, 19)
+        self.entry_m2.insert(0, 6)
         self.entry_y2.insert(0, 2016)
 
     def validate(self, new_text, entry):        
@@ -336,8 +338,12 @@ class readInputDates:
                 self.entry_d2 = int(new_text)
             elif entry == 'm1':
                 self.entry_m1 = int(new_text)
+                #substrace month -1. thats how they formated in yahoo api data
+                self.entry_m1 -= 1
             elif entry == 'm2':
                 self.entry_m2 = int(new_text)
+                #substrace month -1. thats how they formated in yahoo api data
+                self.entry_m2 -= 1
             elif entry == 'y1':
                 self.entry_y1 = int(new_text)
             elif entry == 'y2':
@@ -358,10 +364,8 @@ class readInputDates:
         print 'is_index ', is_index
         if is_index ==1:     
             dataDict = pickle.load(open("data/FIIDATA.txt", "r"))
-        print self.entry_d1, self.entry_d2, self.entry_m1, self.entry_m2, self.entry_y1, self.entry_y2
-        #substrace month -1. thats how they formated in yahoo api data
-        self.entry_m1 -= 1
-        self.entry_m2 -= 1
+        print self.entry_d1, self.entry_d2, self.entry_m1, self.entry_m2, self.entry_y1, self.entry_y2     
+        
         d1 = str(self.entry_d1)
         m1 = str(self.entry_m1)
         y1 = str(self.entry_y1)
@@ -385,9 +389,8 @@ User called function defined below
 """
 def plotNifty():
     root = Tk()
-    my_gui = readInputDates(root)
-    root.mainloop()    
-    #graphData('^nsei', 1, dataList, dateList)
+    my_gui = readInputDates(root)        
+    root.mainloop()
 
 def plotStock(stock):
     EPSdateList = ['2016-01-04', '2015-10-01', '2015-07-01', '2015-04-01']
