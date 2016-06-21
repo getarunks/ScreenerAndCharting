@@ -233,6 +233,7 @@ def graphData(stock, plotStock, dataDict):
             Av2 = movingAverage(closep, MA2)
             
         fig = plt.figure(facecolor=blackThemeBG)
+        fig.canvas.set_window_title(stock)
         mainChart = plt.subplot2grid((7,4), (0,0), rowspan=5, colspan=4, axisbg=blackThemeBG)
         candlestick_ochl(mainChart, candleArray, width=.75, colorup=blackThemeColorUp, colordown=blackThemeColorDown)
          
