@@ -34,6 +34,8 @@ blackThemeColorDown = '#ff1717'
 blackThemeBG = '#07000d'
 spinesColor = "#5998ff"
 epsBarColor = '#5a6de3'
+MA1 = 0
+MA2 = 0
 
 def expMovingAverage(values, window):
     weights = np.exp(np.linspace(-1., 0., window))
@@ -213,8 +215,8 @@ def graphData(stock, plotStock, dataDict):
         print "len of candleArray", len(candleArray)
         print 'len of otherdata', len(otherDataList)
         #print candleArray
-        MA1 = 5
-        MA2 = 150
+        global MA1
+        global MA2
         
         if len(date) > MA2:
             draw_MA = 1
@@ -339,7 +341,9 @@ class readInputDates:
         self.label_startDate = Label(master, text="Start Date:")
         self.label_endDate = Label(master, text="End Date:")
         self.label_stock = Label(master, text="Stock:")
-        self.entry_stock = Entry(master)        
+        self.label_slowMA = Label(master, text="Slow MA:")
+        self.label_fastMA = Label(master, text="Fast MA:")
+        self.entry_stock = Entry(master)
         vcmd = master.register(self.validate)
         self.entry_d1 = Entry(master, validate="key", validatecommand=(vcmd, '%P', 'd1'), text = 1)        
         self.entry_d2 = Entry(master, validate="key", validatecommand=(vcmd, '%P', 'd2'))
@@ -347,6 +351,8 @@ class readInputDates:
         self.entry_m2 = Entry(master, validate="key", validatecommand=(vcmd, '%P', 'm2'))
         self.entry_y1 = Entry(master, validate="key", validatecommand=(vcmd, '%P', 'y1'))
         self.entry_y2 = Entry(master, validate="key", validatecommand=(vcmd, '%P', 'y2'))
+        self.entry_slowMA = Entry(master, validate="key", validatecommand=(vcmd, '%P', 'slowMA'))
+        self.entry_fastMA = Entry(master, validate="key", validatecommand=(vcmd, '%P', 'fastMA'))
         self.plot_button = Button(master, text="Plot", command=lambda: self.plot())
         
         # Layout
@@ -364,6 +370,10 @@ class readInputDates:
         self.entry_d2.grid(row=4, column=3)        
         self.entry_y1.grid(row=3, column=4)
         self.entry_y2.grid(row=4, column=4)
+        self.label_slowMA.grid(row=5, column=1)
+        self.entry_slowMA.grid(row=5, column=2)
+        self.label_fastMA.grid(row=5, column=3)
+        self.entry_fastMA.grid(row=5, column=4)
         
         # set some default values
         self.entry_stock.insert(0, 'ASHOKLEY.NS')
@@ -373,6 +383,8 @@ class readInputDates:
         self.entry_d2.insert(0, 19)
         self.entry_m2.insert(0, 6)
         self.entry_y2.insert(0, 2016)
+        self.entry_slowMA.insert(0, 30)
+        self.entry_fastMA.insert(0, 150)
 
     def validate(self, new_text, entry):        
         if not new_text: # the field is being cleared
@@ -387,7 +399,11 @@ class readInputDates:
             elif entry == 'y1':
                 self.entry_y1 = 0
             elif entry == 'y2':
-                self.entry_y2 = 0            
+                self.entry_y2 = 0
+            elif entry == 'slowMA':
+                self.entry_slowMA = 0
+            elif entry == 'fastMA':
+                self.entry_fastMA = 0
             return True
         try:            
             if entry == 'd1':
@@ -406,11 +422,18 @@ class readInputDates:
                 self.entry_y1 = int(new_text)
             elif entry == 'y2':
                 self.entry_y2 = int(new_text)
+            elif entry == 'slowMA':
+                self.entry_slowMA = int(new_text)
+            elif entry == 'fastMA':
+                self.entry_fastMA = int(new_text)
             return True
         except ValueError:
             return False
     def plot(self):
+        global MA1, MA2
         
+        MA1 = self.entry_slowMA
+        MA2 = self.entry_fastMA
         EPSDataDict = {'2016-01-04': 47,'2015-10-01':32, '2015-07-01':27, '2015-04-01':26 }
         
         #stock = '%5ENSEI'
