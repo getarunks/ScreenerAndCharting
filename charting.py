@@ -155,27 +155,64 @@ def graphData(stock, plotStock, dataDict):
     try:
         stockFile = 'data/'+stock+'.txt'                
         date, openp, highp, lowp, closep, volume, adjclose = np.loadtxt(stockFile,delimiter=',',unpack=True,
-                                                              converters={0: mdates.strpdate2num('%Y-%m-%d')})        
+                                                              converters={0: mdates.strpdate2num('%Y-%m-%d')})
+        niftyFile = 'data/nsei.txt'
+        dateNifty, openpNifty, highpNifty, lowpNifty, closepNifty, volumeNifty, adjclosep = np.loadtxt(niftyFile,delimiter=',',unpack=True,
+                                                                  converters={0: mdates.strpdate2num('%Y-%m-%d')})
+        date = np.flipud(date)
+        openp = np.flipud(openp)
+        highp = np.flipud(highp)
+        lowp = np.flipud(lowp)
+        closep = np.flipud(closep)
+        volume = np.flipud(volume)
+        dateNifty = np.flipud(dateNifty)
+        closepNifty = np.flipud(closepNifty)
+
         print 'Drawing main chart...'        
         x = 0
         numOfDates = len(date)
+        print "no of Dates: ", numOfDates
+        numOfDatesNifty = len(dateNifty)
+        print "no of Dates in Nifty: ", numOfDatesNifty
         candleArray = []
         otherDataList = np.repeat(0.0, numOfDates)
-        while x < numOfDates:
+        print "len of candleArray", len(candleArray)
+
+        while x < numOfDatesNifty:
+            if plotStock == False:
+                # create otherDataList for FII
+                key = num2date(date[x])
+                try:
+                    otherDataList[x] = dataDict[key]
+                except Exception, e:
+                    #suppress this message if we are ploting stock because EPS date is very limited
+                    if plotStock == False:
+                        print 'No FII data for date: ' , str(e)
+                        otherDataList[x] = 0
+            else:
+                #in most of the cases, reduntant data is present in stocks from yahoo. Delete stock data not present
+                #in nifty
+                if date[x] != dateNifty[x]:
+                    print num2date(date[x]), num2date(dateNifty[x])
+                    date = np.delete(date, x)
+                    openp = np.delete(openp, x)
+                    highp = np.delete(highp, x)
+                    lowp = np.delete(lowp, x)
+                    closep = np.delete(closep, x)
+                    volume = np.delete(volume, x)
+                    otherDataList = np.delete(otherDataList, x)
+                    continue
+                else:
+                    otherDataList[x] = closep[x]/closepNifty[x]*100
             #create candlArray in expected order for candlestic_ochl
             #maintain the below order of variables
             appendLine = date[x],openp[x],closep[x],highp[x],lowp[x]
             candleArray.append(appendLine)
-            # create otherDataList for FII or EPS data
-            key = num2date(date[x])
-            try:
-                otherDataList[x] = dataDict[key]
-            except Exception, e:
-                #suppress this message if we are ploting stock because EPS date is very limited
-                if plotStock == False:
-                    print 'No FII data for date: ' , str(e)
-                otherDataList[x] = 0
             x+=1
+
+        print "len of candleArray", len(candleArray)
+        print 'len of otherdata', len(otherDataList)
+        #print candleArray
         MA1 = 5
         MA2 = 150
         
@@ -189,10 +226,8 @@ def graphData(stock, plotStock, dataDict):
             print 'skip MA'
            
         if draw_MA==1:
-            date = np.flipud(date)
-            closepTemp = np.flipud(closep)    
-            Av1 = movingAverage(closepTemp, MA1)
-            Av2 = movingAverage(closepTemp, MA2)
+            Av1 = movingAverage(closep, MA1)
+            Av2 = movingAverage(closep, MA2)
             
         fig = plt.figure(facecolor=blackThemeBG)
         mainChart = plt.subplot2grid((7,4), (0,0), rowspan=5, colspan=4, axisbg=blackThemeBG)
@@ -213,12 +248,12 @@ def graphData(stock, plotStock, dataDict):
         if draw_MA==1:
             plt.legend(loc=3, prop={'size':7}, fancybox=True)
             maLeg = plt.legend(loc=3, ncol=1, prop={'size':7}, fancybox=True, borderaxespad=0.)
-            maLeg.get_frame().set_alpha(0.4)               
+            maLeg.get_frame().set_alpha(0.4)
         
         if plotStock == 1:
             plotNiftyOverlay(mainChart)
-      
-        print 'Drawing main chart... Done'        
+
+        print 'Drawing main chart... Done'
         if plotStock == 1:
             plotVolume(mainChart, date, volume)        
         
@@ -237,13 +272,17 @@ def graphData(stock, plotStock, dataDict):
         epsChart.grid(True, color='w')
         
         if plotStock == True:
-            plt.ylabel('EPS Y-o-Y Growth %')
+            plt.ylabel('RS w.r.t NIFTY')
         else:
             plt.ylabel('FII Data')
         
         #enable if you want lable pad to move further
         #epsChart.yaxis.labelpad = 20
-        epsChart.bar(date, otherDataList, color=epsBarColor, linewidth=0)        
+        #epsChart.bar(date, otherDataList, color=epsBarColor, linewidth=0)
+        epsChart.plot(date, otherDataList, '#b93904', linewidth=1.5)
+        RS_MA = 200
+        RS_AV = movingAverage(otherDataList, RS_MA)
+        epsChart.plot(date[RS_MA:], RS_AV[RS_MA:], slowMA, linewidth=1.5)
         #Draw a horizontal line --- on 0
         epsChart.plot([min(date),max(date)], [0, 0], '--', color='w')
         epsChart.tick_params(axis='x', colors='w')
