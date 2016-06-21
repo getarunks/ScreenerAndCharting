@@ -272,19 +272,38 @@ def graphData(stock, plotStock, dataDict):
         epsChart.grid(True, color='w')
         
         if plotStock == True:
-            plt.ylabel('RS w.r.t NIFTY')
+            plt.ylabel('Relative Strength')
         else:
             plt.ylabel('FII Data')
+            epsChart.bar(date, otherDataList, color=epsBarColor, linewidth=0)
         
         #enable if you want lable pad to move further
         #epsChart.yaxis.labelpad = 20
-        #epsChart.bar(date, otherDataList, color=epsBarColor, linewidth=0)
-        epsChart.plot(date, otherDataList, '#b93904', linewidth=1.5)
-        RS_MA = 200
-        RS_AV = movingAverage(otherDataList, RS_MA)
-        epsChart.plot(date[RS_MA:], RS_AV[RS_MA:], slowMA, linewidth=1.5)
-        #Draw a horizontal line --- on 0
-        epsChart.plot([min(date),max(date)], [0, 0], '--', color='w')
+
+        if plotStock == True:
+            RS_MA = 200
+            RS_AV = movingAverage(otherDataList, RS_MA)
+            TypeMansfield = True
+
+            """
+            MRP = (( RP(today) / sma(RP(today), n)) - 1 ) * 100
+            Full details can be found in below link,
+            http://www.trade2win.com/boards/technical-analysis/134944-stan-weinsteins-stage-analysis-97.html#post2137398
+            """
+            MansfieldRPI = np.repeat(0.0, numOfDatesNifty)
+            x = 0
+            while x < numOfDatesNifty:
+                MansfieldRPI[x] = (otherDataList[x]/RS_AV[x] - 1)*100
+                x +=1
+
+            if TypeMansfield == True:
+                epsChart.plot(date[RS_MA:], MansfieldRPI[RS_MA:], "#FFFF00", linewidth=1.5)
+                #Draw a horizontal line --- on 0
+                epsChart.plot([min(date),max(date)], [0, 0], '--', color='w')
+            else:
+                epsChart.plot(date, otherDataList, '#b93904', linewidth=1.5)
+                epsChart.plot(date[RS_MA:], RS_AV[RS_MA:], slowMA, linewidth=1.5)
+
         epsChart.tick_params(axis='x', colors='w')
         epsChart.tick_params(axis='y', colors='w')
         print 'Drawing EPS chart.. Done'
@@ -347,10 +366,10 @@ class readInputDates:
         self.entry_y2.grid(row=4, column=4)
         
         # set some default values
-        self.entry_stock.insert(0, 'BUTTERFLY.NS')
+        self.entry_stock.insert(0, 'ASHOKLEY.NS')
         self.entry_d1.insert(0, 20)
         self.entry_m1.insert(0, 5)
-        self.entry_y1.insert(0, 2016)
+        self.entry_y1.insert(0, 2013)
         self.entry_d2.insert(0, 19)
         self.entry_m2.insert(0, 6)
         self.entry_y2.insert(0, 2016)
