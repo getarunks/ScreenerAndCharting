@@ -36,6 +36,7 @@ spinesColor = "#5998ff"
 epsBarColor = '#5a6de3'
 MA1 = 0
 MA2 = 0
+TypeMansfield = True
 
 def expMovingAverage(values, window):
     weights = np.exp(np.linspace(-1., 0., window))
@@ -285,7 +286,7 @@ def graphData(stock, plotStock, dataDict):
         if plotStock == True:
             RS_MA = 200
             RS_AV = movingAverage(otherDataList, RS_MA)
-            TypeMansfield = True
+            global TypeMansfield
 
             """
             MRP = (( RP(today) / sma(RP(today), n)) - 1 ) * 100
@@ -328,7 +329,8 @@ def graphData(stock, plotStock, dataDict):
     except Exception, e:
         print 'failed in graphData loop', str(e)
 
-from Tkinter import Tk, Label, Button, Entry
+
+from Tkinter import Tk, Label, Button, Entry, Checkbutton, IntVar
 
 class readInputDates:
     def __init__(self, master):
@@ -354,6 +356,11 @@ class readInputDates:
         self.entry_slowMA = Entry(master, validate="key", validatecommand=(vcmd, '%P', 'slowMA'))
         self.entry_fastMA = Entry(master, validate="key", validatecommand=(vcmd, '%P', 'fastMA'))
         self.plot_button = Button(master, text="Plot", command=lambda: self.plot())
+        self.MansfieldVar = IntVar()
+        #enable Mansfield as default
+        self.MansfieldVar.set(1)
+        self.mansfieldCheckBox = Checkbutton(master, text="Mansfield RSI", variable = self.MansfieldVar, onvalue = 1,\
+                                offvalue=0)
         
         # Layout
         self.label_stock.grid(row=1, column=1)
@@ -374,6 +381,7 @@ class readInputDates:
         self.entry_slowMA.grid(row=5, column=2)
         self.label_fastMA.grid(row=5, column=3)
         self.entry_fastMA.grid(row=5, column=4)
+        self.mansfieldCheckBox.grid(row=6, column=4)
         
         # set some default values
         self.entry_stock.insert(0, 'ASHOKLEY.NS')
@@ -430,7 +438,7 @@ class readInputDates:
         except ValueError:
             return False
     def plot(self):
-        global MA1, MA2
+        global MA1, MA2, TypeMansfield
         
         MA1 = self.entry_slowMA
         MA2 = self.entry_fastMA
@@ -454,6 +462,7 @@ class readInputDates:
         d2 = str(self.entry_d2)
         m2 = str(self.entry_m2)
         y2 = str(self.entry_y2)
+        TypeMansfield = self.MansfieldVar.get()
         
         if is_index == 0:
             fetchYahooData(stock, m1, d1, y1, m2, d2, y2)
