@@ -37,6 +37,7 @@ epsBarColor = '#5a6de3'
 MA1 = 0
 MA2 = 0
 TypeMansfield = True
+NiftyOverlay = True
 
 def expMovingAverage(values, window):
     weights = np.exp(np.linspace(-1., 0., window))
@@ -254,7 +255,7 @@ def graphData(stock, plotStock, dataDict):
             maLeg = plt.legend(loc=3, ncol=1, prop={'size':7}, fancybox=True, borderaxespad=0.)
             maLeg.get_frame().set_alpha(0.4)
         
-        if plotStock == 1:
+        if plotStock == 1 and NiftyOverlay == True:
             plotNiftyOverlay(mainChart)
 
         print 'Drawing main chart... Done'
@@ -362,6 +363,10 @@ class readInputDates:
         self.MansfieldVar.set(1)
         self.mansfieldCheckBox = Checkbutton(master, text="Mansfield RSI", variable = self.MansfieldVar, onvalue = 1,\
                                 offvalue=0)
+        self.niftyOverlayVar = IntVar()
+        self.niftyOverlayVar.set(1)
+        self.niftyOverlayCheckBox = Checkbutton(master, text="Nifty Overlay", variable = self.niftyOverlayVar, onvalue = 1,\
+                                offvalue=0)
         
         # Layout
         self.label_stock.grid(row=1, column=1)
@@ -383,6 +388,7 @@ class readInputDates:
         self.label_fastMA.grid(row=5, column=3)
         self.entry_fastMA.grid(row=5, column=4)
         self.mansfieldCheckBox.grid(row=6, column=4)
+        self.niftyOverlayCheckBox.grid(row=6, column=3)
         
         # set some default values
         self.entry_stock.insert(0, 'ASHOKLEY.NS')
@@ -439,7 +445,7 @@ class readInputDates:
         except ValueError:
             return False
     def plot(self):
-        global MA1, MA2, TypeMansfield
+        global MA1, MA2, TypeMansfield, NiftyOverlay
         
         MA1 = self.entry_slowMA
         MA2 = self.entry_fastMA
@@ -464,6 +470,7 @@ class readInputDates:
         m2 = str(self.entry_m2)
         y2 = str(self.entry_y2)
         TypeMansfield = self.MansfieldVar.get()
+        NiftyOverlay = self.niftyOverlayVar.get()
         
         if is_index == 0:
             fetchYahooData(stock, m1, d1, y1, m2, d2, y2)
