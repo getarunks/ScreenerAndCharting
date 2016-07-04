@@ -853,7 +853,7 @@ def Beat(showFIIonly):
         
         """ Add EPS for last four quaters
         """
-        EPS = BSdata.result_dict['EPS_Q1'] +  BSdata.result_dict['EPS_Q1'] + \
+        EPS = BSdata.result_dict['EPS_Q1'] +  BSdata.result_dict['EPS_Q2'] + \
                 BSdata.result_dict['EPS_Q3'] +  BSdata.result_dict['EPS_Q4']
         """
         averageEPSgrowth = (BSdata.result_dict['EPSQ1Change'] + BSdata.result_dict['EPSQ2Change'] + \
@@ -884,12 +884,6 @@ def Beat(showFIIonly):
             del cf, BSdata
             continue
         """
-        
-        """skip if TTM EPS data is negative"""
-        if EPS < 0:
-            count +=1
-            del cf, BSdata
-            continue;
         
         stock_dict_EPSAnnual[stock] = round(EPS,2)
         stock_dict_EPSG[stock] = averageEPSgrowth
@@ -949,7 +943,7 @@ def Beat(showFIIonly):
             cashFlowError = 1 
             
         textFile.write("=======================================\n")
-        textFile.write("Symbol: %s \tEPS: %s \tAv. EPS growth(last 2 Qtrs): %d%s\n" % \
+        textFile.write("Symbol: %s \tTTM EPS: %s \tAv. EPS growth(last 2 Qtrs): %d%s\n" % \
                         (stock, stock_dict_EPSAnnual[stock], stock_dict_EPSG[stock], '%'))
         textFile.write("Annual EPS Data: %s\n" % (reportType))
         textFile.write("                          %15s%15s%15s%15s\n" % (epsData.yearName[0],
