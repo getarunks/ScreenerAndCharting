@@ -109,25 +109,28 @@ def plotVolume(mainChart, date, volume):
         """
         volumeChart.axes.yaxis.set_ticklabels([])
         volumeMA = 30
-        skipMA = False
-        if volumeMA > len(date):
-            skipMA = True
-        if skipMA == False:
-            volumeMAData = movingAverage(volume, volumeMA)
-            volumeSP = len(date[volumeMA-1:])
-            date1 = sorted(date)
-            volumeMAData = sorted(volumeMAData)            
-            volumeChart.plot(date1[-volumeSP:], volumeMAData[-volumeSP:], 'w', label='volumeMA(30)')            
+        drawMA = True
+        if len(date) > volumeMA:
+            drawMA = True
+        if drawMA == True:
+            volumeMAData = movingAverage(volume, volumeMA)    
+            volumeChart.plot(date[volumeMA:], volumeMAData[volumeMA:], 'w', label='MA(30)') 
         volumeChart.grid(True, color='w')
         setAllSpineColor(volumeChart, spinesColor)
         volumeChart.tick_params(axis='x', colors='w')
         volumeChart.tick_params(axis='y', colors='w')
         plt.ylabel('Volume', color='w')
         plt.legend(loc=4, prop={'size':7}, fancybox=True)
-        if skipMA == True:
-            maLeg = plt.legend(loc=3, ncol=1, prop={'size':7}, fancybox=True, borderaxespad=0.)
+        if drawMA == True:
+            maLeg = plt.legend(loc=2, ncol=1, prop={'size':7}, fancybox=False, borderaxespad=0.)
             #FIXME: enabling below causes error
-            #maLeg.get_frame().set_alpha(0.4)            
+            #maLeg.get_frame().set_alpha(0.5)
+            maLeg.get_frame().set_color('#583759')
+            
+            for text in maLeg.get_texts():
+                print text
+                plt.setp(text, color = 'w')
+            
         for label in volumeChart.xaxis.get_ticklabels():
                 label.set_rotation(45)
         print 'Drawing volume chart... Done'
@@ -179,7 +182,7 @@ def graphData(stock, plotStock, dataDict):
         numOfDatesNifty = len(dateNifty)
         print "no of Dates in Nifty: ", numOfDatesNifty
         candleArray = []
-        otherDataList = np.repeat(0.0, numOfDates)
+        otherDataList = np.repeat(0.0, numOfDatesNifty)
         print "len of candleArray", len(candleArray)
 
         while x < numOfDatesNifty:
@@ -204,7 +207,7 @@ def graphData(stock, plotStock, dataDict):
                     lowp = np.delete(lowp, x)
                     closep = np.delete(closep, x)
                     volume = np.delete(volume, x)
-                    otherDataList = np.delete(otherDataList, x)
+                    #otherDataList = np.delete(otherDataList, x)
                     continue
                 else:
                     otherDataList[x] = closep[x]/closepNifty[x]*100
@@ -302,12 +305,12 @@ def graphData(stock, plotStock, dataDict):
                 x +=1
 
             if TypeMansfield == True:
-                epsChart.plot(date[RS_MA:], MansfieldRPI[RS_MA:], "#FFFF00", linewidth=1.5)
+                epsChart.plot(dateNifty[RS_MA:], MansfieldRPI[RS_MA:], "#FFFF00", linewidth=1.5)
                 #Draw a horizontal line --- on 0
-                epsChart.plot([min(date),max(date)], [0, 0], '--', color='w')
+                epsChart.plot([min(dateNifty),max(dateNifty)], [0, 0], '--', color='w')
             else:
-                epsChart.plot(date, otherDataList, '#b93904', linewidth=1.5)
-                epsChart.plot(date[RS_MA:], RS_AV[RS_MA:], slowMA, linewidth=1.5)
+                epsChart.plot(dateNifty, otherDataList, '#b93904', linewidth=1.5)
+                epsChart.plot(dateNifty[RS_MA:], RS_AV[RS_MA:], slowMA, linewidth=1.5)
 
         epsChart.tick_params(axis='x', colors='w')
         epsChart.tick_params(axis='y', colors='w')
