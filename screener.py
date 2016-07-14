@@ -1225,8 +1225,8 @@ def getCompleteReport(EPSY1, EPSY2, EPSY3, EPSCurrQtr, EPSQtrAlone):
     json.dump(failedStocks, textFile)
     textFile.write("\n")
     
-    print ("dataBase out of outdated stocks = %d, updated = %d\n" % (dataBase_outdate_stocks, dataBase_update_stocks))
-    textFile.write("dataBase out of outdated stocks = %d, updated = %d\n" % (dataBase_outdate_stocks, dataBase_update_stocks))
+    print ("dataBase out of outdated stocks = %d, updated = %d\n" % (dataBase_outdate_stocks, dataBase_updated_stocks))
+    textFile.write("dataBase out of outdated stocks = %d, updated = %d\n" % (dataBase_outdate_stocks, dataBase_updated_stocks))
     
     textFile.close()
     
