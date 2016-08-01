@@ -659,8 +659,11 @@ def getDataDB(stock):
     print row[0], row[1]
     conn.close()
 
-def readDB():
+def readDB(value=None):
     sqlite_file = 'stock_db.sqlite'
+    stocks_with_latest = 0
+    total_stocks = 0
+    verbose = 0
     
     conn =sqlite3.connect(sqlite_file)
     c = conn.cursor()
@@ -673,14 +676,20 @@ def readDB():
               EPSY1Change, EPSY2Change, EPSY3Change \
               from STOCKDATA")
     for row in cursor:
-        print "Symbol = " , row[0], "EPS_Q1 = ", row[1], "EPS_Q2 = ", row[2], "EPS_Q3 = ", row[3], "EPS_Q4 = ", row[4]
-        print "EPS_Q1YoY = ", row[5], "EPS_Q2YoY = ", row[6], "EPS_Q3YoY = ", row[7], "EPS_Q4YoY = ", row[8]
-        print "Q1Name= ", row[9], "Q2Name= ", row[10], "Q3Name= ", row[11], "Q4Name= ", row[12]
-        print "EPSQ1Change = ", row[13], "EPSQ2Change = ", row[14], "EPSQ3Change = ", row[15], "EPSQ4Change = ", row[16]
-        print "Y1Name = ", row[17], "Y2Name = ", row[18], "Y3Name = ", row[19], "Y4Name = ", row[20]
-        print "EPS_Y1 = ", row[21], "EPS_Y2 = ", row[22], "EPS_Y3 = ", row[23], "EPS_Y4 = ", row[24]
-        print "EPSY1Change = ", row[25], "EPSY2Change = ", row[26],  "EPSY3Change = ", row[27]
+        total_stocks += 1
+        if verbose != False:
+            print "Symbol = " , row[0], "EPS_Q1 = ", row[1], "EPS_Q2 = ", row[2], "EPS_Q3 = ", row[3], "EPS_Q4 = ", row[4]
+            print "EPS_Q1YoY = ", row[5], "EPS_Q2YoY = ", row[6], "EPS_Q3YoY = ", row[7], "EPS_Q4YoY = ", row[8]
+            print "Q1Name= ", row[9], "Q2Name= ", row[10], "Q3Name= ", row[11], "Q4Name= ", row[12]
+            print "EPSQ1Change = ", row[13], "EPSQ2Change = ", row[14], "EPSQ3Change = ", row[15], "EPSQ4Change = ", row[16]
+            print "Y1Name = ", row[17], "Y2Name = ", row[18], "Y3Name = ", row[19], "Y4Name = ", row[20]
+            print "EPS_Y1 = ", row[21], "EPS_Y2 = ", row[22], "EPS_Y3 = ", row[23], "EPS_Y4 = ", row[24]
+            print "EPSY1Change = ", row[25], "EPSY2Change = ", row[26],  "EPSY3Change = ", row[27]
+            
+        if value != None and row[9] == value:
+            stocks_with_latest += 1
     conn.close()
+    print "stocks with latest info: ", stocks_with_latest, "\ntotal stocks: ", total_stocks
 
 def createDB():
     sqlite_file = 'stock_db.sqlite'
