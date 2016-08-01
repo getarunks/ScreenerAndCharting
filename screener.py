@@ -659,7 +659,7 @@ def getDataDB(stock):
     print row[0], row[1]
     conn.close()
 
-def readDB(value=None):
+def readDB(qtrName=None):
     sqlite_file = 'stock_db.sqlite'
     stocks_with_latest = 0
     total_stocks = 0
@@ -686,7 +686,7 @@ def readDB(value=None):
             print "EPS_Y1 = ", row[21], "EPS_Y2 = ", row[22], "EPS_Y3 = ", row[23], "EPS_Y4 = ", row[24]
             print "EPSY1Change = ", row[25], "EPSY2Change = ", row[26],  "EPSY3Change = ", row[27]
             
-        if value != None and row[9] == value:
+        if qtrName != None and row[9] == qtrName:
             stocks_with_latest += 1
     conn.close()
     print "stocks with latest info: ", stocks_with_latest, "\ntotal stocks: ", total_stocks
