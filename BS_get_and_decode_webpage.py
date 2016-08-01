@@ -1,6 +1,3 @@
-dataBase_updated_stocks = 0
-dataBase_outdate_stocks = 0
-
 import re
 import urllib2
 from urllib2 import urlopen
@@ -55,7 +52,7 @@ class getData_bussinesStd(object):
         self.DBindex_EPSY1Change = 25
         self.DBindex_EPSY2Change = 26
         self.DBindex_EPSY3Change = 27
-        print "index ",  self.DBindex_symbol, self.DBindex_EPSY3Change
+        #print "index ",  self.DBindex_symbol, self.DBindex_EPSY3Change
 
         """
         self.DBindex_EPS_Q2 = self.DBindex_EPS_Q1 + 1
@@ -212,7 +209,6 @@ class getData_bussinesStd(object):
             return False
 
     def getEPSdata(self):
-        global dataBase_outdate_stocks, dataBase_updated_stocks
         """ First will try to get data from data base if not fetch from website """
         try:
             conn =sqlite3.connect(self.sqlite_file)
@@ -259,7 +255,8 @@ class getData_bussinesStd(object):
             common_code.dataBase_outdate_stocks += 1
 
         except Exception,e:
-            print 'failed in getEPSdata trying to read DB',str(e)
+            print ""
+            #print 'failed in getEPSdata trying to read DB',str(e)
             #return False
 
         try:
@@ -431,7 +428,7 @@ class getData_bussinesStd(object):
             conn.commit()
             conn.close()
 
-            print ("dataBase: out of outdated stocks = %d, updated = %d" % (common_code.dataBase_outdate_stocks, common_code.dataBase_updated_stocks))            
+            print ("dataBase: out of outdated stocks = %d, updated = %d" % (common_code.dataBase_outdate_stocks, common_code.dataBase_updated_stocks))
             return True;
 
         except Exception,e:

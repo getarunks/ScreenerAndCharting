@@ -54,7 +54,7 @@ def Beat(showFIIonly):
     stock_dict_EPSAnnual = {}
     stock_dict_EPSG = {}
     stock_dict_EPSData = {}
-    
+
     length = len(stockListBeat)
     print 'Total no of stock: ', length
     common_code.mySleep(1)
@@ -341,37 +341,40 @@ def getEPSG(stockSymbol, consolidated):
         del cf
         return False
 
-    print 'Annual EPS Data: '+reportType
-    print("                      %15s%15s%15s%15s" % (report.result_dict['Y1Name'],
+    if common_code.completeReportRunning == 0:
+        print 'Annual EPS Data: '+reportType
+        print("                      %15s%15s%15s%15s" % (report.result_dict['Y1Name'],
                                                report.result_dict['Y2Name'],
                                                 report.result_dict['Y3Name'],
                                                 report.result_dict['Y4Name'] ))
-    print("EPS Data       :      %15s%15s%15s%15s" % (report.result_dict['EPS_Y1'],
+        print("EPS Data       :      %15s%15s%15s%15s" % (report.result_dict['EPS_Y1'],
                                                     report.result_dict['EPS_Y2'],
                                                     report.result_dict['EPS_Y3'],
                                                     report.result_dict['EPS_Y4']))
-    print("Change percent :      %15d%15d%15d" %(report.result_dict['EPSY1Change'],
+        print("Change percent :      %15d%15d%15d" %(report.result_dict['EPSY1Change'],
                                                     report.result_dict['EPSY2Change'],
                                                     report.result_dict['EPSY3Change']))
-    print 'Quaterly EPS Data: ' + reportType
-    print("                      %15s%15s%15s%15s" % (report.result_dict['Q1Name'],
+        print 'Quaterly EPS Data: ' + reportType
+        print("                      %15s%15s%15s%15s" % (report.result_dict['Q1Name'],
                                                report.result_dict['Q2Name'],
                                                 report.result_dict['Q3Name'],
                                                 report.result_dict['Q4Name']))
-    print("Current Year   :      %15s%15s%15s%15s" % (report.result_dict['EPS_Q1'],
+        print("Current Year   :      %15s%15s%15s%15s" % (report.result_dict['EPS_Q1'],
                                                     report.result_dict['EPS_Q2'],
                                                     report.result_dict['EPS_Q3'],
                                                     report.result_dict['EPS_Q4']))
-    print("Previous Year  :      %15s%15s%15s%15s" % (report.result_dict['EPS_Q1YoY'],
+        print("Previous Year  :      %15s%15s%15s%15s" % (report.result_dict['EPS_Q1YoY'],
                                                      report.result_dict['EPS_Q2YoY'],
                                                      report.result_dict['EPS_Q3YoY'],
                                                      report.result_dict['EPS_Q4YoY']))
-    print("Change percent :      %15d%15d%15d%15d" %(report.result_dict['EPSQ1Change'],
+        print("Change percent :      %15d%15d%15d%15d" %(report.result_dict['EPSQ1Change'],
                                                      report.result_dict['EPSQ2Change'],
                                                      report.result_dict['EPSQ3Change'],
                                                      report.result_dict['EPSQ4Change']))
-    onGoingAnnualEPS = float(report.result_dict['EPS_Q1']) + float(report.result_dict['EPS_Q2']) + float(report.result_dict['EPS_Q3']) +  float(report.result_dict['EPS_Q4'])
-    print("On going Annual EPS: %0.2f" % (onGoingAnnualEPS))
+    if common_code.completeReportRunning == 0:
+        onGoingAnnualEPS = float(report.result_dict['EPS_Q1']) + float(report.result_dict['EPS_Q2']) + float(report.result_dict['EPS_Q3']) +  float(report.result_dict['EPS_Q4'])
+        print("On going Annual EPS: %0.2f" % (onGoingAnnualEPS))
+
     return report
 
 def getAll(stockSymbol, consolidated):
@@ -403,7 +406,7 @@ def getCompleteReport(EPSY1, EPSY2, EPSY3, EPSCurrQtr, EPSQtrAlone):
     index = 0
     condMetOnce = 0
     for stockSymbol in googleSceernerData.result_df['SYMBOL']:
-        print("Processing stock %s, index = %d out of %d\n" %  (stockSymbol, index, (len(googleSceernerData.result_df['SYMBOL']))))
+        print("Processing stock %s, index = %d out of %d" %  (stockSymbol, index, (len(googleSceernerData.result_df['SYMBOL']))))
         report = getEPSG(stockSymbol, 0)
         if report == False:
             failedStocks.append(stockSymbol)
