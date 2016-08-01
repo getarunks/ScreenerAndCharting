@@ -18,4 +18,14 @@ def getCompleteReport(EPSY1, EPSY2, EPSY3, EPSCurrQtr, EPSQtrAlone):
 			metStocks_3qtrs = []
 			failedStocks = []
 			All this data can be find in FirstReport.txt
-			
+
+How to update new data_BS.json file?
+
+Answer:
+	1. Go to setting in google chrome and open developer options.
+	2. Go to Network tab. Search "json" in search box available.
+	3. Right click and copy link address of get-company-json.
+	4. Do a wget and link address in linux shell prompt.
+	5. copy the initial portion from the old .json file and prepend it with the downloaded file.
+	6. Also remember to close the } bracket.
+	7. cat get-company-json | json_pp > data_BS_new.json
