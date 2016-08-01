@@ -1,4 +1,4 @@
-import json
+import json, pandas
 import google_json_extract
 import BS_json_extract
 import BS_get_and_decode_webpage
@@ -401,12 +401,22 @@ def getCompleteReport(EPSY1, EPSY2, EPSY3, EPSCurrQtr, EPSQtrAlone):
     metStocks_3qtrs = []
     metStocks_2qtrs = []
     failedStocks = []
-
+    
     common_code.completeReportRunning = 1
-    index = 0
+    continue_from_here = 0
+    index = continue_from_here
     condMetOnce = 0
-    for stockSymbol in googleSceernerData.result_df['SYMBOL']:
-        print("Processing stock %s, index = %d out of %d" %  (stockSymbol, index, (len(googleSceernerData.result_df['SYMBOL']))))
+
+    totalSymbols = len(googleSceernerData.result_df['SYMBOL'])
+    
+    if continue_from_here != 0:
+        googleSceernerData.result_df['SYMBOL'] = googleSceernerData.result_df['SYMBOL'].tail(totalSymbols - continue_from_here)
+        dataFrame = googleSceernerData.result_df[pandas.notnull(googleSceernerData.result_df['SYMBOL'])]        
+   
+    for stockSymbol in dataFrame['SYMBOL']:
+        print("Processing stock %s, index = %d out of %d" %  (stockSymbol, index, totalSymbols))
+        if stockSymbol == 0:
+            continue
         report = getEPSG(stockSymbol, 0)
         if report == False:
             failedStocks.append(stockSymbol)
