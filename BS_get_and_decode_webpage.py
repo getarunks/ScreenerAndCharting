@@ -403,7 +403,7 @@ class getData_bussinesStd(object):
                 EPS_Y1, EPS_Y2, EPS_Y3, EPS_Y4,\
                 EPSY1Change, EPSY2Change, EPSY3Change)")
 
-            print "Updating symbol... ", self.stockSymbol
+            #print "Updating symbol... ", self.stockSymbol
             c.execute('''DELETE FROM STOCKDATA WHERE symbol = ?''', (self.stockSymbol,))
 
             c.execute('''INSERT INTO STOCKDATA(symbol, EPS_Q1, EPS_Q2, EPS_Q3, EPS_Q4, \
