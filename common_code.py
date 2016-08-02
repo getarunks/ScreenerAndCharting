@@ -12,3 +12,24 @@ def is_stock_blacklisted(stock):
 dataBase_updated_stocks = 0
 dataBase_outdate_stocks = 0
 completeReportRunning = 0
+
+"""
+Enter the lable show in BS website for latest quater
+"""
+current_qtr = 'Jun-2016'
+
+"""
+Sqlite File name
+"""
+sqliteFile = 'stock_db.sqlite'
+
+"""
+BS data base json file name
+"""
+BS_json_file = 'data_BS.json'
+
+"""
+Google Screener json file name
+"""
+google_json_file = 'NIFTYAllStocks.txt'
+#google_json_file = 'EPS5yearGreaterThanZeroNSE.txt'

@@ -1,9 +1,12 @@
 """
 Set of apis to read the derails of DB.
 """
+
+import sqlite3
+import common_code
 #http://pythoncentral.io/introduction-to-sqlite-in-python/
 def deleteDB():
-    sqlite_file = 'stock_db.sqlite'
+    sqlite_file = common_code.sqliteFile
     conn =sqlite3.connect(sqlite_file)
     c = conn.cursor()
 
@@ -12,7 +15,7 @@ def deleteDB():
     conn.close()
 
 def updateDB(stock, eps):
-    sqlite_file = 'stock_db.sqlite'
+    sqlite_file = common_code.sqliteFile
     conn =sqlite3.connect(sqlite_file)
     c = conn.cursor()
 
@@ -21,7 +24,7 @@ def updateDB(stock, eps):
     conn.close()
 
 def getDataDB(stock):
-    sqlite_file = 'stock_db.sqlite'
+    sqlite_file = common_code.sqliteFile
     conn =sqlite3.connect(sqlite_file)
     c = conn.cursor()
 
@@ -37,7 +40,7 @@ def getDataDB(stock):
     conn.close()
 
 def readDB(qtrName=None):
-    sqlite_file = 'stock_db.sqlite'
+    sqlite_file = common_code.sqliteFile
     stocks_with_latest = 0
     total_stocks = 0
     verbose = 0
@@ -69,7 +72,7 @@ def readDB(qtrName=None):
     print "stocks with latest info: ", stocks_with_latest, "\ntotal stocks: ", total_stocks
 
 def createDB():
-    sqlite_file = 'stock_db.sqlite'
+    sqlite_file = common_code.sqliteFile
     epsdata = []
     epsdata.append(2.3)
     epsdata.append(3.4)

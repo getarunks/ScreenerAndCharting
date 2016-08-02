@@ -9,8 +9,8 @@ class getData_bussinesStd(object):
 	self.stockSymbol = stockSymbol
         self.linkId = stockLinkId
         self.reportType = reportType
-        self.sqlite_file = 'stock_db.sqlite'
-        self.latestQtrName = 'Mar-2016'
+        self.sqlite_file = common_code.sqliteFile
+        self.latestQtrName = common_code.current_qtr
         self.cashFlow_link = 'http://www.business-standard.com/company/'+stockLinkId+'/cash-flow/1/'+reportType
         self.result_dict = {}
         self.ratio_link = 'http://www.business-standard.com/company/'+stockLinkId+'/financials-ratios/1/'+reportType

@@ -4,11 +4,12 @@ DF is having columns of SYMBOL and CompanyName
 """
 
 import pandas, re, json
+import common_code
 
 class google_sceerner_json_DataExtract(object):
     def __init__(self):
         #self.json_file = 'EPS5yearGreaterThanZeroNSE.txt'
-        self.json_file = 'NIFTYAllStocks.txt'
+        self.json_file = common_code.google_json_file
         self.result_df = pandas.DataFrame()
 
     def get_json_from_file(self):

@@ -411,7 +411,9 @@ def getCompleteReport(EPSY1, EPSY2, EPSY3, EPSCurrQtr, EPSQtrAlone):
     
     if continue_from_here != 0:
         googleSceernerData.result_df['SYMBOL'] = googleSceernerData.result_df['SYMBOL'].tail(totalSymbols - continue_from_here)
-        dataFrame = googleSceernerData.result_df[pandas.notnull(googleSceernerData.result_df['SYMBOL'])]        
+        dataFrame = googleSceernerData.result_df[pandas.notnull(googleSceernerData.result_df['SYMBOL'])]
+    else:
+        dataFrame = googleSceernerData.result_df    
    
     for stockSymbol in dataFrame['SYMBOL']:
         print("Processing stock %s, index = %d out of %d" %  (stockSymbol, index, totalSymbols))

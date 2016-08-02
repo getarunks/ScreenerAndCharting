@@ -4,13 +4,14 @@ DF is having columns of SYMBOL, CompanyName, CompId, compFormat, linkId
 """
 
 import pandas, re, json
+import common_code
 
 compFormat_onlyOnce = 0
 BS_DataFrame = pandas.DataFrame()
 class compFormat_bussinesStd(object):
     def __init__(self, stock):
         self.stock = stock;
-        self.saved_json_BS = 'data_BS.json'
+        self.saved_json_BS = common_code.BS_json_file
         self.target_tag = 'searchresults' #use to identify the json data needed
         self.result = pandas.DataFrame()
 
