@@ -33,3 +33,8 @@ Google Screener json file name
 """
 google_json_file = 'NIFTYAllStocks.txt'
 #google_json_file = 'EPS5yearGreaterThanZeroNSE.txt'
+
+"""
+Use website to pick data. If false only DB data is used.
+"""
+use_web = False

@@ -249,7 +249,11 @@ class getData_bussinesStd(object):
                 self.result_dict['EPSY3Change'] = row[self.DBindex_EPSY3Change]
                 conn.close()
                 return True
+
             if common_code.is_stock_blacklisted(self.stockSymbol) == True:
+                return False
+
+            if common_code.use_web == False:
                 return False
             print "Get data from web old data in DB ==============", self.stockSymbol, row[self.DBindex_Q1Name]
             common_code.dataBase_outdate_stocks += 1
