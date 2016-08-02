@@ -11,12 +11,13 @@ def is_stock_blacklisted(stock):
 
 dataBase_updated_stocks = 0
 dataBase_outdate_stocks = 0
-completeReportRunning = 0
+DB_updateRunning = 0
 
 """
 Enter the lable show in BS website for latest quater
 """
 current_qtr = 'Jun-2016'
+previous_qtr = 'Mar-2016'
 
 """
 Sqlite File name
@@ -38,3 +39,35 @@ google_json_file = 'NIFTYAllStocks.txt'
 Use website to pick data. If false only DB data is used.
 """
 use_web = False
+
+"""
+index of variables in a row of SQL DB
+"""
+DBindex_symbol = 0
+DBindex_EPS_Q1 = 1
+DBindex_EPS_Q2 = 2
+DBindex_EPS_Q3 = 3
+DBindex_EPS_Q4 = 4
+DBindex_EPS_Q1YoY = 5
+DBindex_EPS_Q2YoY = 6
+DBindex_EPS_Q3YoY = 7
+DBindex_EPS_Q4YoY = 8
+DBindex_Q1Name = 9
+DBindex_Q2Name = 10
+DBindex_Q3Name = 11
+DBindex_Q4Name = 12
+DBindex_EPSQ1Change = 13
+DBindex_EPSQ2Change = 14
+DBindex_EPSQ3Change = 15
+DBindex_EPSQ4Change = 16
+DBindex_Y1Name = 17
+DBindex_Y2Name = 18
+DBindex_Y3Name = 19
+DBindex_Y4Name = 20
+DBindex_EPS_Y1 = 21
+DBindex_EPS_Y2 = 22
+DBindex_EPS_Y3 = 23
+DBindex_EPS_Y4 = 24
+DBindex_EPSY1Change = 25
+DBindex_EPSY2Change = 26
+DBindex_EPSY3Change = 27

@@ -24,64 +24,6 @@ class getData_bussinesStd(object):
         compId = re.findall('\d+', stockLinkId)
         self.promotorLink = 'http://www.business-standard.com/stocks/share-holding-pattern/'+str(int(compId[0]))
 
-        self.DBindex_symbol = 0
-        self.DBindex_EPS_Q1 = 1
-        self.DBindex_EPS_Q2 = 2
-        self.DBindex_EPS_Q3 = 3
-        self.DBindex_EPS_Q4 = 4
-        self.DBindex_EPS_Q1YoY = 5
-        self.DBindex_EPS_Q2YoY = 6
-        self.DBindex_EPS_Q3YoY = 7
-        self.DBindex_EPS_Q4YoY = 8
-        self.DBindex_Q1Name = 9
-        self.DBindex_Q2Name = 10
-        self.DBindex_Q3Name = 11
-        self.DBindex_Q4Name = 12
-        self.DBindex_EPSQ1Change = 13
-        self.DBindex_EPSQ2Change = 14
-        self.DBindex_EPSQ3Change = 15
-        self.DBindex_EPSQ4Change = 16
-        self.DBindex_Y1Name = 17
-        self.DBindex_Y2Name = 18
-        self.DBindex_Y3Name = 19
-        self.DBindex_Y4Name = 20
-        self.DBindex_EPS_Y1 = 21
-        self.DBindex_EPS_Y2 = 22
-        self.DBindex_EPS_Y3 = 23
-        self.DBindex_EPS_Y4 = 24
-        self.DBindex_EPSY1Change = 25
-        self.DBindex_EPSY2Change = 26
-        self.DBindex_EPSY3Change = 27
-        #print "index ",  self.DBindex_symbol, self.DBindex_EPSY3Change
-
-        """
-        self.DBindex_EPS_Q2 = self.DBindex_EPS_Q1 + 1
-        self.DBindex_EPS_Q3 = self.DBindex_EPS_Q2 + 1
-        self.DBindex_EPS_Q4 = self.DBindex_EPS_Q3 + 1
-        self.DBindex_EPS_Q1YoY = self.DBindex_EPS_Q4 + 1
-        self.DBindex_EPS_Q2YoY = self.DBindex_EPS_Q1YoY + 1
-        self.DBindex_EPS_Q3YoY = self.DBindex_EPS_Q2YoY + 1
-        self.DBindex_EPS_Q4YoY = self.DBindex_EPS_Q3YoY + 1
-        self.DBindex_Q1Name = self.DBindex_EPS_Q4YoY + 1
-        self.DBindex_Q2Name = self.DBindex_Q1Name + 1
-        self.DBindex_Q3Name = self.DBindex_Q2Name + 1
-        self.DBindex_Q4Name = self.DBindex_Q3Name + 1
-        self.DBindex_EPSQ1Change = self.DBindex_Q4Name + 1
-        self.DBindex_EPSQ2Change = self.DBindex_EPSQ1Change + 1
-        self.DBindex_EPSQ3Change = self.DBindex_EPSQ2Change + 1
-        self.DBindex_EPSQ4Change = self.DBindex_EPSQ3Change + 1
-        self.DBindex_Y1Name = self.DBindex_EPSQ4Change + 1
-        self.DBindex_Y2Name = self.DBindex_Y1Name + 1
-        self.DBindex_Y3Name = self.DBindex_Y2Name + 1
-        self.DBindex_Y4Name = self.DBindex_Y3Name + 1
-        self.DBindex_EPS_Y1 = self.DBindex_Y4Name + 1
-        self.DBindex_EPS_Y2 = self.DBindex_EPS_Y1 + 1
-        self.DBindex_EPS_Y3 = self.DBindex_EPS_Y2 + 1
-        self.DBindex_EPS_Y4 = self.DBindex_EPS_Y3 + 1
-        self.DBindex_EPSY1Change = self.DBindex_EPS_Y4
-        self.DBindex_EPSY1Change =
-        """
-
         """
         Lets not bombard the free websites with requestes. Sleep 1 seconds after
         each query.
@@ -218,44 +160,42 @@ class getData_bussinesStd(object):
             row = c.fetchone()
 
             # fetch from web if data is none or outdated
-            if row != None and self.latestQtrName == row[self.DBindex_Q1Name]:
+            if row != None and self.latestQtrName == row[common_code.DBindex_Q1Name]:
                 print "Latest Data found in DB for stock ", self.stockSymbol
-                self.result_dict['EPS_Q1'] = row[self.DBindex_EPS_Q1]
-                self.result_dict['EPS_Q2'] = row[self.DBindex_EPS_Q2]
-                self.result_dict['EPS_Q3'] = row[self.DBindex_EPS_Q3]
-                self.result_dict['EPS_Q4'] = row[self.DBindex_EPS_Q4]
-                self.result_dict['EPS_Q1YoY'] = row[self.DBindex_EPS_Q1YoY]
-                self.result_dict['EPS_Q2YoY'] = row[self.DBindex_EPS_Q2YoY]
-                self.result_dict['EPS_Q3YoY'] = row[self.DBindex_EPS_Q3YoY]
-                self.result_dict['EPS_Q4YoY'] = row[self.DBindex_EPS_Q4YoY]
-                self.result_dict['Q1Name'] = row[self.DBindex_Q1Name]
-                self.result_dict['Q2Name'] = row[self.DBindex_Q2Name]
-                self.result_dict['Q3Name'] = row[self.DBindex_Q3Name]
-                self.result_dict['Q4Name'] = row[self.DBindex_Q4Name]
-                self.result_dict['EPSQ1Change'] = row[self.DBindex_EPSQ1Change]
-                self.result_dict['EPSQ2Change'] = row[self.DBindex_EPSQ2Change]
-                self.result_dict['EPSQ3Change'] = row[self.DBindex_EPSQ3Change]
-                self.result_dict['EPSQ4Change'] = row[self.DBindex_EPSQ4Change]
-                self.result_dict['Y1Name'] = row[self.DBindex_Y1Name]
-                self.result_dict['Y2Name'] = row[self.DBindex_Y2Name]
-                self.result_dict['Y3Name'] = row[self.DBindex_Y3Name]
-                self.result_dict['Y4Name'] = row[self.DBindex_Y4Name]
-                self.result_dict['EPS_Y1'] = row[self.DBindex_EPS_Y1]
-                self.result_dict['EPS_Y2'] = row[self.DBindex_EPS_Y2]
-                self.result_dict['EPS_Y3'] = row[self.DBindex_EPS_Y3]
-                self.result_dict['EPS_Y4'] = row[self.DBindex_EPS_Y4]
-                self.result_dict['EPSY1Change'] = row[self.DBindex_EPSY1Change]
-                self.result_dict['EPSY2Change'] = row[self.DBindex_EPSY2Change]
-                self.result_dict['EPSY3Change'] = row[self.DBindex_EPSY3Change]
+                self.result_dict['EPS_Q1'] = row[common_code.DBindex_EPS_Q1]
+                self.result_dict['EPS_Q2'] = row[common_code.DBindex_EPS_Q2]
+                self.result_dict['EPS_Q3'] = row[common_code.DBindex_EPS_Q3]
+                self.result_dict['EPS_Q4'] = row[common_code.DBindex_EPS_Q4]
+                self.result_dict['EPS_Q1YoY'] = row[common_code.DBindex_EPS_Q1YoY]
+                self.result_dict['EPS_Q2YoY'] = row[common_code.DBindex_EPS_Q2YoY]
+                self.result_dict['EPS_Q3YoY'] = row[common_code.DBindex_EPS_Q3YoY]
+                self.result_dict['EPS_Q4YoY'] = row[common_code.DBindex_EPS_Q4YoY]
+                self.result_dict['Q1Name'] = row[common_code.DBindex_Q1Name]
+                self.result_dict['Q2Name'] = row[common_code.DBindex_Q2Name]
+                self.result_dict['Q3Name'] = row[common_code.DBindex_Q3Name]
+                self.result_dict['Q4Name'] = row[common_code.DBindex_Q4Name]
+                self.result_dict['EPSQ1Change'] = row[common_code.DBindex_EPSQ1Change]
+                self.result_dict['EPSQ2Change'] = row[common_code.DBindex_EPSQ2Change]
+                self.result_dict['EPSQ3Change'] = row[common_code.DBindex_EPSQ3Change]
+                self.result_dict['EPSQ4Change'] = row[common_code.DBindex_EPSQ4Change]
+                self.result_dict['Y1Name'] = row[common_code.DBindex_Y1Name]
+                self.result_dict['Y2Name'] = row[common_code.DBindex_Y2Name]
+                self.result_dict['Y3Name'] = row[common_code.DBindex_Y3Name]
+                self.result_dict['Y4Name'] = row[common_code.DBindex_Y4Name]
+                self.result_dict['EPS_Y1'] = row[common_code.DBindex_EPS_Y1]
+                self.result_dict['EPS_Y2'] = row[common_code.DBindex_EPS_Y2]
+                self.result_dict['EPS_Y3'] = row[common_code.DBindex_EPS_Y3]
+                self.result_dict['EPS_Y4'] = row[common_code.DBindex_EPS_Y4]
+                self.result_dict['EPSY1Change'] = row[common_code.DBindex_EPSY1Change]
+                self.result_dict['EPSY2Change'] = row[common_code.DBindex_EPSY2Change]
+                self.result_dict['EPSY3Change'] = row[common_code.DBindex_EPSY3Change]
                 conn.close()
                 return True
+                
+                if common_code.is_stock_blacklisted(self.stockSymbol) == True:
+                    return False
 
-            if common_code.is_stock_blacklisted(self.stockSymbol) == True:
-                return False
-
-            if common_code.use_web == False:
-                return False
-            print "Get data from web old data in DB ==============", self.stockSymbol, row[self.DBindex_Q1Name]
+            print "Get data from web old data in DB ==============", self.stockSymbol, row[common_code.DBindex_Q1Name]
             common_code.dataBase_outdate_stocks += 1
 
         except Exception,e:

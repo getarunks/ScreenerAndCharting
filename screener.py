@@ -1,8 +1,7 @@
-import json, pandas
+import json, pandas, sqlite3
 import google_json_extract
 import BS_json_extract
 import BS_get_and_decode_webpage
-import DB_api
 import common_code
 
 def getReportType(consolidated):
@@ -28,7 +27,7 @@ class EPSData:
         self.qtrChange = []
 
 def compFormatFailed(stockSymbol):
-    if common_code.completeReportRunning == 0:
+    if common_code.DB_updateRunning == 0:
         return input('Please enter Bussiness std stock ID for %s \' \': ' % (stockSymbol))
     else:
         return False
@@ -341,7 +340,7 @@ def getEPSG(stockSymbol, consolidated):
         del cf
         return False
 
-    if common_code.completeReportRunning == 0:
+    if common_code.DB_updateRunning == 0:
         print 'Annual EPS Data: '+reportType
         print("                      %15s%15s%15s%15s" % (report.result_dict['Y1Name'],
                                                report.result_dict['Y2Name'],
@@ -371,7 +370,7 @@ def getEPSG(stockSymbol, consolidated):
                                                      report.result_dict['EPSQ2Change'],
                                                      report.result_dict['EPSQ3Change'],
                                                      report.result_dict['EPSQ4Change']))
-    if common_code.completeReportRunning == 0:
+    if common_code.DB_updateRunning == 0:
         onGoingAnnualEPS = float(report.result_dict['EPS_Q1']) + float(report.result_dict['EPS_Q2']) + float(report.result_dict['EPS_Q3']) +  float(report.result_dict['EPS_Q4'])
         print("On going Annual EPS: %0.2f" % (onGoingAnnualEPS))
 
@@ -400,12 +399,125 @@ def getCompleteReport(EPSY1, EPSY2, EPSY3, EPSCurrQtr, EPSQtrAlone):
     metStocks_4qtrs = []
     metStocks_3qtrs = []
     metStocks_2qtrs = []
+    negative_currentQtr = []
+    outDatedData = []
+    outDatedData_butPrevQtr = []
+    
+    sqlite_file = common_code.sqliteFile
+    condMetOnce = 0
+    index = -1
+    
+    conn =sqlite3.connect(sqlite_file)
+    c = conn.cursor()
+    cursor = c.execute("SELECT symbol, EPS_Q1, EPS_Q2, EPS_Q3, EPS_Q4, \
+              EPS_Q1YoY, EPS_Q2YoY, EPS_Q3YoY, EPS_Q4YoY,\
+              Q1Name, Q2Name, Q3Name, Q4Name,\
+              EPSQ1Change, EPSQ2Change, EPSQ3Change, EPSQ4Change,\
+              Y1Name, Y2Name, Y3Name, Y4Name,\
+              EPS_Y1, EPS_Y2, EPS_Y3, EPS_Y4,\
+              EPSY1Change, EPSY2Change, EPSY3Change \
+              from STOCKDATA")
+              
+    for row in cursor:
+        stockSymbol = row[common_code.DBindex_symbol]
+        EPS_Q1 = row[common_code.DBindex_EPS_Q1]
+        Q1Name = row[common_code.DBindex_Q1Name]
+
+        EPSQ1Change = row[common_code.DBindex_EPSQ1Change]
+        EPSQ2Change = row[common_code.DBindex_EPSQ2Change]
+        EPSQ3Change = row[common_code.DBindex_EPSQ3Change]
+        EPSQ4Change = row[common_code.DBindex_EPSQ4Change]
+
+        EPSY1Change = row[common_code.DBindex_EPSY1Change]
+        EPSY2Change = row[common_code.DBindex_EPSY2Change]
+        EPSY3Change = row[common_code.DBindex_EPSY3Change]
+        index +=1
+
+        print("Processing stock %s, index = %d" %  (stockSymbol, index))
+        
+        if Q1Name == common_code.previous_qtr:
+            outDatedData_butPrevQtr.append(stockSymbol)
+            continue
+        elif Q1Name != common_code.current_qtr:
+            outDatedData.append(stockSymbol)
+            continue
+        #ignore negative EPS stocks even if it has latest data
+        elif EPS_Q1 < 0:
+            negative_currentQtr.append(stockSymbol)
+            continue
+        elif EPSQ1Change >= float(EPSQtrAlone) and EPSQ2Change >= float(EPSQtrAlone) and\
+            EPSQ3Change >= float(EPSQtrAlone) and EPSQ4Change >= float(EPSQtrAlone):
+            textFile.write("%s meets your stringent 4 qtr EPSG requirement\n" % (stockSymbol))
+            textFile.flush()
+            metStocks_4qtrs.append(stockSymbol)
+            print "meets requirement"
+            condMetOnce = 1
+        elif EPSQ1Change >= float(EPSQtrAlone) and EPSQ2Change >= float(EPSQtrAlone) and\
+            EPSQ3Change >= float(EPSQtrAlone):
+            textFile.write("%s meets your stringent 3 qtr EPSG requirement\n" % (stockSymbol))
+            metStocks_3qtrs.append(stockSymbol)
+            condMetOnce = 1
+        elif EPSQ1Change >= float(EPSQtrAlone) and EPSQ2Change >= float(EPSQtrAlone):
+            textFile.write("%s meets your stringent 2 qtr EPSG requirement\n" % (stockSymbol))
+            metStocks_2qtrs.append(stockSymbol)
+            condMetOnce = 1
+
+        if  EPSY1Change >= float(EPSY1)  and  EPSY2Change >= float(EPSY2) and\
+            EPSY3Change >= float(EPSY3) and EPSQ1Change >= float(EPSCurrQtr):
+            #skip if already in one list
+            if condMetOnce == 0:
+                textFile.write("%s meets CANSLIM funtamentals\n" % (stockSymbol))
+                textFile.flush()
+                metStocks_CANSLIM.append(stockSymbol)
+        condMetOnce = 0
+        
+    conn.close()
+
+    print("%d stocks meets 4 qtr criteria\n" % len(metStocks_4qtrs))
+    print metStocks_4qtrs, "\n"
+    print("%d stocks meets 3 qtr criteria\n" % len(metStocks_3qtrs))
+    print metStocks_3qtrs, "\n"
+    print("%d stocks meets 2 qtr criteria\n" % len(metStocks_2qtrs))
+    print metStocks_2qtrs, "\n"
+    print("%d stocks meets CANSLIM criteria\n" % len(metStocks_CANSLIM))
+    print metStocks_CANSLIM, "\n"
+    print("%d stocks has negative current Qtr\n" % len(negative_currentQtr))
+    print negative_currentQtr, "\n"
+    print("%d stocks has completely outdated Data\n" % len(outDatedData))
+    print outDatedData, "\n"
+    print("%d stocks has outdated data but prev Qtr, ie %s\n" % (len(outDatedData_butPrevQtr), common_code.previous_qtr))
+    print outDatedData_butPrevQtr, "\n"
+
+    textFile.write("Following stocks have %s growth for last 4 quaters:\n" % (EPSQtrAlone))
+    json.dump(metStocks_4qtrs, textFile)
+    textFile.write("\n")
+    textFile.write("Following stocks have %s growth for last 3 quaters:\n" % (EPSQtrAlone))
+    json.dump(metStocks_3qtrs, textFile)
+    textFile.write("\n")
+    textFile.write("Following stocks have %s growth for last 2 quaters:\n" % (EPSQtrAlone))
+    json.dump(metStocks_2qtrs, textFile)
+    textFile.write("\n")
+    textFile.write("Following stocks have met CANSLIM Y1: %s, Y2: %s, Y3: %s Cur Qtr %s:\n" % (EPSY1, EPSY2, EPSY3, EPSCurrQtr))
+    json.dump(metStocks_CANSLIM, textFile)
+    textFile.write("\n")
+
+    print ("dataBase out of outdated stocks = %d, updated = %d\n" % (common_code.dataBase_outdate_stocks, common_code.dataBase_updated_stocks))
+    textFile.write("dataBase out of outdated stocks = %d, updated = %d\n" % (common_code.dataBase_outdate_stocks, common_code.dataBase_updated_stocks))
+    textFile.close()    
+    del googleSceernerData
+    
+def updateDB():
+    googleSceernerData = google_json_extract.google_sceerner_json_DataExtract()
+    googleSceernerData.retrieve_stock_data()
+    googleSceernerData.result_df.to_csv(r'google-data.csv', index=False)
+
+    textFile = open("FirstReport.txt", "w")
+
     failedStocks = []
     
-    common_code.completeReportRunning = 1
+    common_code.DB_updateRunning = 1    
     continue_from_here = 0
     index = continue_from_here
-    condMetOnce = 0
 
     totalSymbols = len(googleSceernerData.result_df['SYMBOL'])
     
@@ -421,77 +533,17 @@ def getCompleteReport(EPSY1, EPSY2, EPSY3, EPSCurrQtr, EPSQtrAlone):
             continue
         report = getEPSG(stockSymbol, 0)
         if report == False:
+            print "failed to update ", stockSymbol
             failedStocks.append(stockSymbol)
             index +=1
             continue
-        #ignore negative EPS stocks
-        elif report.result_dict['EPS_Q1'] < 0:
-            index +=1
-            continue
-        elif report.result_dict['EPSQ1Change'] >= float(EPSQtrAlone) and\
-            report.result_dict['EPSQ2Change'] >= float(EPSQtrAlone) and\
-            report.result_dict['EPSQ3Change'] >= float(EPSQtrAlone) and\
-            report.result_dict['EPSQ4Change'] >= float(EPSQtrAlone):
-            textFile.write("%s meets your stringent 4 qtr EPSG requirement\n" % (stockSymbol))
-            textFile.flush()
-            metStocks_4qtrs.append(stockSymbol)
-            print "meets requirement"
-            condMetOnce = 1
-        elif report.result_dict['EPSQ1Change'] >= float(EPSQtrAlone) and\
-            report.result_dict['EPSQ2Change'] >= float(EPSQtrAlone) and\
-            report.result_dict['EPSQ3Change'] >= float(EPSQtrAlone):
-            textFile.write("%s meets your stringent 3 qtr EPSG requirement\n" % (stockSymbol))
-            metStocks_3qtrs.append(stockSymbol)
-            condMetOnce = 1
-        elif report.result_dict['EPSQ1Change'] >= float(EPSQtrAlone) and\
-            report.result_dict['EPSQ2Change'] >= float(EPSQtrAlone):
-            textFile.write("%s meets your stringent 2 qtr EPSG requirement\n" % (stockSymbol))
-            metStocks_2qtrs.append(stockSymbol)
-            condMetOnce = 1
 
-        if report.result_dict['EPSY1Change'] >= float(EPSY1) and\
-            report.result_dict['EPSY2Change'] >= float(EPSY2) and\
-            report.result_dict['EPSY3Change'] >= float(EPSY3) and\
-            report.result_dict['EPSQ1Change'] >= float(EPSCurrQtr):
-            #skip if already in one list
-            if condMetOnce == 0:
-                textFile.write("%s meets CANSLIM funtamentals\n" % (stockSymbol))
-                textFile.flush()
-                metStocks_CANSLIM.append(stockSymbol)
         index += 1
-        condMetOnce = 0
-
-    print("%d stocks meets 4 qtr criteria\n" % len(metStocks_4qtrs))
-    print metStocks_4qtrs
-    print("%d stocks meets 3 qtr criteria\n" % len(metStocks_3qtrs))
-    print metStocks_3qtrs
-    print("%d stocks meets 2 qtr criteria\n" % len(metStocks_2qtrs))
-    print metStocks_2qtrs
-    print("%d stocks meets CANSLIM criteria\n" % len(metStocks_CANSLIM))
-    print metStocks_CANSLIM
-    print ("%d stocks failed to find in Bussiness std\n" % len(failedStocks))
-    print failedStocks
-
-    textFile.write("Following stocks have %s growth for last 4 quaters:\n" % (EPSQtrAlone))
-    json.dump(metStocks_4qtrs, textFile)
-    textFile.write("\n")
-    textFile.write("Following stocks have %s growth for last 3 quaters:\n" % (EPSQtrAlone))
-    json.dump(metStocks_3qtrs, textFile)
-    textFile.write("\n")
-    textFile.write("Following stocks have %s growth for last 2 quaters:\n" % (EPSQtrAlone))
-    json.dump(metStocks_2qtrs, textFile)
-    textFile.write("\n")
-    textFile.write("Following stocks have met CANSLIM Y1: %s, Y2: %s, Y3: %s Cur Qtr %s:\n" % (EPSY1, EPSY2, EPSY3, EPSCurrQtr))
-    json.dump(metStocks_CANSLIM, textFile)
-    textFile.write("\n")
-    textFile.write("Following stocks failed to find in Buss Std\n")
-    json.dump(failedStocks, textFile)
-    textFile.write("\n")
 
     print ("dataBase out of outdated stocks = %d, updated = %d\n" % (common_code.dataBase_outdate_stocks, common_code.dataBase_updated_stocks))
     textFile.write("dataBase out of outdated stocks = %d, updated = %d\n" % (common_code.dataBase_outdate_stocks, common_code.dataBase_updated_stocks))
     textFile.close()
-    common_code.completeReportRunning = 0
+    common_code.DB_updateRunning = 0
     del googleSceernerData
 
 from Tkinter import Tk, Label, Button, Entry
