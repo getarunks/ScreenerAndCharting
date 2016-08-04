@@ -516,7 +516,7 @@ def updateDB():
     failedStocks = []
     
     common_code.DB_updateRunning = 1    
-    continue_from_here = 0
+    continue_from_here = common_code.update_start_index
     index = continue_from_here
 
     totalSymbols = len(googleSceernerData.result_df['SYMBOL'])
