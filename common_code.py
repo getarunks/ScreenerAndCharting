@@ -12,8 +12,8 @@ update_start_index = 0
 """
 Enter the lable show in BS website for latest quater
 """
-current_qtr = 'Jun-2016'
-previous_qtr = 'Mar-2016'
+current_qtr = 'Dec-2016'
+previous_qtr = 'Sep-2016'
 
 """
 Sqlite File name

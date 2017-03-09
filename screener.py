@@ -288,6 +288,24 @@ def getCashFlow(stockSymbol, consolidated):
         return
     del cf, report
 
+def getBalanceSheet(stockSymbol):
+    cf = BS_json_extract.compFormat_bussinesStd(stockSymbol)
+    cf.get_compFormat()
+    if cf.result == 'NODATA':
+        print 'No Data for: ' + stockSymbol
+        cf.result = compFormatFailed(stockSymbol)
+        if cf.result == False:
+            del cf
+            return False
+
+    report = BS_get_and_decode_webpage.getData_bussinesStd(cf.result, stockSymbol, 'doesntmatter')
+    if report.getBalanceSheetData() == False:
+        print stockSymbol + ' error fetching data'
+        del cf
+        return
+    del cf, report
+
+
 def getPH(stockSymbol):
     cf = BS_json_extract.compFormat_bussinesStd(stockSymbol)
     cf.get_compFormat()

@@ -20,6 +20,8 @@ class getData_bussinesStd(object):
         self.finacialOverview_link1 = 'http://www.business-standard.com/company/'+stockLinkId+'/financials-overview/2/'+reportType
         self.finacialPL_link = 'http://www.business-standard.com/company/'+stockLinkId+'/financials-profit-loss/'+reportType
         self.finacialPL_link1 = 'http://www.business-standard.com/company/'+stockLinkId+'/financials-profit-loss/2/'+reportType
+        self.balance_sheet_link = 'http://www.business-standard.com/company/'+stockLinkId+'/financials-balance-sheet/'+reportType
+        self.summary_link = 'http://www.business-standard.com/company/'+stockLinkId+reportType
         # promotor holding link has only compId, no compFormat
         compId = re.findall('\d+', stockLinkId)
         self.promotorLink = 'http://www.business-standard.com/stocks/share-holding-pattern/'+str(int(compId[0]))
@@ -29,6 +31,64 @@ class getData_bussinesStd(object):
         each query.
         """
         common_code.mySleep(1)
+        
+    def getBalanceSheetData(self):
+        try:
+            source = urlopen(self.balance_sheet_link).read()
+            
+            string = 'Current Liabilities</td>'
+            currentLiabilites = source.split(string)[1].split('<td class="">')[1].split('</td>')[0]
+            
+            string = 'Total Assets</b></td>'
+            totalAssets = source.split(string)[1].split('<td class="">')[1].split('</td>')[0]
+            
+            string = 'Total Debt</td>'
+            totalDebt = source.split(string)[1].split('<td class="">')[1].split('</td')[0]
+            
+            source = urlopen(self.finacialPL_link).read()
+            string = 'Operating Profit</b></td>'
+            operatingProfit = source.split(string)[1].split('<td class="">')[1].split('</td>')[0]
+            
+            source = urlopen(self.summary_link).read()
+            string = 'Market Cap </td>'
+            marketCap = source.split(string)[1].split('<td class="bL1 tdR">')[1].split('</td>')[0]
+            marketCap = marketCap.replace(",", "")
+            
+            RoC = float(operatingProfit)/(float(totalAssets) - float(currentLiabilites))
+            RoC *=100 #convert to percentage
+            
+            enterpriseValue = float(marketCap) + float(totalDebt)
+            earningsYield = float(operatingProfit)/enterpriseValue*100
+            
+            print("Calculate RoC")
+            print("RoC = EBIT/ (Total assests - current liablities)\n")
+            print("Operating Profit(EBIT)             %s" % (operatingProfit))
+            print("Total Assets                       %s" % (totalAssets))
+            print("Current Liabilities                %s" % (currentLiabilites))
+            print("RoC                                %.2f\n" % (RoC))
+
+            
+            print("Operating Profit(EBIT)             %s" % (operatingProfit))
+            print("Market value of Equity             %s" % (marketCap))
+            print("Total Debt                         %s" % (totalDebt))            
+            print("EV = market value of equity + total debt")
+            print("EV                                 %.2f" % (enterpriseValue))
+            print("EBIT/EV earning yield              %.2f" % (earningsYield) )           
+            
+            
+            self.result_dict['CurrentLiabilites'] = currentLiabilites
+            self.result_dict['TotalAssets'] = totalAssets
+            self.result_dict['OperatingProfit'] = operatingProfit
+            self.result_dict['RoC'] = RoC
+            return True
+            
+        except Exception,e:
+            print 'faild in getBalanceSheet loop',str(e)
+            return False
+            
+#        except ValueError as err:
+ #           print ('reason', err)
+  #s          return False
 
     def getPromotorHoldings(self):
         try:
