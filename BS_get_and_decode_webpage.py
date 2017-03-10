@@ -33,6 +33,29 @@ class getData_bussinesStd(object):
         common_code.mySleep(1)
         
     def getBalanceSheetData(self):
+        
+        #First will try to get data from data base if not fetch from website
+        try: 
+            conn =sqlite3.connect(self.sqlite_file)
+            c = conn.cursor()
+            sql_cmd = "SELECT * FROM BEATSTOCKDATA WHERE symbol=?"
+            c.execute(sql_cmd, [(self.stockSymbol)])
+            row = c.fetchone()
+        
+            print row, common_code.current_year, row[common_code.BeatDBindex_currentYear]
+            if row != None and common_code.current_year == row[common_code.BeatDBindex_currentYear]:
+                print "Latest Data found in DB for stock ", self.stockSymbol            
+                self.result_dict['CurrentLiabilites'] = row[common_code.BeatDBindex_currentLiabilites]
+                self.result_dict['TotalAssets'] = row[common_code.BeatDBindex_totalAssets]
+                self.result_dict['OperatingProfit'] = row[common_code.BeatDBindex_operatingProfit]
+                self.result_dict['RoC'] = float(row[common_code.BeatDBindex_operatingProfit])/(float(row[common_code.BeatDBindex_totalAssets]) - float(row[common_code.BeatDBindex_currentLiabilites]))
+                self.result_dict['MarketCap'] = row[common_code.BeatDBindex_marketCap]
+                self.result_dict['TotalDebt'] = row[common_code.BeatDBindex_totalDebt]
+                conn.close()
+                print self.result_dict
+                return True
+        except Exception,e:
+            print ""
         try:
             source = urlopen(self.balance_sheet_link).read()
             
@@ -49,6 +72,9 @@ class getData_bussinesStd(object):
             string = 'Operating Profit</b></td>'
             operatingProfit = source.split(string)[1].split('<td class="">')[1].split('</td>')[0]
             
+            string = 'Figures in Rs crore</td>'
+            currentYear = source.split(string)[1].split('<td class="tdh">')[1].split('</td>')[0]
+            
             source = urlopen(self.summary_link).read()
             string = 'Market Cap </td>'
             marketCap = source.split(string)[1].split('<td class="bL1 tdR">')[1].split('</td>')[0]
@@ -60,6 +86,7 @@ class getData_bussinesStd(object):
             enterpriseValue = float(marketCap) + float(totalDebt)
             earningsYield = float(operatingProfit)/enterpriseValue*100
             
+            print("Current year                        %s" %(currentYear))
             print("Calculate RoC")
             print("RoC = EBIT/ (Total assests - current liablities)\n")
             print("Operating Profit(EBIT)             %s" % (operatingProfit))
@@ -74,16 +101,32 @@ class getData_bussinesStd(object):
             print("EV = market value of equity + total debt")
             print("EV                                 %.2f" % (enterpriseValue))
             print("EBIT/EV earning yield              %.2f" % (earningsYield) )           
-            
-            
+                        
             self.result_dict['CurrentLiabilites'] = currentLiabilites
             self.result_dict['TotalAssets'] = totalAssets
             self.result_dict['OperatingProfit'] = operatingProfit
             self.result_dict['RoC'] = RoC
+            self.result_dict['MarketCap'] = marketCap
+            self.result_dict['TotalDebt'] = totalDebt
+            self.result_dict['CurrentYear'] = currentYear
+
+            c.execute("CREATE TABLE IF NOT EXISTS BEATSTOCKDATA \
+                (symbol, EBIT, TotAssest, CurLiability, MarketCap, \
+                TotDebt, CurrYear)")
+
+            print "Updating symbol... ", self.stockSymbol
+            c.execute('''DELETE FROM BEATSTOCKDATA WHERE symbol = ?''', (self.stockSymbol,))
+            print "test"
+            c.execute('''INSERT INTO BEATSTOCKDATA(symbol, EBIT, TotAssest, CurLiability, MarketCap, TotDebt, CurrYear) values(?,?,?,?,?,?,?)''',
+              (self.stockSymbol, self.result_dict['OperatingProfit'],  self.result_dict['TotalAssets'],  self.result_dict['CurrentLiabilites'],  
+              self.result_dict['MarketCap'],self.result_dict['TotalDebt'], self.result_dict['CurrentYear']))
+            print "test1"
+            conn.commit()
+            conn.close()
             return True
             
         except Exception,e:
-            print 'faild in getBalanceSheet loop',str(e)
+            print 'failed in getBalanceSheet loop',str(e)
             return False
             
 #        except ValueError as err:

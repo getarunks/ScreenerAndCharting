@@ -14,6 +14,7 @@ Enter the lable show in BS website for latest quater
 """
 current_qtr = 'Dec-2016'
 previous_qtr = 'Sep-2016'
+current_year = '2016'
 
 """
 Sqlite File name
@@ -75,3 +76,14 @@ DBindex_EPS_Y4 = 24
 DBindex_EPSY1Change = 25
 DBindex_EPSY2Change = 26
 DBindex_EPSY3Change = 27
+
+"""
+index of variables in a row of SQL DB for BeatTheMarket
+"""
+BeatDBindex_symbol = 0
+BeatDBindex_operatingProfit = 1
+BeatDBindex_totalAssets = 2
+BeatDBindex_currentLiabilites = 3
+BeatDBindex_marketCap = 4
+BeatDBindex_totalDebt = 5
+BeatDBindex_currentYear = 6
