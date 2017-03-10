@@ -39,6 +39,25 @@ def getDataDB(stock):
     print row[0], row[1]
     conn.close()
 
+def readDB_Beat():
+    
+    conn = sqlite3.connect(common_code.sqliteFile)
+    c = conn.cursor()
+    cursor = c.execute("SELECT symbol, EBIT, TotAssest, CurLiability, MarketCap, \
+                TotDebt, CurrYear, EarningsYield, RoC from BEATSTOCKDATA")
+    
+    stock_dict_RoC = {}
+    total_stocks = 0
+    for row in cursor:
+        total_stocks +=1
+        print row
+
+        stock_dict_RoC[row[common_code.BeatDBindex_symbol]] = row[common_code.BeatDBindex_RoC]
+        sort_list = [(k,v) for v,k in sorted(
+                    [(v,k) for k,v in stock_dict_RoC.items()], reverse=True)]
+    print sort_list
+    conn.close()
+    
 def readDB(qtrName=None):
     sqlite_file = common_code.sqliteFile
     stocks_with_latest = 0

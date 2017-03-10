@@ -42,7 +42,6 @@ class getData_bussinesStd(object):
             c.execute(sql_cmd, [(self.stockSymbol)])
             row = c.fetchone()
         
-            print row, common_code.current_year, row[common_code.BeatDBindex_currentYear]
             if row != None and common_code.current_year == row[common_code.BeatDBindex_currentYear]:
                 print "Latest Data found in DB for stock ", self.stockSymbol            
                 self.result_dict['CurrentLiabilites'] = row[common_code.BeatDBindex_currentLiabilites]
@@ -51,10 +50,10 @@ class getData_bussinesStd(object):
                 self.result_dict['RoC'] = float(row[common_code.BeatDBindex_operatingProfit])/(float(row[common_code.BeatDBindex_totalAssets]) - float(row[common_code.BeatDBindex_currentLiabilites]))
                 self.result_dict['MarketCap'] = row[common_code.BeatDBindex_marketCap]
                 self.result_dict['TotalDebt'] = row[common_code.BeatDBindex_totalDebt]
+                self.result_dict['CurrentYear'] = row[common_code.BeatDBindex_currentYear]
                 self.result_dict['EarningsYield'] = row[common_code.BeatDBindex_earningsYield]
                 self.result_dict['RoC'] = row[common_code.BeatDBindex_RoC]
                 conn.close()
-                print self.result_dict
                 return True
         except Exception,e:
             print ""
@@ -87,33 +86,15 @@ class getData_bussinesStd(object):
             
             enterpriseValue = float(marketCap) + float(totalDebt)
             earningsYield = float(operatingProfit)/enterpriseValue*100
-            """
-            print("Current year                        %s" %(currentYear))
-            print("Calculate RoC")
-            print("RoC = EBIT/ (Total assests - current liablities)\n")
-            print("Operating Profit(EBIT)             %s" % (operatingProfit))
-            print("Total Assets                       %s" % (totalAssets))
-            print("Current Liabilities                %s" % (currentLiabilites))
-            print("RoC                                %.2f\n" % (RoC))
-
-            
-            print("Operating Profit(EBIT)             %s" % (operatingProfit))
-            print("Market value of Equity             %s" % (marketCap))
-            print("Total Debt                         %s" % (totalDebt))            
-            print("EV = market value of equity + total debt")
-            print("EV                                 %.2f" % (enterpriseValue))
-            print("EBIT/EV earning yield              %.2f" % (earningsYield) )           
-            """
-                        
+                       
             self.result_dict['CurrentLiabilites'] = currentLiabilites
             self.result_dict['TotalAssets'] = totalAssets
             self.result_dict['OperatingProfit'] = operatingProfit
-            self.result_dict['RoC'] = RoC
             self.result_dict['MarketCap'] = marketCap
             self.result_dict['TotalDebt'] = totalDebt
             self.result_dict['CurrentYear'] = currentYear
-            self.result_dict['EarningsYield'] = earningsYield
-            self.result_dict['RoC'] = RoC
+            self.result_dict['EarningsYield'] = float("{0:.2f}".format(earningsYield))
+            self.result_dict['RoC'] = float("{0:.2f}".format(RoC))
 
             c.execute("CREATE TABLE IF NOT EXISTS BEATSTOCKDATA \
                 (symbol, EBIT, TotAssest, CurLiability, MarketCap, \
@@ -121,12 +102,11 @@ class getData_bussinesStd(object):
 
             print "Updating symbol... ", self.stockSymbol
             c.execute('''DELETE FROM BEATSTOCKDATA WHERE symbol = ?''', (self.stockSymbol,))
-            print "test"
             c.execute('''INSERT INTO BEATSTOCKDATA(symbol, EBIT, TotAssest, CurLiability, MarketCap, TotDebt, CurrYear, EarningsYield, RoC) values(?,?,?,?,?,?,?,?,?)''',
               (self.stockSymbol, self.result_dict['OperatingProfit'],  self.result_dict['TotalAssets'],  self.result_dict['CurrentLiabilites'],  
               self.result_dict['MarketCap'],self.result_dict['TotalDebt'], self.result_dict['CurrentYear'],
               self.result_dict['EarningsYield'], self.result_dict['RoC']))
-            print "test1"
+
             conn.commit()
             conn.close()
             return True

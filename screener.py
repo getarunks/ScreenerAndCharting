@@ -303,6 +303,25 @@ def getBalanceSheet(stockSymbol):
         print stockSymbol + ' error fetching data'
         del cf
         return
+    else:
+        if common_code.DB_updateRunning == 0:
+            print("Current year                        %s" %(report.result_dict['CurrentYear']))
+            print("Calculate RoC")
+            print("RoC = EBIT/ (Total assests - current liablities)\n")
+            print("Operating Profit(EBIT)             %s" % (report.result_dict['OperatingProfit']))
+            print("Total Assets                       %s" % (report.result_dict['TotalAssets']))
+            print("Current Liabilities                %s" % (report.result_dict['CurrentLiabilites']))
+            print("RoC                                %.2f\n" % (report.result_dict['RoC']))
+
+            
+            print("Operating Profit(EBIT)             %s" % (report.result_dict['OperatingProfit']))
+            print("Market value of Equity             %s" % (report.result_dict['MarketCap']))
+            print("Total Debt                         %s" % (report.result_dict['TotalDebt']))            
+            print("EV = market value of equity + total debt")
+            EV = float(report.result_dict['MarketCap']) + float(report.result_dict['TotalDebt'])
+            print("EV                                 %.2f" % (EV))
+            print("EBIT/EV earning yield              %.2f" % (report.result_dict['EarningsYield']) )  
+            
     del cf, report
 
 
