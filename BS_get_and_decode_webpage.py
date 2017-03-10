@@ -51,6 +51,8 @@ class getData_bussinesStd(object):
                 self.result_dict['RoC'] = float(row[common_code.BeatDBindex_operatingProfit])/(float(row[common_code.BeatDBindex_totalAssets]) - float(row[common_code.BeatDBindex_currentLiabilites]))
                 self.result_dict['MarketCap'] = row[common_code.BeatDBindex_marketCap]
                 self.result_dict['TotalDebt'] = row[common_code.BeatDBindex_totalDebt]
+                self.result_dict['EarningsYield'] = row[common_code.BeatDBindex_earningsYield]
+                self.result_dict['RoC'] = row[common_code.BeatDBindex_RoC]
                 conn.close()
                 print self.result_dict
                 return True
@@ -85,7 +87,7 @@ class getData_bussinesStd(object):
             
             enterpriseValue = float(marketCap) + float(totalDebt)
             earningsYield = float(operatingProfit)/enterpriseValue*100
-            
+            """
             print("Current year                        %s" %(currentYear))
             print("Calculate RoC")
             print("RoC = EBIT/ (Total assests - current liablities)\n")
@@ -101,6 +103,7 @@ class getData_bussinesStd(object):
             print("EV = market value of equity + total debt")
             print("EV                                 %.2f" % (enterpriseValue))
             print("EBIT/EV earning yield              %.2f" % (earningsYield) )           
+            """
                         
             self.result_dict['CurrentLiabilites'] = currentLiabilites
             self.result_dict['TotalAssets'] = totalAssets
@@ -109,17 +112,20 @@ class getData_bussinesStd(object):
             self.result_dict['MarketCap'] = marketCap
             self.result_dict['TotalDebt'] = totalDebt
             self.result_dict['CurrentYear'] = currentYear
+            self.result_dict['EarningsYield'] = earningsYield
+            self.result_dict['RoC'] = RoC
 
             c.execute("CREATE TABLE IF NOT EXISTS BEATSTOCKDATA \
                 (symbol, EBIT, TotAssest, CurLiability, MarketCap, \
-                TotDebt, CurrYear)")
+                TotDebt, CurrYear, EarningsYield, RoC)")
 
             print "Updating symbol... ", self.stockSymbol
             c.execute('''DELETE FROM BEATSTOCKDATA WHERE symbol = ?''', (self.stockSymbol,))
             print "test"
-            c.execute('''INSERT INTO BEATSTOCKDATA(symbol, EBIT, TotAssest, CurLiability, MarketCap, TotDebt, CurrYear) values(?,?,?,?,?,?,?)''',
+            c.execute('''INSERT INTO BEATSTOCKDATA(symbol, EBIT, TotAssest, CurLiability, MarketCap, TotDebt, CurrYear, EarningsYield, RoC) values(?,?,?,?,?,?,?,?,?)''',
               (self.stockSymbol, self.result_dict['OperatingProfit'],  self.result_dict['TotalAssets'],  self.result_dict['CurrentLiabilites'],  
-              self.result_dict['MarketCap'],self.result_dict['TotalDebt'], self.result_dict['CurrentYear']))
+              self.result_dict['MarketCap'],self.result_dict['TotalDebt'], self.result_dict['CurrentYear'],
+              self.result_dict['EarningsYield'], self.result_dict['RoC']))
             print "test1"
             conn.commit()
             conn.close()

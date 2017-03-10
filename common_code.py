@@ -87,3 +87,5 @@ BeatDBindex_currentLiabilites = 3
 BeatDBindex_marketCap = 4
 BeatDBindex_totalDebt = 5
 BeatDBindex_currentYear = 6
+BeatDBindex_earningsYield = 7
+BeatDBindex_RoC = 8

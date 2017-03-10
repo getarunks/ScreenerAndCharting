@@ -524,7 +524,7 @@ def getCompleteReport(EPSY1, EPSY2, EPSY3, EPSCurrQtr, EPSQtrAlone):
     textFile.close()    
     del googleSceernerData
     
-def updateDB():
+def updateDB(reqType = 'EPS'):
     googleSceernerData = google_json_extract.google_sceerner_json_DataExtract()
     googleSceernerData.retrieve_stock_data()
     googleSceernerData.result_df.to_csv(r'google-data.csv', index=False)
@@ -549,7 +549,10 @@ def updateDB():
         print("Processing stock %s, index = %d out of %d" %  (stockSymbol, index, totalSymbols))
         if stockSymbol == 0:
             continue
-        report = getEPSG(stockSymbol, 0)
+        if reqType == 'EPS':
+            report = getEPSG(stockSymbol, 0)
+        else:
+            report = getBalanceSheet(stockSymbol)
         if report == False:
             print "failed to update ", stockSymbol
             failedStocks.append(stockSymbol)
