@@ -38,24 +38,83 @@ def getDataDB(stock):
 
     print row[0], row[1]
     conn.close()
-
+    
+def print_selected(selected_stock_list, stock_dict_allDetails):
+    
+    for each_stock in selected_stock_list:
+        symbol , roc = each_stock
+        each_dict = stock_dict_allDetails[symbol]
+        print "=================="
+        print "symbol           = ", each_dict['symbol']
+        print "RoC              = ", each_dict['RoC']
+        print "Earnings Yield   = ", each_dict['eYield']
+        print "Market Cap       = ", each_dict['marCap']
+        print "Total Debt       = ", each_dict['totDebt']
+        print "Operating Profit = ", each_dict['opProfit']
+        print "current Liab     = ", each_dict['currLiab']
+        print "Total Assets     = ", each_dict['totAss']
+        
+        
 def readDB_Beat():
     
     conn = sqlite3.connect(common_code.sqliteFile)
     c = conn.cursor()
     cursor = c.execute("SELECT symbol, EBIT, TotAssest, CurLiability, MarketCap, \
                 TotDebt, CurrYear, EarningsYield, RoC from BEATSTOCKDATA")
-    
-    stock_dict_RoC = {}
+    """
     total_stocks = 0
+    updated_stocks = 0
+    marCap_stocks = 0
+    ev_stocks = 0
     for row in cursor:
         total_stocks +=1
-        print row
-
+        if row[common_code.BeatDBindex_currentYear] == common_code.current_year:
+            updated_stocks +=1
+        if int(row[common_code.BeatDBindex_marketCap]) > 10000:
+            marCap_stocks +=1
+        eV = float(row[common_code.BeatDBindex_marketCap]) + float(row[common_code.BeatDBindex_totalDebt])
+        if eV > 1000:
+            ev_stocks +=1
+   
+    print total_stocks, updated_stocks, marCap_stocks, ev_stocks
+    conn.close()
+    return
+    """
+    stock_dict_RoC = {}
+    total_stocks = 0
+    """ This is a dictonary of dictonary"""
+    stock_dict_allDetails = {}
+    
+    for row in cursor:
+        total_stocks +=1
+        #print row
+                
+        eV = float(row[common_code.BeatDBindex_marketCap]) + float(row[common_code.BeatDBindex_totalDebt])
+        if eV < 200000.00:
+            #print "skiping...",row[common_code.BeatDBindex_symbol], eV
+            continue
+       
         stock_dict_RoC[row[common_code.BeatDBindex_symbol]] = row[common_code.BeatDBindex_RoC]
+        stock_dict_perDetails = {}
+        stock_dict_perDetails['symbol'] = row[common_code.BeatDBindex_symbol]
+        stock_dict_perDetails['currLiab'] = row[common_code.BeatDBindex_currentLiabilites]
+        stock_dict_perDetails['totAss'] = row[common_code.BeatDBindex_totalAssets]
+        stock_dict_perDetails['opProfit'] = row[common_code.BeatDBindex_operatingProfit]
+        stock_dict_perDetails['RoC'] = row[common_code.BeatDBindex_RoC]
+        stock_dict_perDetails['marCap'] = row[common_code.BeatDBindex_marketCap]
+        stock_dict_perDetails['totDebt'] = row[common_code.BeatDBindex_totalDebt]
+        stock_dict_perDetails['curYear'] = row[common_code.BeatDBindex_currentYear]
+        stock_dict_perDetails['eYield'] = row[common_code.BeatDBindex_earningsYield]
+        
+        print "Adding symbol = ", row[common_code.BeatDBindex_symbol]
+        
+        stock_dict_allDetails[row[common_code.BeatDBindex_symbol]] = stock_dict_perDetails
+        
         sort_list = [(k,v) for v,k in sorted(
                     [(v,k) for k,v in stock_dict_RoC.items()], reverse=True)]
-    print sort_list
+    print sort_list[:30]
+    selected_list = sort_list[:30]
+    print_selected(selected_list, stock_dict_allDetails)
     conn.close()
     
 def readDB(qtrName=None):

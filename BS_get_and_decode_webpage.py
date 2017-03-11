@@ -122,6 +122,7 @@ class getData_bussinesStd(object):
             
         except Exception,e:
             print 'failed in getBalanceSheet loop',str(e)
+            conn.close()
             return False
             
 #        except ValueError as err:
