@@ -57,6 +57,9 @@ class getData_bussinesStd(object):
                 return True
         except Exception,e:
             print ""
+        print "Get data from web old data in DB ==============", self.stockSymbol
+        common_code.dataBase_outdate_stocks += 1
+        
         try:
             source = urlopen(self.balance_sheet_link).read()
             
@@ -95,12 +98,13 @@ class getData_bussinesStd(object):
             self.result_dict['CurrentYear'] = currentYear
             self.result_dict['EarningsYield'] = float("{0:.2f}".format(earningsYield))
             self.result_dict['RoC'] = float("{0:.2f}".format(RoC))
-
+            
             c.execute("CREATE TABLE IF NOT EXISTS BEATSTOCKDATA \
                 (symbol, EBIT, TotAssest, CurLiability, MarketCap, \
                 TotDebt, CurrYear, EarningsYield, RoC)")
 
             print "Updating symbol... ", self.stockSymbol
+            print "RoC =", self.result_dict['RoC'], "earingsYield = ", self.result_dict['EarningsYield']
             c.execute('''DELETE FROM BEATSTOCKDATA WHERE symbol = ?''', (self.stockSymbol,))
             c.execute('''INSERT INTO BEATSTOCKDATA(symbol, EBIT, TotAssest, CurLiability, MarketCap, TotDebt, CurrYear, EarningsYield, RoC) values(?,?,?,?,?,?,?,?,?)''',
               (self.stockSymbol, self.result_dict['OperatingProfit'],  self.result_dict['TotalAssets'],  self.result_dict['CurrentLiabilites'],  
@@ -109,6 +113,11 @@ class getData_bussinesStd(object):
 
             conn.commit()
             conn.close()
+            
+            if common_code.current_year == self.result_dict['CurrentYear']:
+                common_code.dataBase_updated_stocks += 1
+             
+            print ("dataBase: out of outdated stocks = %d, updated = %d" % (common_code.dataBase_outdate_stocks, common_code.dataBase_updated_stocks))
             return True
             
         except Exception,e:
