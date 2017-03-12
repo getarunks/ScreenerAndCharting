@@ -40,7 +40,6 @@ def getDataDB(stock):
     conn.close()
     
 def print_selected(selected_stock_list, stock_dict_allDetails):
-    
     for each_stock in selected_stock_list:
         symbol , roc = each_stock
         each_dict = stock_dict_allDetails[symbol]
@@ -81,20 +80,21 @@ def readDB_Beat():
     return
     """
     stock_dict_RoC = {}
+    stock_dict_eYield = {}
     total_stocks = 0
     """ This is a dictonary of dictonary"""
     stock_dict_allDetails = {}
     
     for row in cursor:
         total_stocks +=1
-        #print row
                 
         eV = float(row[common_code.BeatDBindex_marketCap]) + float(row[common_code.BeatDBindex_totalDebt])
-        if eV < 200000.00:
-            #print "skiping...",row[common_code.BeatDBindex_symbol], eV
+        if eV < 1000.00:
             continue
        
         stock_dict_RoC[row[common_code.BeatDBindex_symbol]] = row[common_code.BeatDBindex_RoC]
+        stock_dict_eYield[row[common_code.BeatDBindex_symbol]] = row[common_code.BeatDBindex_earningsYield]
+        """ This declartion should be inside the for loop to create different instance of stock_dict_perDetais"""
         stock_dict_perDetails = {}
         stock_dict_perDetails['symbol'] = row[common_code.BeatDBindex_symbol]
         stock_dict_perDetails['currLiab'] = row[common_code.BeatDBindex_currentLiabilites]
@@ -110,12 +110,44 @@ def readDB_Beat():
         
         stock_dict_allDetails[row[common_code.BeatDBindex_symbol]] = stock_dict_perDetails
         
-        sort_list = [(k,v) for v,k in sorted(
+        sort_list_roc = [(k,v) for v,k in sorted(
                     [(v,k) for k,v in stock_dict_RoC.items()], reverse=True)]
-    print sort_list[:30]
-    selected_list = sort_list[:30]
-    print_selected(selected_list, stock_dict_allDetails)
+        sort_list_eY = [(k,v) for v,k in sorted(
+                    [(v,k) for k,v in stock_dict_eYield.items()], reverse=True)]
+    """
+    we need to create a dict of ranks
+    sotck_dict_ranks = {
+        'IBM': {'eYRank': 32, 'RoCRank' : 65}
+        'TCS': {'eYRank': 102, 'RoCRank' : 5}
+        }
+    """
+  
+    allStock_dict_ranks = {}
+    index = 0
+    for stock in sort_list_roc:
+        stock_dict_ranks = {}
+        stock_dict_ranks['RoCRank'] = index
+        allStock_dict_ranks[stock[0]] = stock_dict_ranks
+        index += 1
+    
+    index = 0
+    stock_dict_netRank = {}
+    for stock in sort_list_eY:
+        stock_dict_ranks = allStock_dict_ranks[stock[0]]
+        stock_dict_ranks['eYRank'] = index
+        stock_dict_ranks['netRank'] = stock_dict_ranks['RoCRank'] + index
+        stock_dict_netRank[stock[0]] = stock_dict_ranks['netRank']
+        sort_list_netRank = [(k,v) for v,k in sorted(
+                    [(v,k) for k,v in stock_dict_netRank.items()], reverse=False)]
+        index += 1
+        
+        
+    print allStock_dict_ranks
+    print "======================="
+    print sort_list_netRank[:30]
+    print_selected(sort_list_netRank[:30], stock_dict_allDetails)
     conn.close()
+    return
     
 def readDB(qtrName=None):
     sqlite_file = common_code.sqliteFile
