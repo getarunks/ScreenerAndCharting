@@ -55,7 +55,6 @@ def print_selected(selected_stock_list, stock_dict_allDetails):
         
         
 def readDB_Beat():
-    
     conn = sqlite3.connect(common_code.sqliteFile)
     c = conn.cursor()
     cursor = c.execute("SELECT symbol, EBIT, TotAssest, CurLiability, MarketCap, \
@@ -82,7 +81,13 @@ def readDB_Beat():
     stock_dict_RoC = {}
     stock_dict_eYield = {}
     total_stocks = 0
-    """ This is a dictonary of dictonary"""
+    """ 
+    This is a dictonary of dictonary.
+    stock_dict_allDetails ={
+        'IBM': {'symbol': 'IBM', 'currLiab' : 234234, 'totAss' : 45454,.... }
+        'TCS': {'symbol': 'TCS', 'currLiab' : 123214, 'totAss' : 71267,.... }
+        }
+    """
     stock_dict_allDetails = {}
     
     for row in cursor:
@@ -117,8 +122,8 @@ def readDB_Beat():
     """
     we need to create a dict of ranks
     sotck_dict_ranks = {
-        'IBM': {'eYRank': 32, 'RoCRank' : 65}
-        'TCS': {'eYRank': 102, 'RoCRank' : 5}
+        'IBM': {'eYRank': 32, 'RoCRank' : 65, 'netRank', 97}
+        'TCS': {'eYRank': 102, 'RoCRank' : 5, 'netRank', 107}
         }
     """
   
@@ -139,8 +144,7 @@ def readDB_Beat():
         stock_dict_netRank[stock[0]] = stock_dict_ranks['netRank']
         sort_list_netRank = [(k,v) for v,k in sorted(
                     [(v,k) for k,v in stock_dict_netRank.items()], reverse=False)]
-        index += 1
-        
+        index += 1    
         
     print allStock_dict_ranks
     print "======================="
