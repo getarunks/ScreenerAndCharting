@@ -54,7 +54,7 @@ def print_selected(selected_stock_list, stock_dict_allDetails):
         print "Total Assets     = ", each_dict['totAss']
         
         
-def readDB_Beat():
+def readDB_Beat(min_eV = 1000.00):
     conn = sqlite3.connect(common_code.sqliteFile)
     c = conn.cursor()
     cursor = c.execute("SELECT symbol, EBIT, TotAssest, CurLiability, MarketCap, \
@@ -94,7 +94,7 @@ def readDB_Beat():
         total_stocks +=1
                 
         eV = float(row[common_code.BeatDBindex_marketCap]) + float(row[common_code.BeatDBindex_totalDebt])
-        if eV < 1000.00:
+        if eV < min_eV:
             continue
        
         stock_dict_RoC[row[common_code.BeatDBindex_symbol]] = row[common_code.BeatDBindex_RoC]
