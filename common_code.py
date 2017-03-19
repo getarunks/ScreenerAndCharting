@@ -89,3 +89,4 @@ BeatDBindex_totalDebt = 5
 BeatDBindex_currentYear = 6
 BeatDBindex_earningsYield = 7
 BeatDBindex_RoC = 8
+BeatDBindex_reportType = 9

@@ -10,7 +10,7 @@ def deleteDB():
     conn =sqlite3.connect(sqlite_file)
     c = conn.cursor()
 
-    c.execute("DROP TABLE STOCKDATA")
+    c.execute("DROP TABLE BEATSTOCKDATA")
     conn.commit()
     conn.close()
 
@@ -52,13 +52,14 @@ def print_selected(selected_stock_list, stock_dict_allDetails):
         print "Operating Profit = ", each_dict['opProfit']
         print "current Liab     = ", each_dict['currLiab']
         print "Total Assets     = ", each_dict['totAss']
+        print "Report Type      = ", each_dict['reportType']
         
         
 def readDB_Beat(min_eV = 1000.00):
     conn = sqlite3.connect(common_code.sqliteFile)
     c = conn.cursor()
     cursor = c.execute("SELECT symbol, EBIT, TotAssest, CurLiability, MarketCap, \
-                TotDebt, CurrYear, EarningsYield, RoC from BEATSTOCKDATA")
+                TotDebt, CurrYear, EarningsYield, RoC,reportType from BEATSTOCKDATA")
     """
     total_stocks = 0
     updated_stocks = 0
@@ -110,6 +111,7 @@ def readDB_Beat(min_eV = 1000.00):
         stock_dict_perDetails['totDebt'] = row[common_code.BeatDBindex_totalDebt]
         stock_dict_perDetails['curYear'] = row[common_code.BeatDBindex_currentYear]
         stock_dict_perDetails['eYield'] = row[common_code.BeatDBindex_earningsYield]
+        stock_dict_perDetails['reportType'] = row[common_code.BeatDBindex_reportType]
         
         print "Adding symbol = ", row[common_code.BeatDBindex_symbol]
         

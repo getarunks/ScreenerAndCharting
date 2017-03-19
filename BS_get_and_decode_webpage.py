@@ -14,14 +14,26 @@ class getData_bussinesStd(object):
         self.cashFlow_link = 'http://www.business-standard.com/company/'+stockLinkId+'/cash-flow/1/'+reportType
         self.result_dict = {}
         self.ratio_link = 'http://www.business-standard.com/company/'+stockLinkId+'/financials-ratios/1/'+reportType
-        self.EPS_Quaterly_1 = 'http://www.business-standard.com/company/'+stockLinkId+'/financials-quaterly/1/'+reportType
+        
+        self.EPS_Quaterly_1 = {}
+        self.EPS_Quaterly_1['Standalone'] = 'http://www.business-standard.com/company/'+stockLinkId+'/financials-quaterly/1/'
+        self.EPS_Quaterly_1['Consolidated'] = 'http://www.business-standard.com/company/'+stockLinkId+'/financials-quaterly/1/Consolidated'
+        
         self.EPS_Quaterly_2 = 'http://www.business-standard.com/company/'+stockLinkId+'/financials-quaterly/2/'+reportType
         self.finacialOverview_link = 'http://www.business-standard.com/company/'+stockLinkId+'/financials-overview/'+reportType
         self.finacialOverview_link1 = 'http://www.business-standard.com/company/'+stockLinkId+'/financials-overview/2/'+reportType
-        self.finacialPL_link = 'http://www.business-standard.com/company/'+stockLinkId+'/financials-profit-loss/'+reportType
+        
+        self.finacialPL_link = {}
+        self.finacialPL_link['Standalone'] = 'http://www.business-standard.com/company/'+stockLinkId+'/financials-profit-loss/'
+        self.finacialPL_link['Consolidated'] = 'http://www.business-standard.com/company/'+stockLinkId+'/financials-profit-loss/1/Consolidated'
+        
         self.finacialPL_link1 = 'http://www.business-standard.com/company/'+stockLinkId+'/financials-profit-loss/2/'+reportType
-        self.balance_sheet_link = 'http://www.business-standard.com/company/'+stockLinkId+'/financials-balance-sheet/'+reportType
-        self.summary_link = 'http://www.business-standard.com/company/'+stockLinkId+reportType
+        
+        self.balance_sheet_link = {}
+        self.balance_sheet_link['Standalone'] = 'http://www.business-standard.com/company/'+stockLinkId+'/financials-balance-sheet/'
+        self.balance_sheet_link['Consolidated'] = 'http://www.business-standard.com/company/'+stockLinkId+'/financials-balance-sheet/1/Consolidated'
+        
+        self.summary_link = 'http://www.business-standard.com/company/'+stockLinkId
         # promotor holding link has only compId, no compFormat
         compId = re.findall('\d+', stockLinkId)
         self.promotorLink = 'http://www.business-standard.com/stocks/share-holding-pattern/'+str(int(compId[0]))
@@ -32,8 +44,18 @@ class getData_bussinesStd(object):
         """
         common_code.mySleep(1)
         
-    def getBalanceSheetData(self):
+    def balanceSheetHelper(self, source, string1, string2, string3):
+        success = 1
+        #output = 'error output'
+        try:
+            output = source.split(string1)[1].split(string2)[1].split(string3)[0]
+        except Exception,e:
+            print "exception in getBalancesheetHelper when looking for", string1, str(e)
+            success = 0
+            output = 'error output'
+        return {'success':success, 'output':output }      
         
+    def getBalanceSheetData(self):        
         #First will try to get data from data base if not fetch from website
         try: 
             conn =sqlite3.connect(self.sqlite_file)
@@ -42,7 +64,7 @@ class getData_bussinesStd(object):
             c.execute(sql_cmd, [(self.stockSymbol)])
             row = c.fetchone()
         
-            if row != None and common_code.current_year == row[common_code.BeatDBindex_currentYear]:
+            if 1 == 2 and row != None and common_code.current_year == row[common_code.BeatDBindex_currentYear]:
                 print "Latest Data found in DB for stock ", self.stockSymbol            
                 self.result_dict['CurrentLiabilites'] = row[common_code.BeatDBindex_currentLiabilites]
                 self.result_dict['TotalAssets'] = row[common_code.BeatDBindex_totalAssets]
@@ -53,6 +75,7 @@ class getData_bussinesStd(object):
                 self.result_dict['CurrentYear'] = row[common_code.BeatDBindex_currentYear]
                 self.result_dict['EarningsYield'] = row[common_code.BeatDBindex_earningsYield]
                 self.result_dict['RoC'] = row[common_code.BeatDBindex_RoC]
+                self.result_dict['reportType'] = row[common_code.BeatDBindex_reportType]
                 conn.close()
                 return True
         except Exception,e:
@@ -60,33 +83,58 @@ class getData_bussinesStd(object):
         print "Get data from web old data in DB ==============", self.stockSymbol
         common_code.dataBase_outdate_stocks += 1
         
+        step = 0
         try:
-            source = urlopen(self.balance_sheet_link).read()
+            """ Lets start with consolidated and fallback to standalone if not available"""
+            reportType = 'Consolidated'
+            source = urlopen(self.balance_sheet_link[reportType]).read()
             
             string = 'Current Liabilities</td>'
+            result = self.balanceSheetHelper(source, string, '<td class="">', '</td>')
+            if result['success'] == 0:
+                reportType = 'Standalone'
+                source = urlopen(self.balance_sheet_link[reportType]).read()
+                result = self.balanceSheetHelper(source, string, '<td class="">', '</td>' )
+            """
             currentLiabilites = source.split(string)[1].split('<td class="">')[1].split('</td>')[0]
+            """
+            print "curr liablait", result['output']
+            if result['success'] == 0:
+                return False
+            currentLiabilites = result['output']
+            step = 1
             
-            string = 'Total Assets</b></td>'
-            totalAssets = source.split(string)[1].split('<td class="">')[1].split('</td>')[0]
+            result = self.balanceSheetHelper(source, 'Total Assets</b></td>', '<td class="">', '</td>')
+            totalAssets = result['output']
+            step = 2
             
             string = 'Total Debt</td>'
-            totalDebt = source.split(string)[1].split('<td class="">')[1].split('</td')[0]
+            result = self.balanceSheetHelper(source, 'Total Debt</td>', '<td class="">', '</td>' )
+            totalDebt = result['output']
+            step = 3
             
-            source = urlopen(self.finacialPL_link).read()
+            source = urlopen(self.finacialPL_link[reportType]).read()
             string = 'Operating Profit</b></td>'
-            operatingProfit = source.split(string)[1].split('<td class="">')[1].split('</td>')[0]
+            result = self.balanceSheetHelper(source, 'Operating Profit</b></td>', '<td class="">', '</td>')
+            operatingProfit = result['output']
+            step = 4
             
             string = 'Figures in Rs crore</td>'
-            currentYear = source.split(string)[1].split('<td class="tdh">')[1].split('</td>')[0]
+            result = self.balanceSheetHelper(source, 'Figures in Rs crore</td>', '<td class="tdh">', '</td>' )
+            currentYear = result['output']
+            step = 5
             
             source = urlopen(self.summary_link).read()
-            string = 'Market Cap </td>'
-            marketCap = source.split(string)[1].split('<td class="bL1 tdR">')[1].split('</td>')[0]
+            #string = 'Market Cap </td>'
+            result = self.balanceSheetHelper(source, 'Market Cap </td>', '<td class="bL1 tdR">', '</td>')
+            marketCap = result['output']
             marketCap = marketCap.replace(",", "")
+            step = 6
             
             RoC = float(operatingProfit)/(float(totalAssets) - float(currentLiabilites))
             RoC *=100 #convert to percentage
             
+            step = 7
             enterpriseValue = float(marketCap) + float(totalDebt)
             earningsYield = float(operatingProfit)/enterpriseValue*100
                        
@@ -101,15 +149,15 @@ class getData_bussinesStd(object):
             
             c.execute("CREATE TABLE IF NOT EXISTS BEATSTOCKDATA \
                 (symbol, EBIT, TotAssest, CurLiability, MarketCap, \
-                TotDebt, CurrYear, EarningsYield, RoC)")
+                TotDebt, CurrYear, EarningsYield, RoC, reportType)")
 
             print "Updating symbol... ", self.stockSymbol
             print "RoC =", self.result_dict['RoC'], "earingsYield = ", self.result_dict['EarningsYield']
             c.execute('''DELETE FROM BEATSTOCKDATA WHERE symbol = ?''', (self.stockSymbol,))
-            c.execute('''INSERT INTO BEATSTOCKDATA(symbol, EBIT, TotAssest, CurLiability, MarketCap, TotDebt, CurrYear, EarningsYield, RoC) values(?,?,?,?,?,?,?,?,?)''',
+            c.execute('''INSERT INTO BEATSTOCKDATA(symbol, EBIT, TotAssest, CurLiability, MarketCap, TotDebt, CurrYear, EarningsYield, RoC, reportType) values(?,?,?,?,?,?,?,?,?,?)''',
               (self.stockSymbol, self.result_dict['OperatingProfit'],  self.result_dict['TotalAssets'],  self.result_dict['CurrentLiabilites'],  
               self.result_dict['MarketCap'],self.result_dict['TotalDebt'], self.result_dict['CurrentYear'],
-              self.result_dict['EarningsYield'], self.result_dict['RoC']))
+              self.result_dict['EarningsYield'], self.result_dict['RoC'], reportType))
 
             conn.commit()
             conn.close()
@@ -121,7 +169,10 @@ class getData_bussinesStd(object):
             return True
             
         except Exception,e:
-            print 'failed in getBalanceSheet loop',str(e)
+            print 'failed in getBalanceSheet loop ',str(e)
+            print "step = ", step
+            if step >= 1:
+                SystemExit(0)
             conn.close()
             return False
             
