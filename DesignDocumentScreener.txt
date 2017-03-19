@@ -29,3 +29,21 @@ Answer:
 	5. copy the initial portion from the old .json file and prepend it with the downloaded file.
 	6. Also remember to close the } bracket.
 	7. cat get-company-json | json_pp > data_BS_new.json
+
+How to update DB from website?
+Answer:
+
+	run command updateDB(), by default it updates EPS DB, for beat DB pass some string eg: updateDB('sdf')
+	Error messages related to update of Beat DB are stored in file errormsg.txt
+
+How to update new NIFTYALLStocks.txt ?
+
+Answer:
+	1. go to google screener.
+	2. Make sure you have logged out of your google account. Otherwise indian markets won't work.
+	3. Go to setting in google chrome and open developer options.
+	4. Go to Network tab. Search "json in search box available.
+	5. Copy link and modify the number of stocks from 20 to the total showing,
+		original:  https://www.google.com/finance?output=json&start=0&num=20&noIL=1&q=[cur
+		modified:  https://www.google.com/finance?output=json&start=0&num=1850&noIL=1&q=[cur
+	6. Save and replace NIFTYALLSTocks.txt

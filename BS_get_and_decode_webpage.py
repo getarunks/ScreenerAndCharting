@@ -97,6 +97,10 @@ class getData_bussinesStd(object):
                 result = self.balanceSheetHelper(source, string, '<td class="">', '</td>' )
 
             if result['success'] == 0:
+                with open("errormsg.txt", "a") as errFile:
+                    errFile.write('=====================\n')
+                    errFile.write('Both consolidated and standalone failed for stock = %s\n' % self.stockSymbol)
+                    errFile.write('consider blacklisting them\n')
                 return False
             currentLiabilites = result['output']
             step = 1
@@ -168,9 +172,27 @@ class getData_bussinesStd(object):
         except Exception,e:
             print 'failed in getBalanceSheet loop ',str(e)
             print "step = ", step
-            if step >= 1:
-                SystemExit(0)
+            with open("errormsg.txt", "a") as errFile:
+                errFile.write("============\n")
+                errFile.write('stock = %s\n' % self.stockSymbol)
+                errFile.write('step = %d\n' % (step))
+                if step == 6:
+                    errFile.write("operatinProfit = %s\n" % (operatingProfit))
+                    print "operatinProfit ", operatingProfit
+                    errFile.write("totalAssets = %s\n" % (totalAssets))
+                    print "totalAssets ", totalAssets
+                    errFile.write("currentLiabilites  = %s\n" % (currentLiabilites))
+                    print "currentLiabilites ", currentLiabilites
+                if step == 7:
+                    print "marketCap ", marketCap
+                    errFile.write('marketCap = %s\n' % (marketCap))
+                    print "totalDebt ", totalDebt
+                    errFile.write('totalDebt = %s\n' % (totalDebt))
             conn.close()
+            """
+            if step >= 1:
+                raise SystemExit(0)
+            """
             return False
             
     def getPromotorHoldings(self):
