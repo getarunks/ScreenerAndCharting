@@ -64,7 +64,7 @@ class getData_bussinesStd(object):
             c.execute(sql_cmd, [(self.stockSymbol)])
             row = c.fetchone()
         
-            if 1 == 2 and row != None and common_code.current_year == row[common_code.BeatDBindex_currentYear]:
+            if row != None and common_code.current_year == row[common_code.BeatDBindex_currentYear]:
                 print "Latest Data found in DB for stock ", self.stockSymbol            
                 self.result_dict['CurrentLiabilites'] = row[common_code.BeatDBindex_currentLiabilites]
                 self.result_dict['TotalAssets'] = row[common_code.BeatDBindex_totalAssets]
@@ -95,10 +95,7 @@ class getData_bussinesStd(object):
                 reportType = 'Standalone'
                 source = urlopen(self.balance_sheet_link[reportType]).read()
                 result = self.balanceSheetHelper(source, string, '<td class="">', '</td>' )
-            """
-            currentLiabilites = source.split(string)[1].split('<td class="">')[1].split('</td>')[0]
-            """
-            print "curr liablait", result['output']
+
             if result['success'] == 0:
                 return False
             currentLiabilites = result['output']
@@ -176,10 +173,6 @@ class getData_bussinesStd(object):
             conn.close()
             return False
             
-#        except ValueError as err:
- #           print ('reason', err)
-  #s          return False
-
     def getPromotorHoldings(self):
         try:
             source = urlopen(self.promotorLink).read()

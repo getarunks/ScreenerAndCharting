@@ -584,6 +584,9 @@ def updateDB(reqType = 'EPS'):
     textFile.write("dataBase out of outdated stocks = %d, updated = %d\n" % (common_code.dataBase_outdate_stocks, common_code.dataBase_updated_stocks))
     textFile.close()
     common_code.DB_updateRunning = 0
+    
+    print "Failed stocsk... Better check and blacklist them if not needed"
+    print failedStocks
     del googleSceernerData
 
 from Tkinter import Tk, Label, Button, Entry
