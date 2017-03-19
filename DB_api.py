@@ -39,6 +39,56 @@ def getDataDB(stock):
     print row[0], row[1]
     conn.close()
     
+def BeatDB_Details():
+    conn = sqlite3.connect(common_code.sqliteFile)
+    c = conn.cursor()
+    cursor = c.execute("SELECT symbol, EBIT, TotAssest, CurLiability, MarketCap, \
+                TotDebt, CurrYear, EarningsYield, RoC,reportType from BEATSTOCKDATA")
+                
+    total_stocks = 0
+    DB_updated_stocks = 0
+    marCap_lessThan100 = marCap_100to500 = marCap_500to1000 = marCap_1000to5000 = marCap_5000to10000 = marCap_10000to20000 = marCap_above20000 = 0
+    stmtConsolidated = 0
+    
+    for row in cursor:
+        total_stocks +=1
+        if row[common_code.BeatDBindex_currentYear] == common_code.current_year:
+            DB_updated_stocks += 1
+
+        eV = float(row[common_code.BeatDBindex_marketCap]) + float(row[common_code.BeatDBindex_totalDebt])
+        if eV < 100:
+            marCap_lessThan100 += 1
+        if eV >= 100 and eV < 500:
+            marCap_100to500 +=1
+        if eV >= 500 and eV < 1000:
+            marCap_500to1000 +=1
+        if eV >= 1000 and eV < 5000:
+            marCap_1000to5000 +=1
+        if eV >= 5000 and eV < 10000:
+            marCap_5000to10000 +=1
+        if eV >= 10000 and eV < 20000:
+            marCap_10000to20000 +=1
+        if eV >= 20000:
+            marCap_above20000 +=1
+            
+        if row[common_code.BeatDBindex_reportType] == 'Consolidated':
+            stmtConsolidated += 1
+    
+    print("BEAT stock DB details: \n")
+    print("Total stocks                             = %d\n" % total_stocks)
+    print("Udated stocsk to current year (%s)       = %d\n" % (common_code.current_year, DB_updated_stocks))
+    print("Stocks catagorized w.r.t Enterprise Value\n")
+    print("          Enterprise Value < 100 Cr      = %d\n"% marCap_lessThan100)
+    print("100    <  Enterprise Value < 500         = %d\n"% marCap_100to500)
+    print("500    <  Enterprise Value < 1,000       = %d\n"% marCap_500to1000)
+    print("1,000  <  Enterprise Value < 5,000       = %d\n"% marCap_1000to5000)
+    print("5,000  <  Enterprise Value < 10,000      = %d\n"% marCap_5000to10000)
+    print("10,000 <  Enterprise Value < 20,000      = %d\n"% marCap_10000to20000)
+    print("20,000 <  Enterprise Value               = %d\n"% marCap_above20000)
+    
+    print("Stocks with consolidated report          = %d\n", stmtConsolidated)
+    conn.close()
+    
 def print_selected(selected_stock_list, stock_dict_allDetails):
     for each_stock in selected_stock_list:
         symbol , roc = each_stock
@@ -54,31 +104,12 @@ def print_selected(selected_stock_list, stock_dict_allDetails):
         print "Total Assets     = ", each_dict['totAss']
         print "Report Type      = ", each_dict['reportType']
         
-        
 def readDB_Beat(min_eV = 1000.00):
     conn = sqlite3.connect(common_code.sqliteFile)
     c = conn.cursor()
     cursor = c.execute("SELECT symbol, EBIT, TotAssest, CurLiability, MarketCap, \
                 TotDebt, CurrYear, EarningsYield, RoC,reportType from BEATSTOCKDATA")
-    """
-    total_stocks = 0
-    updated_stocks = 0
-    marCap_stocks = 0
-    ev_stocks = 0
-    for row in cursor:
-        total_stocks +=1
-        if row[common_code.BeatDBindex_currentYear] == common_code.current_year:
-            updated_stocks +=1
-        if int(row[common_code.BeatDBindex_marketCap]) > 10000:
-            marCap_stocks +=1
-        eV = float(row[common_code.BeatDBindex_marketCap]) + float(row[common_code.BeatDBindex_totalDebt])
-        if eV > 1000:
-            ev_stocks +=1
-   
-    print total_stocks, updated_stocks, marCap_stocks, ev_stocks
-    conn.close()
-    return
-    """
+
     stock_dict_RoC = {}
     stock_dict_eYield = {}
     total_stocks = 0
