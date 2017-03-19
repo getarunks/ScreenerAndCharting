@@ -75,18 +75,18 @@ def BeatDB_Details():
             stmtConsolidated += 1
     
     print("BEAT stock DB details: \n")
-    print("Total stocks                             = %d\n" % total_stocks)
-    print("Udated stocsk to current year (%s)       = %d\n" % (common_code.current_year, DB_updated_stocks))
-    print("Stocks catagorized w.r.t Enterprise Value\n")
-    print("          Enterprise Value < 100 Cr      = %d\n"% marCap_lessThan100)
-    print("100    <  Enterprise Value < 500         = %d\n"% marCap_100to500)
-    print("500    <  Enterprise Value < 1,000       = %d\n"% marCap_500to1000)
-    print("1,000  <  Enterprise Value < 5,000       = %d\n"% marCap_1000to5000)
-    print("5,000  <  Enterprise Value < 10,000      = %d\n"% marCap_5000to10000)
-    print("10,000 <  Enterprise Value < 20,000      = %d\n"% marCap_10000to20000)
-    print("20,000 <  Enterprise Value               = %d\n"% marCap_above20000)
+    print("Total stocks                             = %d" % total_stocks)
+    print("Updated stocsk to current year (%s)      = %d" % (common_code.current_year, DB_updated_stocks))
+    print("No of stocks catagorized w.r.t Enterprise Value")
+    print("          Enterprise Value < 100 Cr      = %d"% marCap_lessThan100)
+    print("100    <  Enterprise Value < 500         = %d"% marCap_100to500)
+    print("500    <  Enterprise Value < 1,000       = %d"% marCap_500to1000)
+    print("1,000  <  Enterprise Value < 5,000       = %d"% marCap_1000to5000)
+    print("5,000  <  Enterprise Value < 10,000      = %d"% marCap_5000to10000)
+    print("10,000 <  Enterprise Value < 20,000      = %d"% marCap_10000to20000)
+    print("20,000 <  Enterprise Value               = %d"% marCap_above20000)
     
-    print("Stocks with consolidated report          = %d\n", stmtConsolidated)
+    print("Stocks with consolidated report          = %d"% stmtConsolidated)
     conn.close()
     
 def print_selected(selected_stock_list, stock_dict_allDetails):
