@@ -40,7 +40,7 @@ How to update new NIFTYALLStocks.txt ?
 
 Answer:
 	1. go to google screener.
-	2. Make sure you have logged out of your google account. Otherwise indian markets won't work.
+	2. If you are looged in, log out. And if you are logged out, log int to google account. Otherwise indian markets won't work. Strange!!!
 	3. Go to setting in google chrome and open developer options.
 	4. Go to Network tab. Search "json in search box available.
 	5. Copy link and modify the number of stocks from 20 to the total showing,
