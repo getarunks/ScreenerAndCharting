@@ -4,6 +4,21 @@ from urllib2 import urlopen
 import sqlite3
 import common_code
 
+
+def myUrlopen(link):
+    try:
+        source = urlopen(link).read()
+        common_code.webPageAcessed +=1
+        print 'web page access count = ', common_code.webPageAcessed
+    except Exception,e:
+        #Sometime server might ot respond, try once again
+        print 'open failed. try again after 2 seconds', str(e)
+        common_code.mySleep(2)
+        source = urlopen(link).read()
+        common_code.ebPageAcessed +=1
+    return source
+    
+
 class getData_bussinesStd(object):
     def __init__(self, stockLinkId, stockSymbol, reportType):
 	self.stockSymbol = stockSymbol
@@ -95,13 +110,13 @@ class getData_bussinesStd(object):
         try:
             """ Lets start with consolidated and fallback to standalone if not available"""
             reportType = 'Consolidated'
-            source = urlopen(self.balance_sheet_link[reportType]).read()
+            source = myUrlopen(self.balance_sheet_link[reportType]).read()
             
             string = 'Current Liabilities</td>'
             result = self.balanceSheetHelper(source, string, '<td class="">', '</td>')
             if result['success'] == 0:
                 reportType = 'Standalone'
-                source = urlopen(self.balance_sheet_link[reportType]).read()
+                source = myUrlopen(self.balance_sheet_link[reportType]).read()
                 result = self.balanceSheetHelper(source, string, '<td class="">', '</td>' )
 
             if result['success'] == 0:
@@ -122,7 +137,7 @@ class getData_bussinesStd(object):
             totalDebt = result['output']
             step = 3
             
-            source = urlopen(self.finacialPL_link[reportType]).read()
+            source = myUrlopen(self.finacialPL_link[reportType]).read()
             string = 'Operating Profit</b></td>'
             result = self.balanceSheetHelper(source, 'Operating Profit</b></td>', '<td class="">', '</td>')
             operatingProfit = result['output']
@@ -133,7 +148,7 @@ class getData_bussinesStd(object):
             currentYear = result['output']
             step = 5
             
-            source = urlopen(self.summary_link).read()
+            source = myUrlopen(self.summary_link).read()
             #string = 'Market Cap </td>'
             result = self.balanceSheetHelper(source, 'Market Cap </td>', '<td class="bL1 tdR">', '</td>')
             marketCap = result['output']
@@ -205,7 +220,7 @@ class getData_bussinesStd(object):
             
     def getPromotorHoldings(self):
         try:
-            source = urlopen(self.promotorLink).read()
+            source = myUrlopen(self.promotorLink)
             PHQuater1 = source.split('(in %)</td>')[1].split('<td class="tdh">')[1].split('</td>')[0]
             PHQuater2 = source.split('(in %)</td>')[1].split('<td class="tdh">')[2].split('</td>')[0]
             PHQuater3 = source.split('(in %)</td>')[1].split('<td class="tdh">')[3].split('</td>')[0]
@@ -297,7 +312,7 @@ class getData_bussinesStd(object):
 
     def getCashFlowData(self):
         try:
-            cashFlow_source = urllib2.urlopen(self.cashFlow_link).read()
+            cashFlow_source = myUrlopen(self.cashFlow_link)
             string = 'Net Cash From Operating Activities</td>'
             CFyear1 = cashFlow_source.split(string)[1].split('<td class="">')[1].split('</td>')[0]
             CFyear2 = cashFlow_source.split(string)[1].split('<td class="">')[2].split('</td>')[0]
@@ -380,16 +395,16 @@ class getData_bussinesStd(object):
             try:
                 """ Lets start with consolidated and fallback to standalone if not available"""
                 reportType = 'Consolidated'
-                self.EPS_Quaterly_1_Source = urllib2.urlopen(self.EPS_Quaterly_1[reportType]).read()
+                self.EPS_Quaterly_1_Source = myUrlopen(self.EPS_Quaterly_1[reportType])
                 sourceCode = self.EPS_Quaterly_1_Source
                 Q1 = float(sourceCode.split('EPS (Rs)</td>')[1].split('<td class="">')[1].split('</td>')[0])                
             except Exception,e:
                 reportType = 'Standalone'
-                self.EPS_Quaterly_1_Source = urllib2.urlopen(self.EPS_Quaterly_1[reportType]).read()
+                self.EPS_Quaterly_1_Source = myUrlopen(self.EPS_Quaterly_1[reportType])
                 sourceCode = self.EPS_Quaterly_1_Source
                 Q1 = float(sourceCode.split('EPS (Rs)</td>')[1].split('<td class="">')[1].split('</td>')[0])
 
-            self.EPS_Quaterly_2_Source = urllib2.urlopen(self.EPS_Quaterly_2[reportType]).read()
+            self.EPS_Quaterly_2_Source = myUrlopen(self.EPS_Quaterly_2[reportType])
             sourceCode = self.EPS_Quaterly_1_Source
             
             Q2 = float(sourceCode.split('EPS (Rs)</td>')[1].split('<td class="">')[2].split('</td>')[0])
@@ -440,13 +455,8 @@ class getData_bussinesStd(object):
             self.result_dict['EPSQ3Change'] = (Q3 - Q3YoY)/Q3YoY*100
             self.result_dict['EPSQ4Change'] = (Q4 - Q4YoY)/Q4YoY*100
 
-            try:
-                source = urlopen(self.finacialOverview_link[reportType]).read()
-            except Exception,e:
-                #Try once again
-                print 'open failed. try again after 2 seconds', str(e)
-                common_code.mySleep(2)
-                source = urlopen(self.finacialOverview_link[reportType]).read()
+            source = myUrlopen(self.finacialOverview_link[reportType])
+
             try:
                 Y1 = float(source.split('Earning Per Share (Rs)</td>')[1].split('<td class="">')[1].split('</td>')[0])
                 Y2 = float(source.split('Earning Per Share (Rs)</td>')[1].split('<td class="">')[2].split('</td>')[0])
@@ -457,25 +467,13 @@ class getData_bussinesStd(object):
                 self.result_dict['Y2Name'] = source.split(string)[1].split('<td class="tdh">')[2].split('</td>')[0]
                 self.result_dict['Y3Name'] = source.split(string)[1].split('<td class="tdh">')[3].split('</td>')[0]
 
-                try:
-                    source = urlopen(self.finacialOverview_link1[reportType]).read()
-                except Exception,e:
-                #Try once again
-                    print 'open failed. try again after 2 seconds', str(e)
-                    common_code.mySleep(2)
-                    source = urlopen(self.finacialOverview_link1[reportType]).read()
+                source = myUrlopen(self.finacialOverview_link1[reportType])
 
                 Y4 = float(source.split('Earning Per Share (Rs)</td>')[1].split('<td class="">')[1].split('</td>')[0])
                 self.result_dict['Y4Name'] = source.split(string)[1].split('<td class="tdh">')[1].split('</td>')[0]
             except Exception,e:
                 print 'failed when spliting finacialoverview link trying finacialPL link',str(e)
-                try:
-                    source = urlopen(self.finacialPL_link[reportType]).read()
-                except Exception,e:
-                #Try once again
-                    print 'open failed. try again after 2 seconds', str(e)
-                    common_code.mySleep(2)
-                    source = urlopen(self.finacialPL_link[reportType]).read()
+                source = myUrlopen(self.finacialPL_link[reportType])                
                 string = '<td class="tdL" colspan="0">Earning Per Share (Rs.)</td>'
                 Y1 = float(source.split(string)[1].split('<td class="amount">')[1].split('</td>')[0])
                 Y2 = float(source.split(string)[1].split('<td class="amount">')[2].split('</td>')[0])
@@ -486,13 +484,8 @@ class getData_bussinesStd(object):
                 self.result_dict['Y2Name'] = source.split(string)[1].split('<td class="tdh">')[2].split('</td>')[0]
                 self.result_dict['Y3Name'] = source.split(string)[1].split('<td class="tdh">')[3].split('</td>')[0]
 
-                try:
-                    source = urlopen(self.finacialPL_link1[reportType]).read()
-                except Exception,e:
-                #Try once again
-                    print 'open failed. try again after 2 seconds', str(e)
-                    common_code.mySleep(2)
-                    source = urlopen(self.finacialPL_link1[reportType]).read()
+                source = myUrlopen(self.finacialPL_link1[reportType])
+
                 string = '<td class="tdL" colspan="0">Earning Per Share (Rs.)</td>'
                 Y4 = float(source.split(string)[1].split('<td class="amount">')[1].split('</td>')[0])
                 string = 'Figures in Rs crore</td>'
@@ -557,7 +550,7 @@ class getData_bussinesStd(object):
 
     def getRatios(self):
         try:
-            self.ratioSource = urlopen(self.ratio_link).read()
+            self.ratioSource = myUrlopen(self.ratio_link)
             string = 'Return on Net Worth (%)</td>'
             returnOnNetWorth_year1 = self.ratioSource.split(string)[1].split('<td class="">')[1].split('</td>')[0]
             returnOnNetWorth_year2 = self.ratioSource.split(string)[1].split('<td class="">')[2].split('</td>')[0]
