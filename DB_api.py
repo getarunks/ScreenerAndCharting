@@ -10,7 +10,7 @@ def deleteDB():
     conn =sqlite3.connect(sqlite_file)
     c = conn.cursor()
 
-    c.execute("DROP TABLE BEATSTOCKDATA")
+    c.execute("DROP TABLE STOCKDATA")
     conn.commit()
     conn.close()
 

@@ -1,9 +1,7 @@
 import re
-import urllib2
 from urllib2 import urlopen
 import sqlite3
 import common_code
-
 
 def myUrlopen(link):
     try:
@@ -17,7 +15,6 @@ def myUrlopen(link):
         source = urlopen(link).read()
         common_code.ebPageAcessed +=1
     return source
-    
 
 class getData_bussinesStd(object):
     def __init__(self, stockLinkId, stockSymbol, reportType):
@@ -50,7 +47,9 @@ class getData_bussinesStd(object):
         self.finacialPL_link['Standalone'] = 'http://www.business-standard.com/company/'+stockLinkId+'/financials-profit-loss/'
         self.finacialPL_link['Consolidated'] = 'http://www.business-standard.com/company/'+stockLinkId+'/financials-profit-loss/1/Consolidated'
         
-        self.finacialPL_link1 = 'http://www.business-standard.com/company/'+stockLinkId+'/financials-profit-loss/2/'+reportType
+        self.finacialPL_link1 = {}
+        self.finacialPL_link1['Standalone'] = 'http://www.business-standard.com/company/'+stockLinkId+'/financials-profit-loss/2/'
+        self.finacialPL_link1['Consolidated'] = 'http://www.business-standard.com/company/'+stockLinkId+'/financials-profit-loss/2/Consolidated'
         
         self.balance_sheet_link = {}
         self.balance_sheet_link['Standalone'] = 'http://www.business-standard.com/company/'+stockLinkId+'/financials-balance-sheet/'
@@ -67,16 +66,40 @@ class getData_bussinesStd(object):
         """
         common_code.mySleep(1)
         
-    def balanceSheetHelper(self, source, string1, string2, string3):
+#    result = self.splitString(sourceCode, 'EPS (Rs)</td>', '<td class="">', '</td>', 2, 4)
+    """
+    Function always return expectednoItems, if there are less items than requested, function 
+    fill them with zeros.
+    """
+    def splitString(self, source, string1, string2, string3, firstElement, expectedNoItems):
         success = 1
         #output = 'error output'
+        noItemsPresent = len(source.split(string1)[1].split(string2))
+        #substract one coloumn of item headers
+        noItemsPresent -= 1
+        noItems = min(noItemsPresent, expectedNoItems)
+        print "items ", noItemsPresent, expectedNoItems, noItems
+        output = []
+
+        """
+        Fill zeros to avoid errors during unpack
+        """        
+        for counter in range(0, expectedNoItems):
+            output.append(0)
+            
         try:
-            output = source.split(string1)[1].split(string2)[1].split(string3)[0]
+            for counter in range(firstElement, noItemsPresent + 1):
+                #print 'output[] =', counter, counter-firstElement
+                if (counter - firstElement) >= expectedNoItems :
+                    break
+                output[counter-firstElement] = (source.split(string1)[1].split(string2)[counter].split(string3)[0])
+                        
         except Exception,e:
-            print "exception in getBalancesheetHelper when looking for", string1, str(e)
+            print "exception in splitString when looking for", string1, str(e)
             success = 0
-            output = 'error output'
-        return {'success':success, 'output':output }      
+            output[0] = 'error output'
+            
+        return {'success':success, 'output':output, 'itemsReturned':noItems }
         
     def getBalanceSheetData(self):        
         #First will try to get data from data base if not fetch from website
@@ -88,21 +111,22 @@ class getData_bussinesStd(object):
             row = c.fetchone()
         
             if row != None and common_code.current_year == row[common_code.BeatDBindex_currentYear]:
-                print "Latest Data found in DB for stock ", self.stockSymbol            
-                self.result_dict['CurrentLiabilites'] = row[common_code.BeatDBindex_currentLiabilites]
-                self.result_dict['TotalAssets'] = row[common_code.BeatDBindex_totalAssets]
-                self.result_dict['OperatingProfit'] = row[common_code.BeatDBindex_operatingProfit]
-                self.result_dict['RoC'] = float(row[common_code.BeatDBindex_operatingProfit])/(float(row[common_code.BeatDBindex_totalAssets]) - float(row[common_code.BeatDBindex_currentLiabilites]))
-                self.result_dict['MarketCap'] = row[common_code.BeatDBindex_marketCap]
-                self.result_dict['TotalDebt'] = row[common_code.BeatDBindex_totalDebt]
-                self.result_dict['CurrentYear'] = row[common_code.BeatDBindex_currentYear]
-                self.result_dict['EarningsYield'] = row[common_code.BeatDBindex_earningsYield]
-                self.result_dict['RoC'] = row[common_code.BeatDBindex_RoC]
-                self.result_dict['reportType'] = row[common_code.BeatDBindex_reportType]
+                print "Latest Data found in DB for stock ", self.stockSymbol, len(row)
+                
+                """ The order of variables is important """
+                self.stockSymbol, self.result_dict['OperatingProfit'], self.result_dict['TotalAssets'],\
+                self.result_dict['CurrentLiabilites'], self.result_dict['MarketCap'],self.result_dict['TotalDebt'],\
+                self.result_dict['CurrentYear'], self.result_dict['EarningsYield'], self.result_dict['RoC'],\
+                self.result_dict['reportType'] = row
+                
                 conn.close()
                 return True
+                
         except Exception,e:
-            print ""
+            print "Exception reading DB for BalanceSheet. May be you want to fix this.", str(e)
+            import time
+            time.sleep(5)
+
         print "Get data from web old data in DB ==============", self.stockSymbol
         common_code.dataBase_outdate_stocks += 1
         
@@ -110,14 +134,13 @@ class getData_bussinesStd(object):
         try:
             """ Lets start with consolidated and fallback to standalone if not available"""
             reportType = 'Consolidated'
-            source = myUrlopen(self.balance_sheet_link[reportType]).read()
+            source = myUrlopen(self.balance_sheet_link[reportType])
             
-            string = 'Current Liabilities</td>'
-            result = self.balanceSheetHelper(source, string, '<td class="">', '</td>')
+            result = self.splitString(source, 'Current Liabilities</td>', '<td class="">', '</td>',1 , 1)
             if result['success'] == 0:
                 reportType = 'Standalone'
-                source = myUrlopen(self.balance_sheet_link[reportType]).read()
-                result = self.balanceSheetHelper(source, string, '<td class="">', '</td>' )
+                source = myUrlopen(self.balance_sheet_link[reportType])
+                result = self.splitString(source, 'Current Liabilities</td>', '<td class="">', '</td>' )
 
             if result['success'] == 0:
                 with open("errormsg.txt", "a") as errFile:
@@ -125,33 +148,29 @@ class getData_bussinesStd(object):
                     errFile.write('Both consolidated and standalone failed for stock = %s\n' % self.stockSymbol)
                     errFile.write('consider blacklisting them\n')
                 return False
-            currentLiabilites = result['output']
+            currentLiabilites = result['output'][0]
             step = 1
             
-            result = self.balanceSheetHelper(source, 'Total Assets</b></td>', '<td class="">', '</td>')
-            totalAssets = result['output']
+            result = self.splitString(source, 'Total Assets</b></td>', '<td class="">', '</td>', 1, 1 )
+            totalAssets = result['output'][0]
             step = 2
-            
-            string = 'Total Debt</td>'
-            result = self.balanceSheetHelper(source, 'Total Debt</td>', '<td class="">', '</td>' )
-            totalDebt = result['output']
+
+            result = self.splitString(source, 'Total Debt</td>', '<td class="">', '</td>', 1, 1)
+            totalDebt = result['output'][0]
             step = 3
             
-            source = myUrlopen(self.finacialPL_link[reportType]).read()
-            string = 'Operating Profit</b></td>'
-            result = self.balanceSheetHelper(source, 'Operating Profit</b></td>', '<td class="">', '</td>')
-            operatingProfit = result['output']
+            source = myUrlopen(self.finacialPL_link[reportType])            
+            result = self.splitString(source, 'Operating Profit</b></td>', '<td class="">', '</td>', 1, 1)
+            operatingProfit = result['output'][0]
             step = 4
             
-            string = 'Figures in Rs crore</td>'
-            result = self.balanceSheetHelper(source, 'Figures in Rs crore</td>', '<td class="tdh">', '</td>' )
-            currentYear = result['output']
+            result = self.splitString(source, 'Figures in Rs crore</td>', '<td class="tdh">', '</td>', 1, 1)
+            currentYear = result['output'][0]
             step = 5
             
-            source = myUrlopen(self.summary_link).read()
-            #string = 'Market Cap </td>'
-            result = self.balanceSheetHelper(source, 'Market Cap </td>', '<td class="bL1 tdR">', '</td>')
-            marketCap = result['output']
+            source = myUrlopen(self.summary_link)
+            result = self.splitString(source, 'Market Cap </td>', '<td class="bL1 tdR">', '</td>', 1, 1)
+            marketCap = result['output'][0]
             marketCap = marketCap.replace(",", "")
             step = 6
             
@@ -221,46 +240,23 @@ class getData_bussinesStd(object):
     def getPromotorHoldings(self):
         try:
             source = myUrlopen(self.promotorLink)
-            PHQuater1 = source.split('(in %)</td>')[1].split('<td class="tdh">')[1].split('</td>')[0]
-            PHQuater2 = source.split('(in %)</td>')[1].split('<td class="tdh">')[2].split('</td>')[0]
-            PHQuater3 = source.split('(in %)</td>')[1].split('<td class="tdh">')[3].split('</td>')[0]
-            PHQuater4 = source.split('(in %)</td>')[1].split('<td class="tdh">')[4].split('</td>')[0]
-            PHQuater5 = source.split('(in %)</td>')[1].split('<td class="tdh">')[5].split('</td>')[0]
+            result = self.splitString(source, '(in %)</td>', '<td class="tdh">', '</td>', 1, 5)
+            PHQuater1, PHQuater2, PHQuater3, PHQuater4, PHQuater5 = result['output']
 
-            string = 'Total of Promoters'
-            totalPromoterQ1 = source.split(string)[1].split('<td class="">')[1].split('</td>')[0]
-            totalPromoterQ2 = source.split(string)[1].split('<td class="">')[2].split('</td>')[0]
-            totalPromoterQ3 = source.split(string)[1].split('<td class="">')[3].split('</td>')[0]
-            totalPromoterQ4 = source.split(string)[1].split('<td class="">')[4].split('</td>')[0]
-            totalPromoterQ5 = source.split(string)[1].split('<td class="">')[5].split('</td>')[0]
+            result = self.splitString(source, 'Total of Promoters', '<td class="">', '</td>', 1, 5 )
+            totalPromoterQ1, totalPromoterQ2, totalPromoterQ3, totalPromoterQ4 ,totalPromoterQ5 = result['output']
 
-            string = '<strong>Institutions</strong>'
-            totalInstitQ1 = source.split(string)[1].split('<td class="">')[1].split('</td>')[0]
-            totalInstitQ2 = source.split(string)[1].split('<td class="">')[2].split('</td>')[0]
-            totalInstitQ3 = source.split(string)[1].split('<td class="">')[3].split('</td>')[0]
-            totalInstitQ4 = source.split(string)[1].split('<td class="">')[4].split('</td>')[0]
-            totalInstitQ5 = source.split(string)[1].split('<td class="">')[5].split('</td>')[0]
+            result = self.splitString(source, '<strong>Institutions</strong>', '<td class="">', '</td>', 1, 5 )
+            totalInstitQ1, totalInstitQ2, totalInstitQ3, totalInstitQ4, totalInstitQ5 = result['output']
 
-            string = 'Foreign Institutional Investors</td>'
-            FIIQ1 = source.split(string)[1].split('<td class="">')[1].split('</td>')[0]
-            FIIQ2 = source.split(string)[1].split('<td class="">')[2].split('</td>')[0]
-            FIIQ3 = source.split(string)[1].split('<td class="">')[3].split('</td>')[0]
-            FIIQ4 = source.split(string)[1].split('<td class="">')[4].split('</td>')[0]
-            FIIQ5 = source.split(string)[1].split('<td class="">')[5].split('</td>')[0]
+            result = self.splitString(source, 'Foreign Institutional Investors</td>', '<td class="">', '</td>', 1, 5 )
+            FIIQ1, FIIQ2, FIIQ3, FIIQ4, FIIQ5 = result['output']
 
-            string = 'Financial Institutions / Banks</td>'
-            FinInstitQ1 = source.split(string)[1].split('<td class="">')[1].split('</td>')[0]
-            FinInstitQ2 = source.split(string)[1].split('<td class="">')[2].split('</td>')[0]
-            FinInstitQ3 = source.split(string)[1].split('<td class="">')[3].split('</td>')[0]
-            FinInstitQ4 = source.split(string)[1].split('<td class="">')[4].split('</td>')[0]
-            FinInstitQ5 = source.split(string)[1].split('<td class="">')[5].split('</td>')[0]
+            result = self.splitString(source, 'Financial Institutions / Banks</td>', '<td class="">', '</td>', 1, 5 )
+            FinInstitQ1,  FinInstitQ2, FinInstitQ3, FinInstitQ4, FinInstitQ5 = result['output']
 
-            string = 'Mutual  Funds / UTI</td'
-            MFQ1 = source.split(string)[1].split('<td class="">')[1].split('</td>')[0]
-            MFQ2 = source.split(string)[1].split('<td class="">')[2].split('</td>')[0]
-            MFQ3 = source.split(string)[1].split('<td class="">')[3].split('</td>')[0]
-            MFQ4 = source.split(string)[1].split('<td class="">')[4].split('</td>')[0]
-            MFQ5 = source.split(string)[1].split('<td class="">')[5].split('</td>')[0]
+            result = self.splitString(source, 'Mutual  Funds / UTI</td', '<td class="">', '</td>', 1, 5 )
+            MFQ1, MFQ2, MFQ3, MFQ4, MFQ5 = result['output']
 
             self.result_dict['PHQuater1'] = PHQuater1
             self.result_dict['PHQuater2'] = PHQuater2
@@ -336,7 +332,7 @@ class getData_bussinesStd(object):
 
         except Exception,e:
             print 'faild in getCashFlowData loop',str(e)
-            return False
+            return False        
 
     def getEPSdata(self):
         """ First will try to get data from data base if not fetch from website """
@@ -348,35 +344,20 @@ class getData_bussinesStd(object):
             row = c.fetchone()
 
             # fetch from web if data is none or outdated
-            if row != None and self.latestQtrName == row[common_code.DBindex_Q1Name]:
+            if 1 == 2 and row != None and self.latestQtrName == row[common_code.DBindex_Q1Name]:
                 print "Latest Data found in DB for stock ", self.stockSymbol
-                self.result_dict['EPS_Q1'] = row[common_code.DBindex_EPS_Q1]
-                self.result_dict['EPS_Q2'] = row[common_code.DBindex_EPS_Q2]
-                self.result_dict['EPS_Q3'] = row[common_code.DBindex_EPS_Q3]
-                self.result_dict['EPS_Q4'] = row[common_code.DBindex_EPS_Q4]
-                self.result_dict['EPS_Q1YoY'] = row[common_code.DBindex_EPS_Q1YoY]
-                self.result_dict['EPS_Q2YoY'] = row[common_code.DBindex_EPS_Q2YoY]
-                self.result_dict['EPS_Q3YoY'] = row[common_code.DBindex_EPS_Q3YoY]
-                self.result_dict['EPS_Q4YoY'] = row[common_code.DBindex_EPS_Q4YoY]
-                self.result_dict['Q1Name'] = row[common_code.DBindex_Q1Name]
-                self.result_dict['Q2Name'] = row[common_code.DBindex_Q2Name]
-                self.result_dict['Q3Name'] = row[common_code.DBindex_Q3Name]
-                self.result_dict['Q4Name'] = row[common_code.DBindex_Q4Name]
-                self.result_dict['EPSQ1Change'] = row[common_code.DBindex_EPSQ1Change]
-                self.result_dict['EPSQ2Change'] = row[common_code.DBindex_EPSQ2Change]
-                self.result_dict['EPSQ3Change'] = row[common_code.DBindex_EPSQ3Change]
-                self.result_dict['EPSQ4Change'] = row[common_code.DBindex_EPSQ4Change]
-                self.result_dict['Y1Name'] = row[common_code.DBindex_Y1Name]
-                self.result_dict['Y2Name'] = row[common_code.DBindex_Y2Name]
-                self.result_dict['Y3Name'] = row[common_code.DBindex_Y3Name]
-                self.result_dict['Y4Name'] = row[common_code.DBindex_Y4Name]
-                self.result_dict['EPS_Y1'] = row[common_code.DBindex_EPS_Y1]
-                self.result_dict['EPS_Y2'] = row[common_code.DBindex_EPS_Y2]
-                self.result_dict['EPS_Y3'] = row[common_code.DBindex_EPS_Y3]
-                self.result_dict['EPS_Y4'] = row[common_code.DBindex_EPS_Y4]
-                self.result_dict['EPSY1Change'] = row[common_code.DBindex_EPSY1Change]
-                self.result_dict['EPSY2Change'] = row[common_code.DBindex_EPSY2Change]
-                self.result_dict['EPSY3Change'] = row[common_code.DBindex_EPSY3Change]
+                
+                """ The order of variables is important """
+                self.stockSymbol, self.result_dict['EPS_Q1'],  self.result_dict['EPS_Q2'],  self.result_dict['EPS_Q3'],\
+                self.result_dict['EPS_Q4'], self.result_dict['EPS_Q1YoY'],self.result_dict['EPS_Q2YoY'],\
+                self.result_dict['EPS_Q3YoY'], self.result_dict['EPS_Q4YoY'], self.result_dict['Q1Name'],\
+                self.result_dict['Q2Name'], self.result_dict['Q3Name'], self.result_dict['Q4Name'],\
+                self.result_dict['EPSQ1Change'], self.result_dict['EPSQ2Change'], self.result_dict['EPSQ3Change'],\
+                self.result_dict['EPSQ4Change'], self.result_dict['Y1Name'], self.result_dict['Y2Name'],\
+                self.result_dict['Y3Name'], self.result_dict['Y4Name'], self.result_dict['EPS_Y1'],\
+                self.result_dict['EPS_Y2'], self.result_dict['EPS_Y3'], self.result_dict['EPS_Y4'],\
+                self.result_dict['EPSY1Change'], self.result_dict['EPSY2Change'], self.result_dict['EPSY3Change'] = row
+                
                 conn.close()
                 return True
                 
@@ -387,9 +368,9 @@ class getData_bussinesStd(object):
             common_code.dataBase_outdate_stocks += 1
 
         except Exception,e:
-            print ""
-            #print 'failed in getEPSdata trying to read DB',str(e)
-            #return False
+            print 'Exception while reading DB section. May be you wanna fix them.',str(e)
+            import time
+            time.sleep(5)
 
         try:
             try:
@@ -407,91 +388,92 @@ class getData_bussinesStd(object):
             self.EPS_Quaterly_2_Source = myUrlopen(self.EPS_Quaterly_2[reportType])
             sourceCode = self.EPS_Quaterly_1_Source
             
-            Q2 = float(sourceCode.split('EPS (Rs)</td>')[1].split('<td class="">')[2].split('</td>')[0])
-            Q3 = float(sourceCode.split('EPS (Rs)</td>')[1].split('<td class="">')[3].split('</td>')[0])
-            Q4 = float(sourceCode.split('EPS (Rs)</td>')[1].split('<td class="">')[4].split('</td>')[0])
-            Q1YoY = float(sourceCode.split('EPS (Rs)</td>')[1].split('<td class="">')[5].split('</td>')[0])
-
-            sourceCode = self.EPS_Quaterly_2_Source
-            Q2YoY = float(sourceCode.split('EPS (Rs)</td>')[1].split('<td class="">')[1].split('</td>')[0])
-            Q3YoY = float(sourceCode.split('EPS (Rs)</td>')[1].split('<td class="">')[2].split('</td>')[0])
-            Q4YoY = float(sourceCode.split('EPS (Rs)</td>')[1].split('<td class="">')[3].split('</td>')[0])
-
-            sourceCode = self.EPS_Quaterly_1_Source
-            string = 'Figures in Rs crore</td>'
-            self.result_dict['Q1Name'] = sourceCode.split(string)[1].split('<td class="tdh">')[1].split('</td>')[0]
-            self.result_dict['Q2Name'] = sourceCode.split(string)[1].split('<td class="tdh">')[2].split('</td>')[0]
-            self.result_dict['Q3Name'] = sourceCode.split(string)[1].split('<td class="tdh">')[3].split('</td>')[0]
-            self.result_dict['Q4Name'] = sourceCode.split(string)[1].split('<td class="tdh">')[4].split('</td>')[0]
-
-            #print Q1Name + Q1Name + Q3Name + Q4Name
-
-            self.result_dict['EPS_Q1'] = Q1
-            self.result_dict['EPS_Q2'] = Q2
-            self.result_dict['EPS_Q3'] = Q3
-            self.result_dict['EPS_Q4'] = Q4
-            self.result_dict['EPS_Q1YoY'] = Q1YoY
-            self.result_dict['EPS_Q2YoY'] = Q2YoY
-            self.result_dict['EPS_Q3YoY'] = Q3YoY
-            self.result_dict['EPS_Q4YoY'] = Q4YoY
-
-            """
-            Check and return if any of the EPS is zero to avoid divide by zero
-
-            list = [Q1YoY, Q2YoY, Q3YoY, Q4YoY]
-            if (any(x == 0 for x in list)):
+            step = 1
+            result = self.splitString(sourceCode, 'EPS (Rs)</td>', '<td class="">', '</td>', 2, 4)
+            if result['success'] == 0:
                 return False
-            """
 
+            items = result['itemsReturned']
+            output = result['output']
+            print items
+            print output[0], output[1], output[2], output[3]
+            
+            Q2, Q3, Q4, Q1YoY = output
+            print "test"
+            print Q2, Q3, Q4, Q1YoY
+
+            step = 2
+            sourceCode = self.EPS_Quaterly_2_Source
+            
+            result = self.splitString(sourceCode, 'EPS (Rs)</td>', '<td class="">', '</td>', 1, 3)            
+            Q2YoY, Q3YoY, Q4YoY = result['output']            
+
+            step = 3
+            sourceCode = self.EPS_Quaterly_1_Source            
+            result = self.splitString(sourceCode, 'Figures in Rs crore</td>', '<td class="tdh">', '</td>', 1, 4)
+            self.result_dict['Q1Name'], self.result_dict['Q2Name'],self.result_dict['Q3Name'],\
+            self.result_dict['Q4Name'] = result['output']
+            self.result_dict['EPS_Q1'] = float(Q1)
+            self.result_dict['EPS_Q2'] = float(Q2)
+            self.result_dict['EPS_Q3'] = float(Q3)
+            self.result_dict['EPS_Q4'] = float(Q4)
+            self.result_dict['EPS_Q1YoY'] = float(Q1YoY)
+            self.result_dict['EPS_Q2YoY'] = float(Q2YoY)
+            self.result_dict['EPS_Q3YoY'] = float(Q3YoY)
+            self.result_dict['EPS_Q4YoY'] = float(Q4YoY)
+
+            step = 4
             """ We make all 0 to 0.1
             """
-            Q1YoY = 0.1 if Q1YoY == 0 else Q1YoY
-            Q2YoY = 0.1 if Q2YoY == 0 else Q2YoY
-            Q3YoY = 0.1 if Q3YoY == 0 else Q3YoY
-            Q4YoY = 0.1 if Q4YoY == 0 else Q4YoY
+            Q1YoY = 0.1 if Q1YoY == 0 else float(Q1YoY)
+            Q2YoY = 0.1 if Q2YoY == 0 else float(Q2YoY)
+            Q3YoY = 0.1 if Q3YoY == 0 else float(Q3YoY)
+            Q4YoY = 0.1 if Q4YoY == 0 else float(Q4YoY)
 
-            self.result_dict['EPSQ1Change'] = (Q1 - Q1YoY)/Q1YoY*100
-            self.result_dict['EPSQ2Change'] = (Q2 - Q2YoY)/Q2YoY*100
-            self.result_dict['EPSQ3Change'] = (Q3 - Q3YoY)/Q3YoY*100
-            self.result_dict['EPSQ4Change'] = (Q4 - Q4YoY)/Q4YoY*100
-
+            self.result_dict['EPSQ1Change'] = (float(Q1) - Q1YoY)/Q1YoY*100
+            self.result_dict['EPSQ2Change'] = (float(Q2) - Q2YoY)/Q2YoY*100
+            self.result_dict['EPSQ3Change'] = (float(Q3) - Q3YoY)/Q3YoY*100
+            self.result_dict['EPSQ4Change'] = (float(Q4) - Q4YoY)/Q4YoY*100
+            step = 5
             source = myUrlopen(self.finacialOverview_link[reportType])
 
             try:
-                Y1 = float(source.split('Earning Per Share (Rs)</td>')[1].split('<td class="">')[1].split('</td>')[0])
-                Y2 = float(source.split('Earning Per Share (Rs)</td>')[1].split('<td class="">')[2].split('</td>')[0])
-                Y3 = float(source.split('Earning Per Share (Rs)</td>')[1].split('<td class="">')[3].split('</td>')[0])
+                result = self.splitString(source, 'Earning Per Share (Rs)</td>', '<td class="">', '</td>', 1, 3)
+                Y1, Y2, Y3 = result['output']
 
-                string = 'Particulars '
-                self.result_dict['Y1Name'] = source.split(string)[1].split('<td class="tdh">')[1].split('</td>')[0]
-                self.result_dict['Y2Name'] = source.split(string)[1].split('<td class="tdh">')[2].split('</td>')[0]
-                self.result_dict['Y3Name'] = source.split(string)[1].split('<td class="tdh">')[3].split('</td>')[0]
+                result = self.splitString(source, 'Particulars ', '<td class="tdh">', '</td>', 1, 3)
+                self.result_dict['Y1Name'], self.result_dict['Y2Name'], self.result_dict['Y3Name'] = result['output']
 
                 source = myUrlopen(self.finacialOverview_link1[reportType])
 
-                Y4 = float(source.split('Earning Per Share (Rs)</td>')[1].split('<td class="">')[1].split('</td>')[0])
-                self.result_dict['Y4Name'] = source.split(string)[1].split('<td class="tdh">')[1].split('</td>')[0]
+                result = self.splitString(source, 'Earning Per Share (Rs)</td>', '<td class="">', '</td>', 1, 1)
+                Y4 = result['output'][0]
+                
+                result = self.splitString(source, 'Particulars ',  '<td class="tdh">', '</td>', 1, 1)
+                self.result_dict['Y4Name'] = result['output'][0]
             except Exception,e:
                 print 'failed when spliting finacialoverview link trying finacialPL link',str(e)
-                source = myUrlopen(self.finacialPL_link[reportType])                
-                string = '<td class="tdL" colspan="0">Earning Per Share (Rs.)</td>'
-                Y1 = float(source.split(string)[1].split('<td class="amount">')[1].split('</td>')[0])
-                Y2 = float(source.split(string)[1].split('<td class="amount">')[2].split('</td>')[0])
-                Y3 = float(source.split(string)[1].split('<td class="amount">')[3].split('</td>')[0])
-
-                string = 'Figures in Rs crore</td>'
-                self.result_dict['Y1Name'] = source.split(string)[1].split('<td class="tdh">')[1].split('</td>')[0]
-                self.result_dict['Y2Name'] = source.split(string)[1].split('<td class="tdh">')[2].split('</td>')[0]
-                self.result_dict['Y3Name'] = source.split(string)[1].split('<td class="tdh">')[3].split('</td>')[0]
-
+                print 'failed link ', self.finacialOverview_link1[reportType]
+                source = myUrlopen(self.finacialPL_link[reportType])
+                step = 6
+                result = self.splitString(source, '<td class="tdL" colspan="0">Earning Per Share (Rs.)</td>',
+                                         '<td class="amount">', '</td>', 1, 3)
+                Y1, Y2, Y3 = result['output']
+                
+                step = 7
+                result = self.splitString(source, 'Figures in Rs crore</td>', '<td class="tdh">' ,'</td>', 1, 3)
+                self.result_dict['Y1Name'], self.result_dict['Y2Name'], self.result_dict['Y3Name'] = result['output']
+                
+                step = 8
                 source = myUrlopen(self.finacialPL_link1[reportType])
-
-                string = '<td class="tdL" colspan="0">Earning Per Share (Rs.)</td>'
-                Y4 = float(source.split(string)[1].split('<td class="amount">')[1].split('</td>')[0])
-                string = 'Figures in Rs crore</td>'
-                self.result_dict['Y4Name'] = source.split(string)[1].split('<td class="tdh">')[1].split('</td>')[0]
+                step = 9               
+                result = self.splitString(source, '<td class="tdL" colspan="0">Earning Per Share (Rs.)</td>', 
+                                            '<td class="amount">', '</td>', 1, 1)
+                Y4 = result['output'][0]
+                result = self.splitString(source, 'Figures in Rs crore</td>', '<td class="tdh">', '</td>', 1, 1 )
+                self.result_dict['Y4Name'] = result['output'][0]                
                 print 'second link succesfull'
-
+            step = 10
             self.result_dict['EPS_Y1'] = Y1
             self.result_dict['EPS_Y2'] = Y2
             self.result_dict['EPS_Y3'] = Y3
@@ -499,14 +481,14 @@ class getData_bussinesStd(object):
 
             """ We make all 0 denomenators to 0.1 to avoid divide by zero
             """
-            Y2 = 0.1 if Y2 == 0 else Y2
-            Y3 = 0.1 if Y3 == 0 else Y3
-            Y4 = 0.1 if Y4 == 0 else Y4
-
-            self.result_dict['EPSY1Change'] = (Y1 - Y2)/Y2*100
-            self.result_dict['EPSY2Change'] = (Y2 - Y3)/Y3*100
-            self.result_dict['EPSY3Change'] = (Y3 - Y4)/Y4*100
-
+            Y2 = 0.1 if float(Y2) == 0.00 else Y2
+            Y3 = 0.1 if float(Y3) == 0.00 else Y3
+            Y4 = 0.1 if float(Y4) == 0.00 else Y4
+            step = 11            
+            self.result_dict['EPSY1Change'] = ((float(Y1) - float(Y2))/float(Y2))*100
+            self.result_dict['EPSY2Change'] = ((float(Y2) - float(Y3))/float(Y3))*100            
+            self.result_dict['EPSY3Change'] = ((float(Y3) - float(Y4))/float(Y4))*100
+            step = 12
             c.execute("CREATE TABLE IF NOT EXISTS STOCKDATA \
                 (symbol, EPS_Q1, EPS_Q2, EPS_Q3, EPS_Q4, \
                 EPS_Q1YoY, EPS_Q2YoY, EPS_Q3YoY, EPS_Q4YoY,\
@@ -515,10 +497,12 @@ class getData_bussinesStd(object):
                 Y1Name, Y2Name, Y3Name, Y4Name,\
                 EPS_Y1, EPS_Y2, EPS_Y3, EPS_Y4,\
                 EPSY1Change, EPSY2Change, EPSY3Change)")
-
+            step = 13
             #print "Updating symbol... ", self.stockSymbol
             c.execute('''DELETE FROM STOCKDATA WHERE symbol = ?''', (self.stockSymbol,))
 
+            print self.result_dict['Y2Name']
+            step = 14
             c.execute('''INSERT INTO STOCKDATA(symbol, EPS_Q1, EPS_Q2, EPS_Q3, EPS_Q4, \
               EPS_Q1YoY, EPS_Q2YoY, EPS_Q3YoY, EPS_Q4YoY,\
               Q1Name, Q2Name, Q3Name, Q4Name,\
@@ -546,6 +530,13 @@ class getData_bussinesStd(object):
 
         except Exception,e:
             print 'failed in getEPSdata Report_bussinesStd loop',str(e)
+            print 'step = ', step
+            print 'report type ', reportType
+            if step == 1:
+                print self.EPS_Quaterly_1[reportType]
+            if step == 2:
+                print self.EPS_Quaterly_2[reportType]
+                
             return False
 
     def getRatios(self):
