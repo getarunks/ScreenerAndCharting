@@ -17,15 +17,14 @@ def myUrlopen(link):
     return source
 
 class getData_bussinesStd(object):
-    def __init__(self, stockLinkId, stockSymbol, reportType):
-	self.stockSymbol = stockSymbol
+    def __init__(self, stockLinkId, stockSymbol):
+        self.stockSymbol = stockSymbol
         self.linkId = stockLinkId
-        self.reportType = reportType
         self.sqlite_file = common_code.sqliteFile
         self.latestQtrName = common_code.current_qtr
-        self.cashFlow_link = 'http://www.business-standard.com/company/'+stockLinkId+'/cash-flow/1/'+reportType
+        self.cashFlow_link = 'http://www.business-standard.com/company/'+stockLinkId+'/cash-flow/1/'
         self.result_dict = {}
-        self.ratio_link = 'http://www.business-standard.com/company/'+stockLinkId+'/financials-ratios/1/'+reportType
+        self.ratio_link = 'http://www.business-standard.com/company/'+stockLinkId+'/financials-ratios/1/'
         
         self.EPS_Quaterly_1 = {}
         self.EPS_Quaterly_1['Standalone'] = 'http://www.business-standard.com/company/'+stockLinkId+'/financials-quaterly/1/'
@@ -37,7 +36,7 @@ class getData_bussinesStd(object):
         
         self.finacialOverview_link = {}
         self.finacialOverview_link['Standalone'] = 'http://www.business-standard.com/company/'+stockLinkId+'/financials-overview/'
-        self.finacialOverview_link['Consolidated'] = 'http://www.business-standard.com/company/'+stockLinkId+'/financials-overview/2/Consolidated'
+        self.finacialOverview_link['Consolidated'] = 'http://www.business-standard.com/company/'+stockLinkId+'/financials-overview/1/Consolidated'
         
         self.finacialOverview_link1 = {}
         self.finacialOverview_link1['Standalone'] = 'http://www.business-standard.com/company/'+stockLinkId+'/financials-overview/2/'
@@ -214,10 +213,14 @@ class getData_bussinesStd(object):
         except Exception,e:
             print 'failed in getBalanceSheet loop ',str(e)
             print "step = ", step
+            print "reportType ", reportType
             with open("errormsg.txt", "a") as errFile:
                 errFile.write("============\n")
                 errFile.write('stock = %s\n' % self.stockSymbol)
                 errFile.write('step = %d\n' % (step))
+                if step == 3:
+                    errFile.write(self.balance_sheet_link[reportType])
+                    print ("source = %s" % self.balance_sheet_link[reportType])                    
                 if step == 6:
                     errFile.write("operatinProfit = %s\n" % (operatingProfit))
                     print "operatinProfit ", operatingProfit
@@ -332,7 +335,8 @@ class getData_bussinesStd(object):
                 self.result_dict['EPSQ4Change'], self.result_dict['Y1Name'], self.result_dict['Y2Name'],\
                 self.result_dict['Y3Name'], self.result_dict['Y4Name'], self.result_dict['EPS_Y1'],\
                 self.result_dict['EPS_Y2'], self.result_dict['EPS_Y3'], self.result_dict['EPS_Y4'],\
-                self.result_dict['EPSY1Change'], self.result_dict['EPSY2Change'], self.result_dict['EPSY3Change'] = row
+                self.result_dict['EPSY1Change'], self.result_dict['EPSY2Change'], self.result_dict['EPSY3Change'],\
+                self.result_dict['reportType'] = row
                 
                 conn.close()
                 return True
@@ -369,15 +373,9 @@ class getData_bussinesStd(object):
             if result['success'] == 0:
                 return False
 
-            items = result['itemsReturned']
-            output = result['output']
-            print items
-            print output[0], output[1], output[2], output[3]
-            
+            output = result['output']           
             Q2, Q3, Q4, Q1YoY = output
-            print "test"
-            print Q2, Q3, Q4, Q1YoY
-
+            
             step = 2
             sourceCode = self.EPS_Quaterly_2_Source
             
@@ -460,7 +458,7 @@ class getData_bussinesStd(object):
             Y2 = 0.1 if float(Y2) == 0.00 else Y2
             Y3 = 0.1 if float(Y3) == 0.00 else Y3
             Y4 = 0.1 if float(Y4) == 0.00 else Y4
-            step = 11            
+            step = 11
             self.result_dict['EPSY1Change'] = ((float(Y1) - float(Y2))/float(Y2))*100
             self.result_dict['EPSY2Change'] = ((float(Y2) - float(Y3))/float(Y3))*100            
             self.result_dict['EPSY3Change'] = ((float(Y3) - float(Y4))/float(Y4))*100
@@ -472,12 +470,12 @@ class getData_bussinesStd(object):
                 EPSQ1Change, EPSQ2Change, EPSQ3Change, EPSQ4Change,\
                 Y1Name, Y2Name, Y3Name, Y4Name,\
                 EPS_Y1, EPS_Y2, EPS_Y3, EPS_Y4,\
-                EPSY1Change, EPSY2Change, EPSY3Change)")
+                EPSY1Change, EPSY2Change, EPSY3Change, reportType)")
             step = 13
             #print "Updating symbol... ", self.stockSymbol
             c.execute('''DELETE FROM STOCKDATA WHERE symbol = ?''', (self.stockSymbol,))
 
-            print self.result_dict['Y2Name']
+            self.result_dict['reportType'] = reportType
             step = 14
             c.execute('''INSERT INTO STOCKDATA(symbol, EPS_Q1, EPS_Q2, EPS_Q3, EPS_Q4, \
               EPS_Q1YoY, EPS_Q2YoY, EPS_Q3YoY, EPS_Q4YoY,\
@@ -485,15 +483,15 @@ class getData_bussinesStd(object):
               EPSQ1Change, EPSQ2Change, EPSQ3Change, EPSQ4Change,\
               Y1Name, Y2Name, Y3Name, Y4Name,\
               EPS_Y1, EPS_Y2, EPS_Y3, EPS_Y4,\
-              EPSY1Change, EPSY2Change, EPSY3Change)\
-              values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
+              EPSY1Change, EPSY2Change, EPSY3Change, reportType)\
+              values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, ?)''',
               (self.stockSymbol, self.result_dict['EPS_Q1'],  self.result_dict['EPS_Q2'],  self.result_dict['EPS_Q3'],  self.result_dict['EPS_Q4'],
               self.result_dict['EPS_Q1YoY'],self.result_dict['EPS_Q2YoY'], self.result_dict['EPS_Q3YoY'], self.result_dict['EPS_Q4YoY'],
               self.result_dict['Q1Name'], self.result_dict['Q2Name'], self.result_dict['Q3Name'], self.result_dict['Q4Name'],
               self.result_dict['EPSQ1Change'], self.result_dict['EPSQ2Change'], self.result_dict['EPSQ3Change'], self.result_dict['EPSQ4Change'],
               self.result_dict['Y1Name'], self.result_dict['Y2Name'], self.result_dict['Y3Name'], self.result_dict['Y4Name'],
               self.result_dict['EPS_Y1'], self.result_dict['EPS_Y2'], self.result_dict['EPS_Y3'], self.result_dict['EPS_Y4'],
-              self.result_dict['EPSY1Change'], self.result_dict['EPSY2Change'], self.result_dict['EPSY3Change']))
+              self.result_dict['EPSY1Change'], self.result_dict['EPSY2Change'], self.result_dict['EPSY3Change'], reportType))
 
             if self.latestQtrName == self.result_dict['Q1Name']:
                 common_code.dataBase_updated_stocks += 1
@@ -552,4 +550,3 @@ class getData_bussinesStd(object):
         except Exception,e:
             print 'faild in getRatio bussinesSTD loop',str(e)
             return False
-

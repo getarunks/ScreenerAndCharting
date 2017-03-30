@@ -4,13 +4,14 @@ import BS_json_extract
 import BS_get_and_decode_webpage
 import common_code
 
+"""
 def getReportType(consolidated):
     if consolidated == 0:
         reportType = 'Standalone'
     else:
         reportType = 'Consolidated'
     return reportType
-
+"""
 ##### All command line function below
 
  #Add stock list here to run Beat command
@@ -359,8 +360,7 @@ def getRatios(stockSymbol, consolidated):
         del cf
     #del cf, report
 
-def getEPSG(stockSymbol, consolidated):
-    reportType = getReportType(consolidated)
+def getEPSG(stockSymbol):    
     cf = BS_json_extract.compFormat_bussinesStd(stockSymbol)
     cf.get_compFormat()
     if cf.result == 'NODATA':
@@ -370,15 +370,14 @@ def getEPSG(stockSymbol, consolidated):
             del cf
             return False
 
-    reportType = getReportType(consolidated)
-    report = BS_get_and_decode_webpage.getData_bussinesStd(cf.result, stockSymbol, reportType)
+    report = BS_get_and_decode_webpage.getData_bussinesStd(cf.result, stockSymbol)
     if report.getEPSdata() == False:
         print stockSymbol + ' error fetching data'
         del cf
         return False
 
     if common_code.DB_updateRunning == 0:
-        print 'Annual EPS Data: '+reportType
+        print 'Annual EPS Data: '+ report.result_dict['reportType']
         print("                      %15s%15s%15s%15s" % (report.result_dict['Y1Name'],
                                                report.result_dict['Y2Name'],
                                                 report.result_dict['Y3Name'],
@@ -390,7 +389,7 @@ def getEPSG(stockSymbol, consolidated):
         print("Change percent :      %15d%15d%15d" %(report.result_dict['EPSY1Change'],
                                                     report.result_dict['EPSY2Change'],
                                                     report.result_dict['EPSY3Change']))
-        print 'Quaterly EPS Data: ' + reportType
+        print 'Quaterly EPS Data: ' + report.result_dict['reportType']
         print("                      %15s%15s%15s%15s" % (report.result_dict['Q1Name'],
                                                report.result_dict['Q2Name'],
                                                 report.result_dict['Q3Name'],
@@ -408,7 +407,8 @@ def getEPSG(stockSymbol, consolidated):
                                                      report.result_dict['EPSQ3Change'],
                                                      report.result_dict['EPSQ4Change']))
     if common_code.DB_updateRunning == 0:
-        onGoingAnnualEPS = float(report.result_dict['EPS_Q1']) + float(report.result_dict['EPS_Q2']) + float(report.result_dict['EPS_Q3']) +  float(report.result_dict['EPS_Q4'])
+        onGoingAnnualEPS = float(report.result_dict['EPS_Q1']) + float(report.result_dict['EPS_Q2']) +\
+                           float(report.result_dict['EPS_Q3']) +  float(report.result_dict['EPS_Q4'])
         print("On going Annual EPS: %0.2f" % (onGoingAnnualEPS))
 
     return report
