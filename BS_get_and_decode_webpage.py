@@ -241,65 +241,41 @@ class getData_bussinesStd(object):
         try:
             source = myUrlopen(self.promotorLink)
             result = self.splitString(source, '(in %)</td>', '<td class="tdh">', '</td>', 1, 5)
-            PHQuater1, PHQuater2, PHQuater3, PHQuater4, PHQuater5 = result['output']
+            self.result_dict['PHQuater1'], self.result_dict['PHQuater2'], self.result_dict['PHQuater3'],\
+            self.result_dict['PHQuater4'], self.result_dict['PHQuater5'] = result['output']
 
             result = self.splitString(source, 'Total of Promoters', '<td class="">', '</td>', 1, 5 )
-            totalPromoterQ1, totalPromoterQ2, totalPromoterQ3, totalPromoterQ4 ,totalPromoterQ5 = result['output']
+            self.result_dict['totalPromoterQ1'], self.result_dict['totalPromoterQ2'], self.result_dict['totalPromoterQ3'],\
+            self.result_dict['totalPromoterQ4'] ,self.result_dict['totalPromoterQ5'] = result['output']
 
             result = self.splitString(source, '<strong>Institutions</strong>', '<td class="">', '</td>', 1, 5 )
-            totalInstitQ1, totalInstitQ2, totalInstitQ3, totalInstitQ4, totalInstitQ5 = result['output']
+            self.result_dict['totalInstitQ1'], self.result_dict['totalInstitQ2'], self.result_dict['totalInstitQ3'],\
+            self.result_dict['totalInstitQ4'], self.result_dict['totalInstitQ5'] = result['output']
 
             result = self.splitString(source, 'Foreign Institutional Investors</td>', '<td class="">', '</td>', 1, 5 )
-            FIIQ1, FIIQ2, FIIQ3, FIIQ4, FIIQ5 = result['output']
+            self.result_dict['FIIQ1'], self.result_dict['FIIQ2'], self.result_dict['FIIQ3'], self.result_dict['FIIQ4'],\
+            self.result_dict['FIIQ5'] = result['output']
 
             result = self.splitString(source, 'Financial Institutions / Banks</td>', '<td class="">', '</td>', 1, 5 )
-            FinInstitQ1,  FinInstitQ2, FinInstitQ3, FinInstitQ4, FinInstitQ5 = result['output']
+            self.result_dict['FinInstitQ1'],  self.result_dict['FinInstitQ2'], self.result_dict['FinInstitQ3'],\
+            self.result_dict['FinInstitQ4'], self.result_dict['FinInstitQ4'] = result['output']
 
             result = self.splitString(source, 'Mutual  Funds / UTI</td', '<td class="">', '</td>', 1, 5 )
-            MFQ1, MFQ2, MFQ3, MFQ4, MFQ5 = result['output']
+            self.result_dict['MFQ1'], self.result_dict['MFQ2'], self.result_dict['MFQ3'], self.result_dict['MFQ4'],\
+            self.result_dict['MFQ5'] = result['output']
 
-            self.result_dict['PHQuater1'] = PHQuater1
-            self.result_dict['PHQuater2'] = PHQuater2
-            self.result_dict['PHQuater3'] = PHQuater3
-            self.result_dict['PHQuater4'] = PHQuater4
-            self.result_dict['PHQuater5'] = PHQuater5
-
-            self.result_dict['totalPromoterQ1'] = totalPromoterQ1
-            self.result_dict['totalPromoterQ2'] = totalPromoterQ2
-            self.result_dict['totalPromoterQ3'] = totalPromoterQ3
-            self.result_dict['totalPromoterQ4'] = totalPromoterQ4
-            self.result_dict['totalPromoterQ5'] = totalPromoterQ5
-
-            self.result_dict['totalInstitQ1'] = totalInstitQ1
-            self.result_dict['totalInstitQ2'] = totalInstitQ2
-            self.result_dict['totalInstitQ3'] = totalInstitQ3
-            self.result_dict['totalInstitQ4'] = totalInstitQ4
-            self.result_dict['totalInstitQ5'] = totalInstitQ5
-
-            self.result_dict['FIIQ1'] = FIIQ1
-            self.result_dict['FIIQ2'] = FIIQ2
-            self.result_dict['FIIQ3'] = FIIQ3
-            self.result_dict['FIIQ4'] = FIIQ4
-            self.result_dict['FIIQ5'] = FIIQ5
-
-            self.result_dict['FinInstitQ1'] = FinInstitQ1
-            self.result_dict['FinInstitQ2'] = FinInstitQ2
-            self.result_dict['FinInstitQ3'] = FinInstitQ3
-            self.result_dict['FinInstitQ4'] = FinInstitQ4
-            self.result_dict['FinInstitQ5'] = FinInstitQ5
-
-            self.result_dict['MFQ1'] = MFQ1
-            self.result_dict['MFQ2'] = MFQ2
-            self.result_dict['MFQ3'] = MFQ3
-            self.result_dict['MFQ4'] = MFQ4
-            self.result_dict['MFQ5'] = MFQ5
-
-            print("in percent                %s\t%s\t%s\t%s\t%s" % (PHQuater1, PHQuater2, PHQuater3, PHQuater4, PHQuater5))
-            print("Tot PH                  : %s\t\t%s\t\t%s\t\t%s\t\t%s" % (totalPromoterQ1, totalPromoterQ2, totalPromoterQ3, totalPromoterQ4, totalPromoterQ5))
-            print("Tot Institutions        : %s\t\t%s\t\t%s\t\t%s\t\t%s" % (totalInstitQ1, totalInstitQ2, totalInstitQ3, totalInstitQ4, totalInstitQ5))
-            print("Financial Institutions  : %s\t\t%s\t\t%s\t\t%s\t\t%s\n" % (FinInstitQ1, FinInstitQ2, FinInstitQ3, FinInstitQ4, FinInstitQ5))
-            print("FII                     : %s\t\t%s\t\t%s\t\t%s\t\t%s" % (FIIQ1, FIIQ2, FIIQ3, FIIQ4, FIIQ5))
-            print("Mutal Funds             : %s\t\t%s\t\t%s\t\t%s\t\t%s" % (MFQ1, MFQ2, MFQ3, MFQ4, MFQ5))
+            print("in percent                %s\t%s\t%s\t%s\t%s" % (self.result_dict['PHQuater1'], self.result_dict['PHQuater2'],\
+            self.result_dict['PHQuater3'], self.result_dict['PHQuater4'], self.result_dict['PHQuater5'] ))
+            print("Tot PH                  : %s\t\t%s\t\t%s\t\t%s\t\t%s" % (self.result_dict['totalPromoterQ1'], self.result_dict['totalPromoterQ2'],\
+            self.result_dict['totalPromoterQ3'], self.result_dict['totalPromoterQ4'] ,self.result_dict['totalPromoterQ5']))
+            print("Tot Institutions        : %s\t\t%s\t\t%s\t\t%s\t\t%s" % (self.result_dict['totalInstitQ1'], self.result_dict['totalInstitQ2'],\
+            self.result_dict['totalInstitQ3'], self.result_dict['totalInstitQ4'], self.result_dict['totalInstitQ5']))
+            print("Financial Institutions  : %s\t\t%s\t\t%s\t\t%s\t\t%s\n" % (self.result_dict['FinInstitQ1'],  self.result_dict['FinInstitQ2'],
+            self.result_dict['FinInstitQ3'], self.result_dict['FinInstitQ4'], self.result_dict['FinInstitQ4']))
+            print("FII                     : %s\t\t%s\t\t%s\t\t%s\t\t%s" % (self.result_dict['FIIQ1'], self.result_dict['FIIQ2'],\
+            self.result_dict['FIIQ3'], self.result_dict['FIIQ4'],self.result_dict['FIIQ5']))
+            print("Mutal Funds             : %s\t\t%s\t\t%s\t\t%s\t\t%s" % (self.result_dict['MFQ1'], self.result_dict['MFQ2'],\
+            self.result_dict['MFQ3'], self.result_dict['MFQ4'], self.result_dict['MFQ5']))
             return True
 
         except Exception,e:
