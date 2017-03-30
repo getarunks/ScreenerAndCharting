@@ -344,7 +344,7 @@ class getData_bussinesStd(object):
             row = c.fetchone()
 
             # fetch from web if data is none or outdated
-            if 1 == 2 and row != None and self.latestQtrName == row[common_code.DBindex_Q1Name]:
+            if row != None and self.latestQtrName == row[common_code.DBindex_Q1Name]:
                 print "Latest Data found in DB for stock ", self.stockSymbol
                 
                 """ The order of variables is important """
@@ -541,26 +541,18 @@ class getData_bussinesStd(object):
 
     def getRatios(self):
         try:
-            self.ratioSource = myUrlopen(self.ratio_link)
-            string = 'Return on Net Worth (%)</td>'
-            returnOnNetWorth_year1 = self.ratioSource.split(string)[1].split('<td class="">')[1].split('</td>')[0]
-            returnOnNetWorth_year2 = self.ratioSource.split(string)[1].split('<td class="">')[2].split('</td>')[0]
-            returnOnNetWorth_year3 = self.ratioSource.split(string)[1].split('<td class="">')[3].split('</td>')[0]
+            ratioSource = myUrlopen(self.ratio_link)
+            result = self.splitString(ratioSource, 'Return on Net Worth (%)</td>', '<td class="">' ,'</td>', 1, 3)
+            returnOnNetWorth_year1, returnOnNetWorth_year2, returnOnNetWorth_year3 = result['output']
 
-            string = '<td class="tdh tdC">Ratios</td>'
-            year1 = self.ratioSource.split(string)[1].split('<td class="tdh">')[1].split('</td>')[0]
-            year2 = self.ratioSource.split(string)[1].split('<td class="tdh">')[2].split('</td>')[0]
-            year3 = self.ratioSource.split(string)[1].split('<td class="tdh">')[3].split('</td>')[0]
+            result = self.splitString(ratioSource, '<td class="tdh tdC">Ratios</td>', '<td class="tdh">' ,'</td>', 1, 3)
+            year1, year2, year3 = result['output']
 
-            string = 'Debt-Equity Ratio</td>'
-            debtToEquity_year1 = self.ratioSource.split(string)[1].split('<td class="">')[1].split('</td>')[0]
-            debtToEquity_year2 = self.ratioSource.split(string)[1].split('<td class="">')[2].split('</td>')[0]
-            debtToEquity_year3 = self.ratioSource.split(string)[1].split('<td class="">')[3].split('</td>')[0]
+            result = self.splitString(ratioSource, 'Debt-Equity Ratio</td>', '<td class="">' ,'</td>', 1, 3)
+            debtToEquity_year1, debtToEquity_year2, debtToEquity_year3 = result['output']
 
-            string = 'Interest Coverage ratio</td>'
-            interestCoverage_year1 = self.ratioSource.split(string)[1].split('<td class="">')[1].split('</td>')[0]
-            interestCoverage_year2 = self.ratioSource.split(string)[1].split('<td class="">')[2].split('</td>')[0]
-            interestCoverage_year3 = self.ratioSource.split(string)[1].split('<td class="">')[3].split('</td>')[0]
+            result = self.splitString(ratioSource, 'Interest Coverage ratio</td>', '<td class="">' ,'</td>', 1, 3)
+            interestCoverage_year1, interestCoverage_year2, interestCoverage_year3 = result['output']
 
             print("Ratios                \t%s\t%s\t%s" % (year1, year2, year3))
             print("Return On Net Worth : \t%s\t%s\t%s" % (returnOnNetWorth_year1, returnOnNetWorth_year2, returnOnNetWorth_year3))
