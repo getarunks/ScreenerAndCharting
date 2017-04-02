@@ -77,7 +77,6 @@ class getData_bussinesStd(object):
         #substract one coloumn of item headers
         noItemsPresent -= 1
         noItems = min(noItemsPresent, expectedNoItems)
-        print "items ", noItemsPresent, expectedNoItems, noItems
         output = []
 
         """

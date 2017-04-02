@@ -299,7 +299,7 @@ def getBalanceSheet(stockSymbol):
             del cf
             return False
 
-    report = BS_get_and_decode_webpage.getData_bussinesStd(cf.result, stockSymbol, 'doesntmatter')
+    report = BS_get_and_decode_webpage.getData_bussinesStd(cf.result, stockSymbol)
     if report.getBalanceSheetData() == False:
         print stockSymbol + ' error fetching data'
         del cf
@@ -343,7 +343,7 @@ def getPH(stockSymbol):
         return
     del cf, report
 
-def getRatios(stockSymbol, consolidated):
+def getRatios(stockSymbol):
     cf = BS_json_extract.compFormat_bussinesStd(stockSymbol)
     cf.get_compFormat()
     if cf.result == 'NODATA':
@@ -353,8 +353,7 @@ def getRatios(stockSymbol, consolidated):
             del cf
             return False
 
-    reportType = getReportType(consolidated)
-    report = BS_get_and_decode_webpage.getData_bussinesStd(cf.result, stockSymbol, reportType)
+    report = BS_get_and_decode_webpage.getData_bussinesStd(cf.result, stockSymbol)
     if report.getRatios() == False:
         print stockSymbol + ' error fetching data'
         del cf
@@ -486,7 +485,6 @@ def getCompleteReport(EPSY1, EPSY2, EPSY3, EPSCurrQtr, EPSQtrAlone):
             EPSQ3Change >= float(EPSQtrAlone) and EPSQ4Change >= float(EPSQtrAlone):
             textFile.write("%s meets your stringent 4 qtr EPSG requirement\n" % (stockSymbol))
             textFile.flush()
-            metStocks_4qtrs.append(stockSymbol)
             print "meets requirement"
             condMetOnce = 1
         elif EPSQ1Change >= float(EPSQtrAlone) and EPSQ2Change >= float(EPSQtrAlone) and\
