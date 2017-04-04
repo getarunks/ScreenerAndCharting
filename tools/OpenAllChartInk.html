@@ -1,37 +1,42 @@
 <!DOCTYPE html>
 <html>
-<body>
+<body style="background-color:powderblue;">
 
-<p id="message0"></p>
-<p> Enter Stock Tickers :</p>
+<style>
+body {
+	background-image:url(img src="img/background.png")
+}
+</style>
+<p style="font-size:150%;" id="messageLink"></p>
+<p style="font-size:150%;"> Enter Stock Tickers :</p>
 <input type="text" id="stockTicker">
 <button type="button" onclick="mainFunction()">Open ChartInk links</button>
-<p id="message"></p>
-<p id="message1"></p>
+<button type="button" onclick="startOverFunction()">Start Over</button>
+<p style="font-size:150%;"> Number of charts to open per click :</p>
+<input type="text" id="stockToDisplay" spellcheck="false">
+<p id="messageProcessedStocks"></p>
+<p id="messageProcessedStocksStats"></p>
+
+<center> <img src="img/background.png" alt="Mountain View" > </center>
 
 <script>
-var message0 = document.getElementById("message0");
-message0.innerHTML = "Copy data from: https://www.nseindia.com/products/dynaContent/equities/equities/json/online52NewHigh.json";
+var messageLink = document.getElementById("messageLink");
+messageLink.innerHTML = "Copy data from: https://www.nseindia.com/products/dynaContent/equities/equities/json/online52NewHigh.json";
 
-function myFunction() {
-	var message, x, stocks_list;
-    message = document.getElementById("message");
-    message.innerHTML = "";
-
-	var stocks_list = document.getElementById("stockTicker").value;
-	var stocks = stocks_list.split(",")
-	message.innerHTML += stocks;
-
-	for (i=0; i< stocks.length -1; i++) {
-		var text = "http://chartink.com/stocks/" + stocks[i] + ".html";
-		text = text.replace (/"/g,"");
-		text = text.replace (/ /g,"");
-		window.open(text);
-	}
-}
 totalStocks = 0;
 processedStocks = 0;
 var x = "";
+var messageProcessedStocks = document.getElementById("messageProcessedStocks")
+var messageProcessedStocksStats = document.getElementById("messageProcessedStocksStats");
+document.getElementById("stockToDisplay").value = 5;
+
+function startOverFunction() {
+	
+	totalStocks = 0;
+	processedStocks = 0;
+	messageProcessedStocks.innerHTML = "";
+	messageProcessedStocksStats.innerHTML = "Total stocks: " + totalStocks + " Processed: " + processedStocks
+}
 
 function openPage(stock){
 
@@ -44,25 +49,24 @@ function openPage(stock){
 
 function mainFunction() {
 	var stocks_list = document.getElementById("stockTicker").value;
-	var newObj = JSON.parse(stocks_list);
-	var message = document.getElementById("message");
-	var message1 = document.getElementById("message1");
-	message.innerHTML = x;
-	totalStocks = newObj.data.length
+	var newObj = JSON.parse(stocks_list);	
+	var stocksToDisplay = document.getElementById("stockToDisplay").value;
+	messageProcessedStocks.innerHTML = x;
+	totalStocks = newObj.data.length	
 
 	debugger;
 	for (i = processedStocks ; i < totalStocks ; i++) {
 		debugger;
 		x += newObj.data[i].symbol;
 		x += ", ";
-		message.innerHTML = x;
+		messageProcessedStocks.innerHTML = x;
 		openPage(newObj.data[i].symbol)
 		debugger;
 		processedStocks += 1
-		if (processedStocks % 10 == 0)
+		if (processedStocks % stocksToDisplay == 0)
 			break;
 	}
-	message1.innerHTML = "Total stocks: " + totalStocks + " Processed: " + processedStocks
+	messageProcessedStocksStats.innerHTML = "Total stocks: " + totalStocks + " Processed: " + processedStocks
 }
 </script>
 </body>
