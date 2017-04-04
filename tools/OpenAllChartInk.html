@@ -2,27 +2,67 @@
 <html>
 <body>
 
+<p id="message0"></p>
 <p> Enter Stock Tickers :</p>
 <input type="text" id="stockTicker">
-<button type="button" onclick="myFunction()">Open ChartInk links</button>
+<button type="button" onclick="mainFunction()">Open ChartInk links</button>
 <p id="message"></p>
+<p id="message1"></p>
 
 <script>
+var message0 = document.getElementById("message0");
+message0.innerHTML = "Copy data from: https://www.nseindia.com/products/dynaContent/equities/equities/json/online52NewHigh.json";
+
 function myFunction() {
 	var message, x, stocks_list;
     message = document.getElementById("message");
     message.innerHTML = "";
-	
+
 	var stocks_list = document.getElementById("stockTicker").value;
 	var stocks = stocks_list.split(",")
 	message.innerHTML += stocks;
-	
+
 	for (i=0; i< stocks.length -1; i++) {
 		var text = "http://chartink.com/stocks/" + stocks[i] + ".html";
 		text = text.replace (/"/g,"");
 		text = text.replace (/ /g,"");
 		window.open(text);
 	}
+}
+totalStocks = 0;
+processedStocks = 0;
+var x = "";
+
+function openPage(stock){
+
+	var text = "http://chartink.com/stocks/" + stock + ".html";
+	text = text.replace (/"/g,"");
+	text = text.replace (/ /g,"");
+	console.log(text);
+	window.open(text);
+}
+
+function mainFunction() {
+	var stocks_list = document.getElementById("stockTicker").value;
+	var newObj = JSON.parse(stocks_list);
+	var message = document.getElementById("message");
+	var message1 = document.getElementById("message1");
+	message.innerHTML = x;
+	totalStocks = newObj.data.length
+
+	debugger;
+	for (i = processedStocks ; i < totalStocks ; i++) {
+		debugger;
+		x += newObj.data[i].symbol;
+		x += ", ";
+		message.innerHTML = x;
+		openPage(newObj.data[i].symbol)
+		debugger;
+		processedStocks += 1
+		if (processedStocks % 10 == 0)
+			break;
+	}
+	message1.innerHTML = "Total stocks: " + totalStocks + " Processed: " + processedStocks
 }
 </script>
 </body>
