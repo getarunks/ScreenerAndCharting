@@ -32,6 +32,7 @@ function startOverFunction() {
 	totalStocks = 0;
 	processedStocks = 0;
 	messageProcessedStocks.innerHTML = "";
+	strStockProcessed ="";
 	messageProcessedStocksStats.innerHTML = "Total stocks: " + totalStocks + " Processed: " + processedStocks
 }
 
@@ -69,6 +70,7 @@ function mainFunction() {
 		debugger;
 		var stocks_list = document.getElementById("stockTicker").value;
 		var stocks = stocks_list.split(",")
+		totalStocks = stocks.length - 1;
 		for (i = processedStocks ; i < stocks.length -1; i++) {
 			debugger;
 			strStockProcessed += stocks[i];
