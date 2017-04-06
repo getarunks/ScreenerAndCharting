@@ -21,6 +21,7 @@ messageLink.innerHTML = "Copy data from: https://www.nseindia.com/products/dynaC
 
 totalStocks = 0;
 processedStocks = 0;
+copyTextNow = 1;
 var strStockProcessed = "";
 var messageProcessedStocks = document.getElementById("messageProcessedStocks")
 var messageProcessedStocksStats = document.getElementById("messageProcessedStocksStats");
@@ -34,6 +35,7 @@ function startOverFunction() {
 	messageProcessedStocks.innerHTML = "";
 	strStockProcessed ="";
 	messageProcessedStocksStats.innerHTML = "Total stocks: " + totalStocks + " Processed: " + processedStocks
+	copyTextNow = 1;
 }
 
 function openPage(stock){
@@ -46,20 +48,23 @@ function openPage(stock){
 
 function mainFunction() {
 	var jsonFormat = document.getElementById("jsonFormatCheck");
-	var stocks_list = document.getElementById("stockTicker").value;
-	if (jsonFormat.checked == true)
-		var newObj = JSON.parse(stocks_list);	
+	if (copyTextNow == 1) {
+		var stocks_list = document.getElementById("stockTicker").value;
+		if (jsonFormat.checked == true)
+			jsonData = JSON.parse(stocks_list);
+	}
+		
 	var stocksToOpenPerClick = document.getElementById("stocksToOpenPerClick").value;
 	messageProcessedStocks.innerHTML = strStockProcessed;	
 	
 	if (jsonFormat.checked == true) {
-		totalStocks = newObj.data.length;
+		totalStocks = jsonData.data.length;
 		debugger;
 		for (i = processedStocks ; i < totalStocks ; i++) {
 			debugger;
-			strStockProcessed += newObj.data[i].symbol;
+			strStockProcessed += jsonData.data[i].symbol;
 			strStockProcessed += ", ";
-			openPage(newObj.data[i].symbol)
+			openPage(jsonData.data[i].symbol)
 			debugger;
 			processedStocks += 1
 			if (processedStocks % stocksToOpenPerClick == 0)

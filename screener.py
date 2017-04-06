@@ -336,7 +336,7 @@ def getPH(stockSymbol):
             del cf
             return False
 
-    report = BS_get_and_decode_webpage.getData_bussinesStd(cf.result, stockSymbol, 'doesntmatter')
+    report = BS_get_and_decode_webpage.getData_bussinesStd(cf.result, stockSymbol)
     if report.getPromotorHoldings() == False:
         print stockSymbol + ' error fetching data'
         del cf
