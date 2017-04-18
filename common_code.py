@@ -12,9 +12,9 @@ update_start_index = 0
 """
 Enter the lable show in BS website for latest quater
 """
-current_qtr = 'Dec-2016'
-previous_qtr = 'Sep-2016'
-current_year = '2016'
+current_qtr = 'Mar-2017'
+previous_qtr = 'Dec-2016'
+current_year = '2017'
 
 """
 Sqlite File name

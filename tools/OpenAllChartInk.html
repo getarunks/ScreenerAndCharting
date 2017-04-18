@@ -7,6 +7,7 @@
 <p style="font-size:110%;" id="messageLink"></p>
 <p style="font-size:110%;"> Enter Text : <input type="text" id="stockTicker">
 JSON Format: <input type="checkbox" id="jsonFormatCheck">
+Text Seperated by Space: <input type="checkbox" id="txtSeperatorSpace">
 <button type="button" onclick="mainFunction()">Open ChartInk links</button>
 <button type="button" onclick="startOverFunction()">Start Over</button>
 Number of charts to open per click : <input type="text" id="stocksToOpenPerClick" spellcheck="false">
@@ -27,6 +28,7 @@ var messageProcessedStocks = document.getElementById("messageProcessedStocks")
 var messageProcessedStocksStats = document.getElementById("messageProcessedStocksStats");
 document.getElementById("stocksToOpenPerClick").value = 5;
 jsonFormat = document.getElementById("jsonFormatCheck");
+txtSeperatorSpace = document.getElementById("txtSeperatorSpace");
 jsonFormat.checked = true;
 
 function startOverFunction() {	
@@ -74,7 +76,13 @@ function mainFunction() {
 	} else {
 		debugger;
 		var stocks_list = document.getElementById("stockTicker").value;
-		var stocks = stocks_list.split(",")
+		txtSeperatorSpace = document.getElementById("txtSeperatorSpace");
+		if(txtSeperatorSpace.checked == true) {
+			seperator = " ";
+		} else {
+			seperator = ",";
+		}
+		var stocks = stocks_list.split(seperator)
 		totalStocks = stocks.length - 1;
 		for (i = processedStocks ; i < stocks.length -1; i++) {
 			debugger;
