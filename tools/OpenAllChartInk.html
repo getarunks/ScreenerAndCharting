@@ -11,6 +11,7 @@ Text Seperated by Space: <input type="checkbox" id="txtSeperatorSpace">
 <button type="button" onclick="mainFunction()">Open ChartInk links</button>
 <button type="button" onclick="startOverFunction()">Start Over</button>
 Number of charts to open per click : <input type="text" id="stocksToOpenPerClick" spellcheck="false">
+Start Index : <input type="text" id="startIndex" spellcheck="false">
 </p>
 
 <p id="messageProcessedStocks"></p>
@@ -27,6 +28,7 @@ var strStockProcessed = "";
 var messageProcessedStocks = document.getElementById("messageProcessedStocks")
 var messageProcessedStocksStats = document.getElementById("messageProcessedStocksStats");
 document.getElementById("stocksToOpenPerClick").value = 5;
+document.getElementById("startIndex").value = 0;
 jsonFormat = document.getElementById("jsonFormatCheck");
 txtSeperatorSpace = document.getElementById("txtSeperatorSpace");
 jsonFormat.checked = true;
@@ -57,7 +59,13 @@ function mainFunction() {
 	}
 		
 	var stocksToOpenPerClick = document.getElementById("stocksToOpenPerClick").value;
-	messageProcessedStocks.innerHTML = strStockProcessed;	
+	index = document.getElementById("startIndex").value;
+	messageProcessedStocks.innerHTML = strStockProcessed;
+	
+	if (processedStocks == 0) {
+		debugger;
+		processedStocks = parseInt(index);
+	}
 	
 	if (jsonFormat.checked == true) {
 		totalStocks = jsonData.data.length;
@@ -71,6 +79,7 @@ function mainFunction() {
 			processedStocks += 1
 			if (processedStocks % stocksToOpenPerClick == 0)
 				break;
+			debugger;
 		}
 		messageProcessedStocks.innerHTML = strStockProcessed;
 	} else {
