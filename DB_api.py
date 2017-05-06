@@ -39,6 +39,28 @@ def getDataDB(stock):
     print row[0], row[1]
     conn.close()
     
+def EPSDB_Details():
+    conn = sqlite3.connect(common_code.sqliteFile)
+    c = conn.cursor()
+    cursor = c.execute("SELECT symbol, EPS_Q1, EPS_Q2, EPS_Q3, EPS_Q4, \
+                EPS_Q1YoY, EPS_Q2YoY, EPS_Q3YoY, EPS_Q4YoY,\
+                Q1Name, Q2Name, Q3Name, Q4Name,\
+                EPSQ1Change, EPSQ2Change, EPSQ3Change, EPSQ4Change,\
+                Y1Name, Y2Name, Y3Name, Y4Name,\
+                EPS_Y1, EPS_Y2, EPS_Y3, EPS_Y4,\
+                EPSY1Change, EPSY2Change, EPSY3Change, reportType from STOCKDATA")
+    total_stocks = 0
+    DB_updated_stocks = 0
+    
+    for row in cursor:
+        total_stocks +=1
+        if row[common_code.DBindex_Q1Name] == common_code.current_qtr:
+            DB_updated_stocks +=1
+    
+    print "latest qtr: " + common_code.current_qtr
+    print ("total stocks = %d updated stocks = %d\n" % (total_stocks, DB_updated_stocks))
+    conn.close()
+    
 def BeatDB_Details():
     conn = sqlite3.connect(common_code.sqliteFile)
     c = conn.cursor()
@@ -217,71 +239,3 @@ def readDB(qtrName=None):
             stocks_with_latest += 1
     conn.close()
     print "stocks with latest info: ", stocks_with_latest, "\ntotal stocks: ", total_stocks
-
-def createDB():
-    sqlite_file = common_code.sqliteFile
-    epsdata = []
-    epsdata.append(2.3)
-    epsdata.append(3.4)
-
-    conn =sqlite3.connect(sqlite_file)
-    c = conn.cursor()
-
-    c.execute("CREATE TABLE STOCKDATA \
-              (symbol, EPS_Q1, EPS_Q2, EPS_Q3, EPS_Q4, \
-              EPS_Q1YoY, EPS_Q2YoY, EPS_Q3YoY, EPS_Q4YoY,\
-              Q1Name, Q2Name, Q3Name, Q4Name,\
-              EPSQ1Change, EPSQ2Change, EPSQ3Change, EPSQ4Change,\
-              Y1Name, Y2Name, Y3Name, Y4Name,\
-              EPS_Y1, EPS_Y2, EPS_Y3, EPS_Y4,\
-              EPSY1Change, EPSY2Change, EPSY3Change,\
-              TTMEPS)")
-
-    """
-    c.execute("INSERT INTO STOCKDATA (symbol, Q1EPS)\
-                VALUES(?)",epsdata[1])
-    conn.commit()
-    conn.close()
-    return
-    """
-
-    for stock in stockListBeat:
-        cf = compFormat_bussinesStd(stock)
-        cf.get_compFormat()
-        if cf.result == 'NODATA':
-            print 'No Data for: ' + stock
-            del cf
-            return
-
-        reportType = getReportType(0)
-        BSdata = getData_bussinesStd(cf.result, stock, reportType)
-        if BSdata.getEPSdata() == False:
-            print 'get_averageEPS returned False'
-            return
-
-        """ Add EPS for last four quaters
-        """
-        TTMEPS = BSdata.result_dict['EPS_Q1'] +  BSdata.result_dict['EPS_Q1'] + \
-                BSdata.result_dict['EPS_Q3'] +  BSdata.result_dict['EPS_Q4']
-
-        c.execute('''INSERT INTO STOCKDATA(symbol, EPS_Q1, EPS_Q2, EPS_Q3, EPS_Q4, \
-              EPS_Q1YoY, EPS_Q2YoY, EPS_Q3YoY, EPS_Q4YoY,\
-              Q1Name, Q2Name, Q3Name, Q4Name,\
-              EPSQ1Change, EPSQ2Change, EPSQ3Change, EPSQ4Change,\
-              Y1Name, Y2Name, Y3Name, Y4Name,\
-              EPS_Y1, EPS_Y2, EPS_Y3, EPS_Y4,\
-              EPSY1Change, EPSY2Change, EPSY3Change,\
-              TTMEPS)\
-              values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
-              (stock, BSdata.result_dict['EPS_Q1'],  BSdata.result_dict['EPS_Q2'],  BSdata.result_dict['EPS_Q3'],  BSdata.result_dict['EPS_Q4'],
-              BSdata.result_dict['EPS_Q1YoY'],BSdata.result_dict['EPS_Q2YoY'], BSdata.result_dict['EPS_Q3YoY'], BSdata.result_dict['EPS_Q4YoY'],
-              BSdata.result_dict['Q1Name'], BSdata.result_dict['Q2Name'], BSdata.result_dict['Q3Name'], BSdata.result_dict['Q4Name'],
-              BSdata.result_dict['EPSQ1Change'], BSdata.result_dict['EPSQ2Change'], BSdata.result_dict['EPSQ3Change'], BSdata.result_dict['EPSQ4Change'],
-              BSdata.result_dict['Y1Name'], BSdata.result_dict['Y2Name'], BSdata.result_dict['Y3Name'], BSdata.result_dict['Y4Name'],
-              BSdata.result_dict['EPS_Y1'], BSdata.result_dict['EPS_Y2'], BSdata.result_dict['EPS_Y3'], BSdata.result_dict['EPS_Y4'],
-              BSdata.result_dict['EPSY1Change'], BSdata.result_dict['EPSY2Change'], BSdata.result_dict['EPSY3Change'],
-              TTMEPS))
-
-    #http://stackoverflow.com/questions/7026911/sqlite-no-return-type-in-python
-    conn.commit()
-    conn.close()
