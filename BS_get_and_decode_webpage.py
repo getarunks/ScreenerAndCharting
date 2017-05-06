@@ -350,20 +350,25 @@ class getData_bussinesStd(object):
             print 'Exception while reading DB section. May be you wanna fix them.',str(e)
             import time
             time.sleep(5)
+            
+        print "web access needed..."
 
         try:
             try:
                 """ Lets start with consolidated and fallback to standalone if not available"""
                 reportType = 'Consolidated'
+                step = -2
                 self.EPS_Quaterly_1_Source = myUrlopen(self.EPS_Quaterly_1[reportType])
                 sourceCode = self.EPS_Quaterly_1_Source
                 Q1 = float(sourceCode.split('EPS (Rs)</td>')[1].split('<td class="">')[1].split('</td>')[0])                
             except Exception,e:
+                print "exception in consolidated"
+                step = -1
                 reportType = 'Standalone'
                 self.EPS_Quaterly_1_Source = myUrlopen(self.EPS_Quaterly_1[reportType])
                 sourceCode = self.EPS_Quaterly_1_Source
                 Q1 = float(sourceCode.split('EPS (Rs)</td>')[1].split('<td class="">')[1].split('</td>')[0])
-
+            step = 0
             self.EPS_Quaterly_2_Source = myUrlopen(self.EPS_Quaterly_2[reportType])
             sourceCode = self.EPS_Quaterly_1_Source
             

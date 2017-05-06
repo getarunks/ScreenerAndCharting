@@ -412,13 +412,13 @@ def getEPSG(stockSymbol):
 
     return report
 
-def getAll(stockSymbol, consolidated):
+def getAll(stockSymbol):
     print("=============================")
-    getEPSG(stockSymbol, consolidated)
+    getEPSG(stockSymbol)
     print("=============================")
-    getRatios(stockSymbol, consolidated)
+    getRatios(stockSymbol)
     print("=============================")
-    getCashFlow(stockSymbol, consolidated)
+    getCashFlow(stockSymbol)
     print("=============================")
     print("Promoter Holding Pattern:")
     getPH(stockSymbol)
@@ -453,7 +453,7 @@ def getCompleteReport(EPSY1, EPSY2, EPSY3, EPSCurrQtr, EPSQtrAlone):
               EPS_Y1, EPS_Y2, EPS_Y3, EPS_Y4,\
               EPSY1Change, EPSY2Change, EPSY3Change \
               from STOCKDATA")
-              
+    latestData = 0      
     for row in cursor:
         stockSymbol = row[common_code.DBindex_symbol]
         EPS_Q1 = row[common_code.DBindex_EPS_Q1]
@@ -480,6 +480,7 @@ def getCompleteReport(EPSY1, EPSY2, EPSY3, EPSCurrQtr, EPSQtrAlone):
         #ignore negative EPS stocks even if it has latest data
         elif EPS_Q1 < 0:
             negative_currentQtr.append(stockSymbol)
+            latestData +=1
             continue
         elif EPSQ1Change >= float(EPSQtrAlone) and EPSQ2Change >= float(EPSQtrAlone) and\
             EPSQ3Change >= float(EPSQtrAlone) and EPSQ4Change >= float(EPSQtrAlone):
@@ -497,6 +498,8 @@ def getCompleteReport(EPSY1, EPSY2, EPSY3, EPSCurrQtr, EPSQtrAlone):
             metStocks_2qtrs.append(stockSymbol)
             condMetOnce = 1
 
+        latestData +=1
+
         if  EPSY1Change >= float(EPSY1)  and  EPSY2Change >= float(EPSY2) and\
             EPSY3Change >= float(EPSY3) and EPSQ1Change >= float(EPSCurrQtr):
             #skip if already in one list
@@ -507,7 +510,9 @@ def getCompleteReport(EPSY1, EPSY2, EPSY3, EPSCurrQtr, EPSQtrAlone):
         condMetOnce = 0
         
     conn.close()
-
+    
+    
+    print("%d stocks has latest data\n" % latestData)
     print("%d stocks meets 4 qtr criteria\n" % len(metStocks_4qtrs))
     print metStocks_4qtrs, "\n"
     print("%d stocks meets 3 qtr criteria\n" % len(metStocks_3qtrs))
@@ -567,7 +572,7 @@ def updateDB(reqType = 'EPS'):
         if stockSymbol == 0:
             continue
         if reqType == 'EPS':
-            report = getEPSG(stockSymbol, 0)
+            report = getEPSG(stockSymbol)
         else:
             report = getBalanceSheet(stockSymbol)
         if report == False:
