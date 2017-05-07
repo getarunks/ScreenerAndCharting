@@ -580,9 +580,25 @@ def updateAllDB():
             print stockSymbol + ' error fetching data'
         index +=1
         del cf
-        if index == 1:
+        if index == 50:
             break
-    
+"""
+Function written to test the updateAllDB().
+This funciton allows to use updateCompleteDataBase for a particular stock.
+"""
+def test_updateAllDB():
+    stockSymbol = 'FAIRCHEM'
+    cf = BS_json_extract.compFormat_bussinesStd(stockSymbol)
+    cf.get_compFormat()
+    if cf.result == 'NODATA':
+        print 'No Data for: ' + stockSymbol
+        return
+    print "processing stock...", stockSymbol
+    report = BS_get_and_decode_webpage.getData_bussinesStd(cf.result, stockSymbol)
+    if report.updateCompleteDataBase() == False:
+        print stockSymbol + ' error fetching data'
+    del cf
+        
 def updateDB(reqType = 'EPS'):
     googleSceernerData = google_json_extract.google_sceerner_json_DataExtract()
     googleSceernerData.retrieve_stock_data()

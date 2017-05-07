@@ -11,6 +11,7 @@ def deleteDB():
     c = conn.cursor()
 
     c.execute("DROP TABLE YEARLYSTOCKDATA")
+    c.execute("DROP TABLE QUATERLYSTOCKDATA")
     conn.commit()
     conn.close()
 
@@ -125,12 +126,28 @@ def print_selected(selected_stock_list, stock_dict_allDetails):
         print "current Liab     = ", each_dict['currLiab']
         print "Total Assets     = ", each_dict['totAss']
         print "Report Type      = ", each_dict['reportType']
-        
-def readDB_Beat(min_eV = 0, max_ev = 100000000):
+
+def _get_qtrTTM_EBIT(stockSymbol, c):
+    #conn =sqlite3.connect(common_code.sqlite_file)
+    #c = conn.cursor()
+    sql_cmd = "SELECT * FROM QUATERLYSTOCKDATA WHERE symbol=?"
+    c.execute(sql_cmd, [(stockSymbol)])
+    row = c.fetchone()
+    total =  row[common_code.QuaterlyIndex_EBIT_Q1] + row[common_code.QuaterlyIndex_EBIT_Q2] + \
+                row[common_code.QuaterlyIndex_EBIT_Q3] + row[common_code.QuaterlyIndex_EBIT_Q4]
+    print "TTM QTR EBIT ", total
+    return total
+
+def filterStocksDB_Beat(min_eV = 0, max_ev = 100000000):
+    use_qtr_EBIT = True
     conn = sqlite3.connect(common_code.sqliteFile)
     c = conn.cursor()
-    cursor = c.execute("SELECT symbol, EBIT, TotAssest, CurLiability, MarketCap, \
-                TotDebt, CurrYear, EarningsYield, RoC,reportType from BEATSTOCKDATA")
+    cursor_yearly = c.execute("SELECT symbol,Y1EPS, Y2EPS, Y3EPS, Y4EPS, \
+                Y1Name, Y2Name, Y3Name, Y4Name,\
+                EPSY1Change, EPSY2Change, EPSY3Change,\
+                EBIT, TotAssest, CurLiability, MarketCap,\
+                TotDebt, CurrYear, EarningsYield, RoC, \
+                reportType from YEARLYSTOCKDATA")
 
     stock_dict_RoC = {}
     stock_dict_eYield = {}
@@ -144,31 +161,34 @@ def readDB_Beat(min_eV = 0, max_ev = 100000000):
     """
     stock_dict_allDetails = {}
     
-    for row in cursor:
+    for row in cursor_yearly:
         total_stocks +=1
                 
-        eV = float(row[common_code.BeatDBindex_marketCap]) + float(row[common_code.BeatDBindex_totalDebt])
+        eV = float(row[common_code.YearlyIndex_MarketCap]) + float(row[common_code.YearlyIndex_TotDebt])
         if (eV < min_eV) or (eV > max_ev):
             continue
        
-        stock_dict_RoC[row[common_code.BeatDBindex_symbol]] = row[common_code.BeatDBindex_RoC]
-        stock_dict_eYield[row[common_code.BeatDBindex_symbol]] = row[common_code.BeatDBindex_earningsYield]
+        stock_dict_RoC[row[common_code.YearlyIndex_symbol]] = row[common_code.YearlyIndex_RoC]
+        stock_dict_eYield[row[common_code.YearlyIndex_symbol]] = row[common_code.YearlyIndex_EarningsYield]
         """ This declartion should be inside the for loop to create different instance of stock_dict_perDetais"""
         stock_dict_perDetails = {}
-        stock_dict_perDetails['symbol'] = row[common_code.BeatDBindex_symbol]
-        stock_dict_perDetails['currLiab'] = row[common_code.BeatDBindex_currentLiabilites]
-        stock_dict_perDetails['totAss'] = row[common_code.BeatDBindex_totalAssets]
-        stock_dict_perDetails['opProfit'] = row[common_code.BeatDBindex_operatingProfit]
-        stock_dict_perDetails['RoC'] = row[common_code.BeatDBindex_RoC]
-        stock_dict_perDetails['marCap'] = row[common_code.BeatDBindex_marketCap]
-        stock_dict_perDetails['totDebt'] = row[common_code.BeatDBindex_totalDebt]
-        stock_dict_perDetails['curYear'] = row[common_code.BeatDBindex_currentYear]
-        stock_dict_perDetails['eYield'] = row[common_code.BeatDBindex_earningsYield]
-        stock_dict_perDetails['reportType'] = row[common_code.BeatDBindex_reportType]
+        stock_dict_perDetails['symbol'] = row[common_code.YearlyIndex_symbol]
+        stock_dict_perDetails['currLiab'] = row[common_code.YearlyIndex_CurLiability]
+        stock_dict_perDetails['totAss'] = row[common_code.YearlyIndex_TotAssest]
+        if use_qtr_EBIT == True:
+            stock_dict_perDetails['opProfit'] = _get_qtrTTM_EBIT(row[common_code.YearlyIndex_symbol], c)
+        else:
+            stock_dict_perDetails['opProfit'] = row[common_code.YearlyIndex_EBIT]
+        stock_dict_perDetails['RoC'] = row[common_code.YearlyIndex_RoC]
+        stock_dict_perDetails['marCap'] = row[common_code.YearlyIndex_MarketCap]
+        stock_dict_perDetails['totDebt'] = row[common_code.YearlyIndex_TotDebt]
+        stock_dict_perDetails['curYear'] = row[common_code.YearlyIndex_CurrYear]
+        stock_dict_perDetails['eYield'] = row[common_code.YearlyIndex_EarningsYield]
+        stock_dict_perDetails['reportType'] = row[common_code.YearlyIndex_reportType]
         
-        print "Adding symbol = ", row[common_code.BeatDBindex_symbol]
+        print "Adding symbol = ", row[common_code.YearlyIndex_symbol]
         
-        stock_dict_allDetails[row[common_code.BeatDBindex_symbol]] = stock_dict_perDetails
+        stock_dict_allDetails[row[common_code.YearlyIndex_symbol]] = stock_dict_perDetails
         
         sort_list_roc = [(k,v) for v,k in sorted(
                     [(v,k) for k,v in stock_dict_RoC.items()], reverse=True)]

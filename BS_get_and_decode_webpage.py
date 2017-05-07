@@ -105,145 +105,147 @@ class getData_bussinesStd(object):
         """
         try:
             reportType = 'Consolidated'
-            source = myUrlopen(self.finacialOverview_link[reportType])
+            self.balanceSheet_source = myUrlopen(self.balance_sheet_link[reportType])                        
             """
-            We can't use splitString. We have to git exception here to switch to standalone
+            We can't use splitString. We have to get exception here to switch to standalone
             """
-            Y1EPS = source.split('Earning Per Share (Rs)</td>')[1].split('<td class="">')[1].split('</td>')[0]
+            currentLiabilites = self.balanceSheet_source.split('Current Liabilities</td>')[1].split('<td class="">')[1].split('</td>')[0]            
         except Exception:
             print "exception in consolidated"
             reportType = 'Standalone'
             step = -1
-            source = myUrlopen(self.finacialOverview_link[reportType])
-            Y1EPS = source.split('Earning Per Share (Rs)</td>')[1].split('<td class="">')[1].split('</td>')[0]            
-        self.finacialOverview_source = source
-        print "report type: ", reportType
-        try:            
-            """
-            Some stocks Anuual EPS is listed in finacial overview link, for other
-            it is listed in P&L link. To solve this we need the below try except,
-            """
-            try:
-                step = 0
-                result = self.splitString(self.finacialOverview_source, 'Earning Per Share (Rs)</td>', '<td class="">', '</td>', 1, 3)
-                Y1EPS, Y2EPS, Y3EPS = result['output']            
-                
-                step = 1
-                result = self.splitString(self.finacialOverview_source, 'Particulars ', '<td class="tdh">', '</td>', 1, 3)
-                Y1Name, Y2Name, Y3Name = result['output']
-                
-                step =2
-                self.finacialOverview_source1 = myUrlopen(self.finacialOverview_link1[reportType])
-                result = self.splitString(self.finacialOverview_source1, 'Earning Per Share (Rs)</td>', '<td class="">', '</td>', 1, 1)
-                Y4EPS = result['output'][0]      
-                
-                result = self.splitString(self.finacialOverview_source1, 'Particulars ',  '<td class="tdh">', '</td>', 1, 1)
-                Y4Name = result['output'][0]
-                finacialPL_src_buffered = 0
-            except Exception,e:
-                print 'failed when spliting finacialoverview link trying finacialPL link',str(e)
-                self.finacialPL_source = myUrlopen(self.finacialPL_link[reportType])
-                step = 6
-                result = self.splitString(self.finacialPL_source, '<td class="tdL" colspan="0">Earning Per Share (Rs.)</td>',
-                                         '<td class="amount">', '</td>', 1, 3)
-                Y1EPS, Y2EPS, Y3EPS = result['output']
-                
-                step = 7
-                result = self.splitString(self.finacialPL_source, 'Figures in Rs crore</td>', '<td class="tdh">' ,'</td>', 1, 3)
-                Y1Name, Y2Name, Y3Name = result['output']
-                
-                step = 8
-                self.finacialPL_source1 = myUrlopen(self.finacialPL_link1[reportType])
-                step = 9               
-                result = self.splitString(self.finacialPL_source1, '<td class="tdL" colspan="0">Earning Per Share (Rs.)</td>', 
-                                            '<td class="amount">', '</td>', 1, 1)
-                Y4EPS = result['output'][0]
-                result = self.splitString(self.finacialPL_source1, 'Figures in Rs crore</td>', '<td class="tdh">', '</td>', 1, 1 )
-                Y4Name = result['output'][0]                
-                print 'second link succesfull'
-                finacialPL_src_buffered = 1
+            self.balanceSheet_source = myUrlopen(self.balance_sheet_link[reportType])
+            currentLiabilites = self.balanceSheet_source.split('Current Liabilities</td>')[1].split('<td class="">')[1].split('</td>')[0]
+
+        print "report type: ", reportType       
+        """
+        Some stocks Anuual EPS is listed in finacial overview link, for other
+        it is listed in P&L link. To solve this we need the below try except,
+        """
+        try:
+            step = 0
+            self.finacialOverview_source = myUrlopen(self.finacialOverview_link[reportType])
+            result = self.splitString(self.finacialOverview_source, 'Earning Per Share (Rs)</td>', '<td class="">', '</td>', 1, 3)
+            Y1EPS, Y2EPS, Y3EPS = result['output']            
             
-            step = 10
-            self.balanceSheet_source = myUrlopen(self.balance_sheet_link[reportType])            
-            result = self.splitString(self.balanceSheet_source, 'Current Liabilities</td>', '<td class="">', '</td>', 1, 1 )
-            currentLiabilites = result['output'][0]
+            step = 1
+            result = self.splitString(self.finacialOverview_source, 'Particulars ', '<td class="tdh">', '</td>', 1, 3)
+            Y1Name, Y2Name, Y3Name = result['output']
             
-            step = 11
-            result = self.splitString(self.balanceSheet_source, 'Total Assets</b></td>', '<td class="">', '</td>', 1, 1 )
-            totalAssets = result['output'][0]
+            step =2
+            self.finacialOverview_source1 = myUrlopen(self.finacialOverview_link1[reportType])
+            result = self.splitString(self.finacialOverview_source1, 'Earning Per Share (Rs)</td>', '<td class="">', '</td>', 1, 1)
+            Y4EPS = result['output'][0]      
             
-            step = 12
-            result = self.splitString(self.balanceSheet_source, 'Total Debt</td>', '<td class="">', '</td>', 1, 1)
-            totalDebt = result['output'][0]
+            result = self.splitString(self.finacialOverview_source1, 'Particulars ',  '<td class="tdh">', '</td>', 1, 1)
+            Y4Name = result['output'][0]
+            finacialPL_src_buffered = 0
+        except Exception,e:
+            print 'failed when spliting finacialoverview link trying finacialPL link',str(e)
+            print 'step ', step
+            import time
+            print "sleep 3secs"
+            time.sleep(3)
+            self.finacialPL_source = myUrlopen(self.finacialPL_link[reportType])
+            step = 6
+            result = self.splitString(self.finacialPL_source, '<td class="tdL" colspan="0">Earning Per Share (Rs.)</td>',
+                                     '<td class="amount">', '</td>', 1, 3)
+            Y1EPS, Y2EPS, Y3EPS = result['output']
             
-            step = 13
-            if finacialPL_src_buffered == 0:
-                self.finacialPL_source = myUrlopen(self.finacialPL_link[reportType])
+            step = 7
+            result = self.splitString(self.finacialPL_source, 'Figures in Rs crore</td>', '<td class="tdh">' ,'</td>', 1, 3)
+            Y1Name, Y2Name, Y3Name = result['output']
+            
+            step = 8
+            self.finacialPL_source1 = myUrlopen(self.finacialPL_link1[reportType])
+            step = 9               
+            result = self.splitString(self.finacialPL_source1, '<td class="tdL" colspan="0">Earning Per Share (Rs.)</td>', 
+                                        '<td class="amount">', '</td>', 1, 1)
+            Y4EPS = result['output'][0]
+            result = self.splitString(self.finacialPL_source1, 'Figures in Rs crore</td>', '<td class="tdh">', '</td>', 1, 1 )
+            Y4Name = result['output'][0]                
+            print 'second link succesfull'
+            finacialPL_src_buffered = 1
+
+        step = 11
+        result = self.splitString(self.balanceSheet_source, 'Total Assets</b></td>', '<td class="">', '</td>', 1, 1 )
+        totalAssets = result['output'][0]
+        
+        step = 12
+        result = self.splitString(self.balanceSheet_source, 'Total Debt</td>', '<td class="">', '</td>', 1, 1)
+        totalDebt = result['output'][0]
+        
+        step = 13
+        """
+        As per the program flow, finacialPL_src is buffered for finacial stocks.
+        These finacial stocks has operating profit represented in different way. Handling this seperatly
+        """
+        if finacialPL_src_buffered == 0:
+            self.finacialPL_source = myUrlopen(self.finacialPL_link[reportType])
             result = self.splitString(self.finacialPL_source, 'Operating Profit</b></td>', '<td class="">', '</td>', 1, 1)
             operatingProfit = result['output'][0]
+        else :
+            result = self.splitString(self.finacialPL_source, '<td class="tdL" colspan="0">Total</td>', '<td class="amount">', '</td>', 1, 1)
+            operatingProfit = result['output'][0]
+            print "operatingProfit ", operatingProfit
+        
+        step = 14
+        result = self.splitString(self.finacialPL_source, 'Figures in Rs crore</td>', '<td class="tdh">', '</td>', 1, 1)
+        currentYear = result['output'][0]
+        
+        step = 15
+        self.summary_source = myUrlopen(self.summary_link)
+        result = self.splitString(self.summary_source, 'Market Cap </td>', '<td class="bL1 tdR">', '</td>', 1, 1)
+        marketCap = result['output'][0]
+        marketCap = marketCap.replace(",", "")
+        
+        step = 16
+        RoC = float(operatingProfit)/(float(totalAssets) - float(currentLiabilites))
+        RoC *=100 #convert to percentage
+        
+        step = 17
+        enterpriseValue = float(marketCap) + float(totalDebt)
+        earningsYield = float(operatingProfit)/enterpriseValue*100
             
-            step = 14
-            result = self.splitString(self.finacialPL_source, 'Figures in Rs crore</td>', '<td class="tdh">', '</td>', 1, 1)
-            currentYear = result['output'][0]
-            
-            step = 15
-            self.summary_source = myUrlopen(self.summary_link)
-            result = self.splitString(self.summary_source, 'Market Cap </td>', '<td class="bL1 tdR">', '</td>', 1, 1)
-            marketCap = result['output'][0]
-            marketCap = marketCap.replace(",", "")
-            
-            step = 16
-            RoC = float(operatingProfit)/(float(totalAssets) - float(currentLiabilites))
-            RoC *=100 #convert to percentage
-            
-            step = 17
-            enterpriseValue = float(marketCap) + float(totalDebt)
-            earningsYield = float(operatingProfit)/enterpriseValue*100
+        print Y1Name, Y2Name, Y3Name, Y4Name
+        print Y1EPS, Y2EPS, Y3EPS, Y4EPS
+        """ We make all 0 denomenators to 0.1 to avoid divide by zero
+        """
+        Y2EPS = 0.1 if float(Y2EPS) == 0.00 else Y2EPS
+        Y3EPS = 0.1 if float(Y3EPS) == 0.00 else Y3EPS
+        Y4EPS = 0.1 if float(Y4EPS) == 0.00 else Y4EPS
+        step = 18
+        EPSY1Change = ((float(Y1EPS) - float(Y2EPS))/float(Y2EPS))*100
+        EPSY2Change = ((float(Y2EPS) - float(Y3EPS))/float(Y3EPS))*100            
+        EPSY3Change = ((float(Y3EPS) - float(Y4EPS))/float(Y4EPS))*100
                 
-            print Y1Name, Y2Name, Y3Name, Y4Name
-            print Y1EPS, Y2EPS, Y3EPS, Y4EPS
-            """ We make all 0 denomenators to 0.1 to avoid divide by zero
-            """
-            Y2EPS = 0.1 if float(Y2EPS) == 0.00 else Y2EPS
-            Y3EPS = 0.1 if float(Y3EPS) == 0.00 else Y3EPS
-            Y4EPS = 0.1 if float(Y4EPS) == 0.00 else Y4EPS
-            step = 18
-            EPSY1Change = ((float(Y1EPS) - float(Y2EPS))/float(Y2EPS))*100
-            EPSY2Change = ((float(Y2EPS) - float(Y3EPS))/float(Y3EPS))*100            
-            EPSY3Change = ((float(Y3EPS) - float(Y4EPS))/float(Y4EPS))*100
-                    
-            conn = sqlite3.connect(self.sqlite_file)
-            c = conn.cursor()
-                            
-            c.execute("CREATE TABLE IF NOT EXISTS YEARLYSTOCKDATA \
-                (symbol, Y1EPS, Y2EPS, Y3EPS, Y4EPS, \
-                Y1Name, Y2Name, Y3Name, Y4Name,\
-                EPSY1Change, EPSY2Change, EPSY3Change,\
-                EBIT, TotAssest, CurLiability, MarketCap,\
-                TotDebt, CurrYear, EarningsYield, RoC, \
-                reportType)")
-            step = 19
-            c.execute('''DELETE FROM YEARLYSTOCKDATA WHERE symbol = ?''', (self.stockSymbol,))
-            step = 20
-            c.execute('''INSERT INTO YEARLYSTOCKDATA(symbol, Y1EPS, Y2EPS, Y3EPS, Y4EPS, \
-                Y1Name, Y2Name, Y3Name, Y4Name,\
-                EPSY1Change, EPSY2Change, EPSY3Change,\
-                EBIT, TotAssest, CurLiability, MarketCap,\
-                TotDebt, CurrYear, EarningsYield, RoC, \
-                reportType)\
-              values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
-              (self.stockSymbol, Y1EPS, Y2EPS, Y3EPS, Y4EPS, Y1Name, Y2Name, Y3Name, Y4Name,
-               EPSY1Change, EPSY2Change, EPSY3Change,
-               operatingProfit, totalAssets, currentLiabilites, marketCap,
-               totalDebt, currentYear, float("{0:.2f}".format(earningsYield)), float("{0:.2f}".format(RoC)),
-               reportType))
-            conn.commit()
-            conn.close()
-            
-        except Exception,e:
-            print "Exception in yearlyUpdate loop", str(e)
-            print "step ", step
-            return False
+        conn = sqlite3.connect(self.sqlite_file)
+        c = conn.cursor()
+                        
+        c.execute("CREATE TABLE IF NOT EXISTS YEARLYSTOCKDATA \
+            (symbol, Y1EPS, Y2EPS, Y3EPS, Y4EPS, \
+            Y1Name, Y2Name, Y3Name, Y4Name,\
+            EPSY1Change, EPSY2Change, EPSY3Change,\
+            EBIT, TotAssest, CurLiability, MarketCap,\
+            TotDebt, CurrYear, EarningsYield, RoC, \
+            reportType)")
+        step = 19
+        c.execute('''DELETE FROM YEARLYSTOCKDATA WHERE symbol = ?''', (self.stockSymbol,))
+        step = 20
+        c.execute('''INSERT INTO YEARLYSTOCKDATA(symbol, Y1EPS, Y2EPS, Y3EPS, Y4EPS, \
+            Y1Name, Y2Name, Y3Name, Y4Name,\
+            EPSY1Change, EPSY2Change, EPSY3Change,\
+            EBIT, TotAssest, CurLiability, MarketCap,\
+            TotDebt, CurrYear, EarningsYield, RoC, \
+            reportType)\
+          values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
+          (self.stockSymbol, Y1EPS, Y2EPS, Y3EPS, Y4EPS, Y1Name, Y2Name, Y3Name, Y4Name,
+           EPSY1Change, EPSY2Change, EPSY3Change,
+           operatingProfit, totalAssets, currentLiabilites, marketCap,
+           totalDebt, currentYear, float("{0:.2f}".format(earningsYield)), float("{0:.2f}".format(RoC)),
+           reportType))
+        conn.commit()
+        conn.close()
                 
     def quaterlyUpdate(self):            
         try:
@@ -258,16 +260,15 @@ class getData_bussinesStd(object):
             reportType = 'Standalone'
             step = -1
             self.Quaterly_1_Source = myUrlopen(self.EPS_Quaterly_1[reportType])
+            Q1 = float(self.Quaterly_1_Source.split('EPS (Rs)</td>')[1].split('<td class="">')[1].split('</td>')[0])
             
         self.Quaterly_2_Source = myUrlopen(self.EPS_Quaterly_2[reportType])
         print "report type: ", reportType
-        try: 
-            step = 0
-            Q1 = float(self.Quaterly_1_Source.split('EPS (Rs)</td>')[1].split('<td class="">')[1].split('</td>')[0])
+        try:
             step = 1
             result = self.splitString(self.Quaterly_1_Source, 'EPS (Rs)</td>', '<td class="">', '</td>', 2, 4)
             if result['success'] == 0:
-                return False    
+                return False
             output = result['output']
             Q2, Q3, Q4, Q1YoY = output
                 
@@ -331,19 +332,26 @@ class getData_bussinesStd(object):
     def updateCompleteDataBase(self):
         update_quaterly = 1
         update_yearly = 1
+        
+        if common_code.is_stock_blacklisted(self.stockSymbol):
+            return False
         try:
             conn = sqlite3.connect(self.sqlite_file)
             c = conn.cursor()
             sql_cmd = "SELECT * FROM QUATERLYSTOCKDATA WHERE symbol=?"
             c.execute(sql_cmd, [(self.stockSymbol)])
-            row = c.fetchone()
+            qtr_row = c.fetchone()
+            c.execute("SELECT * FROM QUATERLYSTOCKDATA WHERE symbol=?", [(self.stockSymbol)])
+            yearly_row = c.fetchone()
             conn.close()
             """ if data is uptodate return """
-            if row!=None and common_code.current_year == row[common_code.DBindex_Y1Name] and common_code.current_qtr == row[common_code.DBindex_Q1Name]:
+            if qtr_row!=None and yearly_row!=None and \
+                common_code.current_year == yearly_row[common_code.YearlyIndex_Y1Name] and\
+                common_code.current_qtr == qtr_row[common_code.QuaterlyIndex_Q1Name]:
                 return
-            if common_code.current_qtr == row[common_code.DBindex_Q1Name]:
+            if common_code.current_qtr == qtr_row[common_code.QuaterlyIndex_Q1Name]:
                 update_quaterly = 0
-            if common_code.current_year == row[common_code.DBindex_Y1Name]:
+            if common_code.current_year == yearly_row[common_code.YearlyIndex_Y1Name]:
                 update_yearly = 0
         except Exception,e:
             print "Exception updateCompleteDataBase. May be you want to fix this.", str(e)
