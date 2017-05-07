@@ -98,8 +98,222 @@ class getData_bussinesStd(object):
             output[0] = 'error output'
             
         return {'success':success, 'output':output, 'itemsReturned':noItems }
+
+    def yearlyUpdate(self):
+        """
+        This try except loop is to figure out the reportType(conslidate/standalone)
+        """
+        try:
+            reportType = 'Consolidated'
+            source = myUrlopen(self.finacialOverview_link[reportType])
+            """
+            We can't use splitString. We have to git exception here to switch to standalone
+            """
+            Y1EPS = source.split('Earning Per Share (Rs)</td>')[1].split('<td class="">')[1].split('</td>')[0]
+        except Exception:
+            print "exception in consolidated"
+            reportType = 'Standalone'
+            step = -1
+            source = myUrlopen(self.finacialOverview_link[reportType])
+            Y1EPS = source.split('Earning Per Share (Rs)</td>')[1].split('<td class="">')[1].split('</td>')[0]            
+        self.finacialOverview_source = source
+        print "report type: ", reportType
+        try:            
+            """
+            Some stocks Anuual EPS is listed in finacial overview link, for other
+            it is listed in P&L link. To solve this we need the below try except,
+            """
+            try:
+                step = 0
+                result = self.splitString(self.finacialOverview_source, 'Earning Per Share (Rs)</td>', '<td class="">', '</td>', 1, 3)
+                Y1EPS, Y2EPS, Y3EPS = result['output']            
+                
+                step = 1
+                result = self.splitString(self.finacialOverview_source, 'Particulars ', '<td class="tdh">', '</td>', 1, 3)
+                Y1Name, Y2Name, Y3Name = result['output']
+                
+                step =2
+                self.finacialOverview_source1 = myUrlopen(self.finacialOverview_link1[reportType])
+                result = self.splitString(self.finacialOverview_source1, 'Earning Per Share (Rs)</td>', '<td class="">', '</td>', 1, 1)
+                Y4EPS = result['output'][0]      
+                
+                result = self.splitString(self.finacialOverview_source1, 'Particulars ',  '<td class="tdh">', '</td>', 1, 1)
+                Y4Name = result['output'][0]
+            except Exception,e:
+                print 'failed when spliting finacialoverview link trying finacialPL link',str(e)
+                self.finacialPL_source = myUrlopen(self.finacialPL_link[reportType])
+                step = 6
+                result = self.splitString(self.finacialPL_source, '<td class="tdL" colspan="0">Earning Per Share (Rs.)</td>',
+                                         '<td class="amount">', '</td>', 1, 3)
+                Y1EPS, Y2EPS, Y3EPS = result['output']
+                
+                step = 7
+                result = self.splitString(self.finacialPL_source, 'Figures in Rs crore</td>', '<td class="tdh">' ,'</td>', 1, 3)
+                Y1Name, Y2Name, Y3Name = result['output']
+                
+                step = 8
+                self.finacialPL_source1 = myUrlopen(self.finacialPL_link1[reportType])
+                step = 9               
+                result = self.splitString(self.finacialPL_source1, '<td class="tdL" colspan="0">Earning Per Share (Rs.)</td>', 
+                                            '<td class="amount">', '</td>', 1, 1)
+                Y4EPS = result['output'][0]
+                result = self.splitString(self.finacialPL_source1, 'Figures in Rs crore</td>', '<td class="tdh">', '</td>', 1, 1 )
+                Y4Name = result['output'][0]                
+                print 'second link succesfull'
+                
+            print Y1Name, Y2Name, Y3Name, Y4Name
+            print Y1EPS, Y2EPS, Y3EPS, Y4EPS
+            """ We make all 0 denomenators to 0.1 to avoid divide by zero
+            """
+            Y2EPS = 0.1 if float(Y2EPS) == 0.00 else Y2EPS
+            Y3EPS = 0.1 if float(Y3EPS) == 0.00 else Y3EPS
+            Y4EPS = 0.1 if float(Y4EPS) == 0.00 else Y4EPS
+            step = 11
+            EPSY1Change = ((float(Y1EPS) - float(Y2EPS))/float(Y2EPS))*100
+            EPSY2Change = ((float(Y2EPS) - float(Y3EPS))/float(Y3EPS))*100            
+            EPSY3Change = ((float(Y3EPS) - float(Y4EPS))/float(Y4EPS))*100
+                    
+            conn = sqlite3.connect(self.sqlite_file)
+            c = conn.cursor()
+                            
+            c.execute("CREATE TABLE IF NOT EXISTS YEARLYSTOCKDATA \
+                (symbol, Y1EPS, Y2EPS, Y3EPS, Y4EPS, \
+                Y1Name, Y2Name, Y3Name, Y4Name,\
+                EPSY1Change, EPSY2Change, EPSY3Change,\
+                reportType)")
+            step = 13
+            c.execute('''DELETE FROM YEARLYSTOCKDATA WHERE symbol = ?''', (self.stockSymbol,))
+            step = 14
+            c.execute('''INSERT INTO YEARLYSTOCKDATA(symbol, Y1EPS, Y2EPS, Y3EPS, Y4EPS, \
+                Y1Name, Y2Name, Y3Name, Y4Name,\
+                EPSY1Change, EPSY2Change, EPSY3Change,\
+                reportType)\
+              values(?,?,?,?,?,?,?,?,?,?,?,?,?)''',
+              (self.stockSymbol, Y1EPS, Y2EPS, Y3EPS, Y4EPS, Y1Name, Y2Name, Y3Name, Y4Name,
+               EPSY1Change, EPSY2Change, EPSY3Change,
+              reportType))            
+            conn.commit()
+            conn.close()
+            
+        except Exception,e:
+            print "Exception in yearlyUpdate loop", str(e)
+            print "step ", step        
+                
+    def quaterlyUpdate(self):            
+        try:
+            """ Lets start with consolidated and fallback to standalone if not available"""
+            reportType = 'Consolidated'
+            step = -2
+            self.Quaterly_1_Source = myUrlopen(self.EPS_Quaterly_1[reportType])
+            """ Try to decipher the report, if there is exception we have to try standalone"""
+            Q1 = float(self.Quaterly_1_Source.split('EPS (Rs)</td>')[1].split('<td class="">')[1].split('</td>')[0])
+        except Exception,e:
+            print "exception in consolidated"
+            reportType = 'Standalone'
+            step = -1
+            self.Quaterly_1_Source = myUrlopen(self.EPS_Quaterly_1[reportType])
+            
+        self.Quaterly_2_Source = myUrlopen(self.EPS_Quaterly_2[reportType])
+        print "report type: ", reportType
+        try: 
+            step = 0
+            Q1 = float(self.Quaterly_1_Source.split('EPS (Rs)</td>')[1].split('<td class="">')[1].split('</td>')[0])
+            step = 1
+            result = self.splitString(self.Quaterly_1_Source, 'EPS (Rs)</td>', '<td class="">', '</td>', 2, 4)
+            if result['success'] == 0:
+                return False    
+            output = result['output']
+            Q2, Q3, Q4, Q1YoY = output
+                
+            step = 2
+            result = self.splitString(self.Quaterly_2_Source, 'EPS (Rs)</td>', '<td class="">', '</td>', 1, 3)            
+            Q2YoY, Q3YoY, Q4YoY = result['output']          
+    
+            step = 3
+            result = self.splitString(self.Quaterly_1_Source, 'Figures in Rs crore</td>', '<td class="tdh">', '</td>', 1, 4)
+            Q1Name, Q2Name, Q3Name, Q4Name = result['output']
+            EPS_Q1 = float(Q1)
+            EPS_Q2 = float(Q2)
+            EPS_Q3 = float(Q3)
+            EPS_Q4 = float(Q4)
+            EPS_Q1YoY = float(Q1YoY)
+            EPS_Q2YoY = float(Q2YoY)
+            EPS_Q3YoY = float(Q3YoY)
+            EPS_Q4YoY = float(Q4YoY)
+    
+            step = 4
+            """ We make all 0 to 0.1
+            """
+            Q1YoY = 0.1 if Q1YoY == 0 else float(Q1YoY)
+            Q2YoY = 0.1 if Q2YoY == 0 else float(Q2YoY)
+            Q3YoY = 0.1 if Q3YoY == 0 else float(Q3YoY)
+            Q4YoY = 0.1 if Q4YoY == 0 else float(Q4YoY)
+    
+            EPSQ1Change = (float(Q1) - Q1YoY)/Q1YoY*100
+            EPSQ2Change = (float(Q2) - Q2YoY)/Q2YoY*100
+            EPSQ3Change = (float(Q3) - Q3YoY)/Q3YoY*100
+            EPSQ4Change = (float(Q4) - Q4YoY)/Q4YoY*100
+
+            conn = sqlite3.connect(self.sqlite_file)
+            c = conn.cursor()
+                            
+            c.execute("CREATE TABLE IF NOT EXISTS QUATERLYSTOCKDATA \
+                (symbol, EPS_Q1, EPS_Q2, EPS_Q3, EPS_Q4, \
+                EPS_Q1YoY, EPS_Q2YoY, EPS_Q3YoY, EPS_Q4YoY,\
+                Q1Name, Q2Name, Q3Name, Q4Name,\
+                EPSQ1Change, EPSQ2Change, EPSQ3Change, EPSQ4Change,\
+                reportType)")
+            step = 13
+            c.execute('''DELETE FROM QUATERLYSTOCKDATA WHERE symbol = ?''', (self.stockSymbol,))
+            step = 14
+            c.execute('''INSERT INTO QUATERLYSTOCKDATA(symbol, EPS_Q1, EPS_Q2, EPS_Q3, EPS_Q4, \
+              EPS_Q1YoY, EPS_Q2YoY, EPS_Q3YoY, EPS_Q4YoY,\
+              Q1Name, Q2Name, Q3Name, Q4Name,\
+              EPSQ1Change, EPSQ2Change, EPSQ3Change, EPSQ4Change,\
+              reportType)\
+              values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
+              (self.stockSymbol, EPS_Q1, EPS_Q2, EPS_Q3, EPS_Q4, EPS_Q1YoY, EPS_Q2YoY, EPS_Q3YoY, EPS_Q4YoY,
+              Q1Name, Q2Name, Q3Name, Q4Name, EPSQ1Change, EPSQ2Change, EPSQ3Change, EPSQ4Change,
+              reportType))
+            print "Qtr data updated for", self.stockSymbol, Q1Name
+            conn.commit()
+            conn.close()
+        except Exception,e:
+            print "Exception reading DB for quaterlyUpdate. May be you want to fix this.", str(e)
+            print "setp = ", step
+            return False            
+
+    def updateCompleteDataBase(self):
+        update_quaterly = 1
+        update_yearly = 1
+        try:
+            conn = sqlite3.connect(self.sqlite_file)
+            c = conn.cursor()
+            sql_cmd = "SELECT * FROM QUATERLYSTOCKDATA WHERE symbol=?"
+            c.execute(sql_cmd, [(self.stockSymbol)])
+            row = c.fetchone()
+            conn.close()
+            """ if data is uptodate return """
+            if row!=None and common_code.current_year == row[common_code.DBindex_Y1Name] and common_code.current_qtr == row[common_code.DBindex_Q1Name]:
+                return
+            if common_code.current_qtr == row[common_code.DBindex_Q1Name]:
+                update_quaterly = 0
+            if common_code.current_year == row[common_code.DBindex_Y1Name]:
+                update_yearly = 0
+        except Exception,e:
+            print "Exception updateCompleteDataBase. May be you want to fix this.", str(e)
+            
+        """ proceed with update """
+        """
+        if update_quaterly == 1:
+            print "calling quaterlyUpdate"
+            self.quaterlyUpdate(c)
+        """
+        if update_yearly == 1:
+            self.yearlyUpdate()
+
         
-    def getBalanceSheetData(self):        
+    def getBalanceSheetData(self):
         #First will try to get data from data base if not fetch from website
         try: 
             conn =sqlite3.connect(self.sqlite_file)

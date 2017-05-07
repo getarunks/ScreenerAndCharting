@@ -66,7 +66,7 @@ def BeatDB_Details():
     c = conn.cursor()
     cursor = c.execute("SELECT symbol, EBIT, TotAssest, CurLiability, MarketCap, \
                 TotDebt, CurrYear, EarningsYield, RoC,reportType from BEATSTOCKDATA")
-                
+
     total_stocks = 0
     DB_updated_stocks = 0
     marCap_lessThan100 = marCap_100to500 = marCap_500to1000 = marCap_1000to5000 = marCap_5000to10000 = marCap_10000to20000 = marCap_above20000 = 0
@@ -208,11 +208,34 @@ def readDB_Beat(min_eV = 0, max_ev = 100000000):
     conn.close()
     return
     
-def readDB(qtrName=None):
+def YearlyDBDetails():
+    stocks_with_latest = 0
+    total_stocks = 0
+    verbose = True
+    
+    conn = sqlite3.connect(common_code.sqliteFile)
+    c = conn.cursor()
+    cursor = c.execute("SELECT symbol,Y1EPS, Y2EPS, Y3EPS, Y4EPS, \
+                Y1Name, Y2Name, Y3Name, Y4Name,\
+                EPSY1Change, EPSY2Change, EPSY3Change,\
+                reportType from YEARLYSTOCKDATA")
+    
+    for row in cursor:
+        total_stocks +=1
+        if verbose == True:
+            print "Symbol = ", row[0]
+            print row[5] , " ", row[6], " ", row[7], " " , row[8]
+            print row[1], " ", row[2], " ", row[3], " ", row[4]         
+            print row[9], " ", row[10], " ", row[11]
+            
+    conn.close()
+    print "stocks with latest info: ", stocks_with_latest, "\ntotal stocks: ", total_stocks
+            
+def QuaterlyDBDetatils(qtrName=common_code.current_qtr):
     sqlite_file = common_code.sqliteFile
     stocks_with_latest = 0
     total_stocks = 0
-    verbose = 0
+    verbose = True
 
     conn =sqlite3.connect(sqlite_file)
     c = conn.cursor()
@@ -220,20 +243,17 @@ def readDB(qtrName=None):
               EPS_Q1YoY, EPS_Q2YoY, EPS_Q3YoY, EPS_Q4YoY,\
               Q1Name, Q2Name, Q3Name, Q4Name,\
               EPSQ1Change, EPSQ2Change, EPSQ3Change, EPSQ4Change,\
-              Y1Name, Y2Name, Y3Name, Y4Name,\
-              EPS_Y1, EPS_Y2, EPS_Y3, EPS_Y4,\
-              EPSY1Change, EPSY2Change, EPSY3Change \
-              from STOCKDATA")
+              reportType \
+              from QUATERLYSTOCKDATA")
+
     for row in cursor:
         total_stocks += 1
-        if verbose != False:
+        if verbose == True:
             print "Symbol = " , row[0], "EPS_Q1 = ", row[1], "EPS_Q2 = ", row[2], "EPS_Q3 = ", row[3], "EPS_Q4 = ", row[4]
             print "EPS_Q1YoY = ", row[5], "EPS_Q2YoY = ", row[6], "EPS_Q3YoY = ", row[7], "EPS_Q4YoY = ", row[8]
             print "Q1Name= ", row[9], "Q2Name= ", row[10], "Q3Name= ", row[11], "Q4Name= ", row[12]
             print "EPSQ1Change = ", row[13], "EPSQ2Change = ", row[14], "EPSQ3Change = ", row[15], "EPSQ4Change = ", row[16]
-            print "Y1Name = ", row[17], "Y2Name = ", row[18], "Y3Name = ", row[19], "Y4Name = ", row[20]
-            print "EPS_Y1 = ", row[21], "EPS_Y2 = ", row[22], "EPS_Y3 = ", row[23], "EPS_Y4 = ", row[24]
-            print "EPSY1Change = ", row[25], "EPSY2Change = ", row[26],  "EPSY3Change = ", row[27]
+            print "Report type: ", row[17]
 
         if qtrName != None and row[9] == qtrName:
             stocks_with_latest += 1

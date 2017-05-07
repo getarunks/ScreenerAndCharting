@@ -546,6 +546,43 @@ def getCompleteReport(EPSY1, EPSY2, EPSY3, EPSCurrQtr, EPSQtrAlone):
     textFile.close()    
     del googleSceernerData
     
+def updateAllDB():
+    googleSceernerData = google_json_extract.google_sceerner_json_DataExtract()
+    googleSceernerData.retrieve_stock_data()
+    googleSceernerData.result_df.to_csv(r'google-data.csv', index=False)
+    
+    common_code.DB_updateRunning = 1
+    continue_from_here = common_code.update_start_index
+    index = continue_from_here
+
+    totalSymbols = len(googleSceernerData.result_df['SYMBOL'])
+    
+    if continue_from_here != 0:
+        googleSceernerData.result_df['SYMBOL'] = googleSceernerData.result_df['SYMBOL'].tail(totalSymbols - continue_from_here)
+        dataFrame = googleSceernerData.result_df[pandas.notnull(googleSceernerData.result_df['SYMBOL'])]
+    else:
+        dataFrame = googleSceernerData.result_df 
+        
+    for stockSymbol in dataFrame['SYMBOL']:
+        print("Processing stock %s, index = %d out of %d" %  (stockSymbol, index, totalSymbols))
+        import time
+        time.sleep(2)
+        if stockSymbol == 0:
+            continue        
+        cf = BS_json_extract.compFormat_bussinesStd(stockSymbol)
+        cf.get_compFormat()
+        if cf.result == 'NODATA':
+            print 'No Data for: ' + stockSymbol
+            continue
+
+        report = BS_get_and_decode_webpage.getData_bussinesStd(cf.result, stockSymbol)
+        if report.updateCompleteDataBase() == False:
+            print stockSymbol + ' error fetching data'
+        index +=1
+        del cf
+        if index == 1:
+            break
+    
 def updateDB(reqType = 'EPS'):
     googleSceernerData = google_json_extract.google_sceerner_json_DataExtract()
     googleSceernerData.retrieve_stock_data()
