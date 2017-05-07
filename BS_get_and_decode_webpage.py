@@ -101,7 +101,7 @@ class getData_bussinesStd(object):
 
     def yearlyUpdate(self):
         """
-        This try except loop is to figure out the reportType(conslidate/standalone)
+        This try-except loop is to figure out the reportType(conslidate/standalone)
         """
         try:
             reportType = 'Consolidated'
@@ -139,6 +139,7 @@ class getData_bussinesStd(object):
                 
                 result = self.splitString(self.finacialOverview_source1, 'Particulars ',  '<td class="tdh">', '</td>', 1, 1)
                 Y4Name = result['output'][0]
+                finacialPL_src_buffered = 0
             except Exception,e:
                 print 'failed when spliting finacialoverview link trying finacialPL link',str(e)
                 self.finacialPL_source = myUrlopen(self.finacialPL_link[reportType])
@@ -160,6 +161,44 @@ class getData_bussinesStd(object):
                 result = self.splitString(self.finacialPL_source1, 'Figures in Rs crore</td>', '<td class="tdh">', '</td>', 1, 1 )
                 Y4Name = result['output'][0]                
                 print 'second link succesfull'
+                finacialPL_src_buffered = 1
+            
+            step = 10
+            self.balanceSheet_source = myUrlopen(self.balance_sheet_link[reportType])            
+            result = self.splitString(self.balanceSheet_source, 'Current Liabilities</td>', '<td class="">', '</td>', 1, 1 )
+            currentLiabilites = result['output'][0]
+            
+            step = 11
+            result = self.splitString(self.balanceSheet_source, 'Total Assets</b></td>', '<td class="">', '</td>', 1, 1 )
+            totalAssets = result['output'][0]
+            
+            step = 12
+            result = self.splitString(self.balanceSheet_source, 'Total Debt</td>', '<td class="">', '</td>', 1, 1)
+            totalDebt = result['output'][0]
+            
+            step = 13
+            if finacialPL_src_buffered == 0:
+                self.finacialPL_source = myUrlopen(self.finacialPL_link[reportType])
+            result = self.splitString(self.finacialPL_source, 'Operating Profit</b></td>', '<td class="">', '</td>', 1, 1)
+            operatingProfit = result['output'][0]
+            
+            step = 14
+            result = self.splitString(self.finacialPL_source, 'Figures in Rs crore</td>', '<td class="tdh">', '</td>', 1, 1)
+            currentYear = result['output'][0]
+            
+            step = 15
+            self.summary_source = myUrlopen(self.summary_link)
+            result = self.splitString(self.summary_source, 'Market Cap </td>', '<td class="bL1 tdR">', '</td>', 1, 1)
+            marketCap = result['output'][0]
+            marketCap = marketCap.replace(",", "")
+            
+            step = 16
+            RoC = float(operatingProfit)/(float(totalAssets) - float(currentLiabilites))
+            RoC *=100 #convert to percentage
+            
+            step = 17
+            enterpriseValue = float(marketCap) + float(totalDebt)
+            earningsYield = float(operatingProfit)/enterpriseValue*100
                 
             print Y1Name, Y2Name, Y3Name, Y4Name
             print Y1EPS, Y2EPS, Y3EPS, Y4EPS
@@ -168,7 +207,7 @@ class getData_bussinesStd(object):
             Y2EPS = 0.1 if float(Y2EPS) == 0.00 else Y2EPS
             Y3EPS = 0.1 if float(Y3EPS) == 0.00 else Y3EPS
             Y4EPS = 0.1 if float(Y4EPS) == 0.00 else Y4EPS
-            step = 11
+            step = 18
             EPSY1Change = ((float(Y1EPS) - float(Y2EPS))/float(Y2EPS))*100
             EPSY2Change = ((float(Y2EPS) - float(Y3EPS))/float(Y3EPS))*100            
             EPSY3Change = ((float(Y3EPS) - float(Y4EPS))/float(Y4EPS))*100
@@ -180,24 +219,31 @@ class getData_bussinesStd(object):
                 (symbol, Y1EPS, Y2EPS, Y3EPS, Y4EPS, \
                 Y1Name, Y2Name, Y3Name, Y4Name,\
                 EPSY1Change, EPSY2Change, EPSY3Change,\
+                EBIT, TotAssest, CurLiability, MarketCap,\
+                TotDebt, CurrYear, EarningsYield, RoC, \
                 reportType)")
-            step = 13
+            step = 19
             c.execute('''DELETE FROM YEARLYSTOCKDATA WHERE symbol = ?''', (self.stockSymbol,))
-            step = 14
+            step = 20
             c.execute('''INSERT INTO YEARLYSTOCKDATA(symbol, Y1EPS, Y2EPS, Y3EPS, Y4EPS, \
                 Y1Name, Y2Name, Y3Name, Y4Name,\
                 EPSY1Change, EPSY2Change, EPSY3Change,\
+                EBIT, TotAssest, CurLiability, MarketCap,\
+                TotDebt, CurrYear, EarningsYield, RoC, \
                 reportType)\
-              values(?,?,?,?,?,?,?,?,?,?,?,?,?)''',
+              values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
               (self.stockSymbol, Y1EPS, Y2EPS, Y3EPS, Y4EPS, Y1Name, Y2Name, Y3Name, Y4Name,
                EPSY1Change, EPSY2Change, EPSY3Change,
-              reportType))            
+               operatingProfit, totalAssets, currentLiabilites, marketCap,
+               totalDebt, currentYear, float("{0:.2f}".format(earningsYield)), float("{0:.2f}".format(RoC)),
+               reportType))
             conn.commit()
             conn.close()
             
         except Exception,e:
             print "Exception in yearlyUpdate loop", str(e)
-            print "step ", step        
+            print "step ", step
+            return False
                 
     def quaterlyUpdate(self):            
         try:
@@ -304,8 +350,10 @@ class getData_bussinesStd(object):
             
         """ proceed with update """
         if update_quaterly == 1:
+            print "call quaterlyUpdate ...."
             self.quaterlyUpdate()
         if update_yearly == 1:
+            print "call yearly Update...."
             self.yearlyUpdate()
         
     def getBalanceSheetData(self):

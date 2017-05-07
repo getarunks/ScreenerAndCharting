@@ -10,7 +10,7 @@ def deleteDB():
     conn =sqlite3.connect(sqlite_file)
     c = conn.cursor()
 
-    c.execute("DROP TABLE QUATERLYSTOCKDATA")
+    c.execute("DROP TABLE YEARLYSTOCKDATA")
     conn.commit()
     conn.close()
 
@@ -218,6 +218,8 @@ def YearlyDBDetails():
     cursor = c.execute("SELECT symbol,Y1EPS, Y2EPS, Y3EPS, Y4EPS, \
                 Y1Name, Y2Name, Y3Name, Y4Name,\
                 EPSY1Change, EPSY2Change, EPSY3Change,\
+                EBIT, TotAssest, CurLiability, MarketCap,\
+                TotDebt, CurrYear, EarningsYield, RoC, \
                 reportType from YEARLYSTOCKDATA")
     
     for row in cursor:
@@ -227,6 +229,14 @@ def YearlyDBDetails():
             print row[5] , " ", row[6], " ", row[7], " " , row[8]
             print row[1], " ", row[2], " ", row[3], " ", row[4]         
             print row[9], " ", row[10], " ", row[11]
+            print "EBIT ", row[12]
+            print "TotAssest ", row[13]
+            print "CurLiability ", row[14]
+            print "MarketCap ", row[15]
+            print "TotDebt ", row[16]
+            print "CurrYear ", row[17]
+            print "EarningsYield ", row[18]
+            print "RoC ", row[19]
             
     conn.close()
     print "stocks with latest info: ", stocks_with_latest, "\ntotal stocks: ", total_stocks
@@ -255,8 +265,7 @@ def QuaterlyDBDetatils(qtrName=common_code.current_qtr):
             print "EPSQ1Change = ", row[13], "EPSQ2Change = ", row[14], "EPSQ3Change = ", row[15], "EPSQ4Change = ", row[16]
             print "EBIT_Q1 = ", row[17], "EBIT_Q2 = ", row[18], "EBIT_Q3 = ", row[19], "EBIT_Q4 = ", row[20]
             print "Report type: ", row[21]
-        total = row[17] + row[18] + row[19] + row[20]
-        print "TTM EBIT = ", total
+        print "TTM EBIT = ", row[17] + row[18] + row[19] + row[20]
 
         if qtrName != None and row[9] == qtrName:
             stocks_with_latest += 1
