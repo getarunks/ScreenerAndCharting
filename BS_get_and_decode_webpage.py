@@ -232,15 +232,11 @@ class getData_bussinesStd(object):
             step = 3
             result = self.splitString(self.Quaterly_1_Source, 'Figures in Rs crore</td>', '<td class="tdh">', '</td>', 1, 4)
             Q1Name, Q2Name, Q3Name, Q4Name = result['output']
-            EPS_Q1 = float(Q1)
-            EPS_Q2 = float(Q2)
-            EPS_Q3 = float(Q3)
-            EPS_Q4 = float(Q4)
-            EPS_Q1YoY = float(Q1YoY)
-            EPS_Q2YoY = float(Q2YoY)
-            EPS_Q3YoY = float(Q3YoY)
-            EPS_Q4YoY = float(Q4YoY)
-    
+            
+            step = 4
+            result = self.splitString(self.Quaterly_1_Source, 'Operating Profit</td>', '<td class="">', '</td>', 1, 4)
+            EBIT_Q1, EBIT_Q2, EBIT_Q3, EBIT_Q4 = result['output']
+            
             step = 4
             """ We make all 0 to 0.1
             """
@@ -262,6 +258,7 @@ class getData_bussinesStd(object):
                 EPS_Q1YoY, EPS_Q2YoY, EPS_Q3YoY, EPS_Q4YoY,\
                 Q1Name, Q2Name, Q3Name, Q4Name,\
                 EPSQ1Change, EPSQ2Change, EPSQ3Change, EPSQ4Change,\
+                EBIT_Q1, EBIT_Q2, EBIT_Q3, EBIT_Q4,\
                 reportType)")
             step = 13
             c.execute('''DELETE FROM QUATERLYSTOCKDATA WHERE symbol = ?''', (self.stockSymbol,))
@@ -270,10 +267,12 @@ class getData_bussinesStd(object):
               EPS_Q1YoY, EPS_Q2YoY, EPS_Q3YoY, EPS_Q4YoY,\
               Q1Name, Q2Name, Q3Name, Q4Name,\
               EPSQ1Change, EPSQ2Change, EPSQ3Change, EPSQ4Change,\
+              EBIT_Q1, EBIT_Q2, EBIT_Q3, EBIT_Q4,\
               reportType)\
-              values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
-              (self.stockSymbol, EPS_Q1, EPS_Q2, EPS_Q3, EPS_Q4, EPS_Q1YoY, EPS_Q2YoY, EPS_Q3YoY, EPS_Q4YoY,
+              values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
+              (self.stockSymbol, float(Q1), float(Q2), float(Q3), float(Q4), float(Q1YoY), float(Q2YoY), float(Q3YoY), float(Q4YoY),
               Q1Name, Q2Name, Q3Name, Q4Name, EPSQ1Change, EPSQ2Change, EPSQ3Change, EPSQ4Change,
+              float(EBIT_Q1), float(EBIT_Q2), float(EBIT_Q3), float(EBIT_Q4),
               reportType))
             print "Qtr data updated for", self.stockSymbol, Q1Name
             conn.commit()
@@ -304,14 +303,10 @@ class getData_bussinesStd(object):
             print "Exception updateCompleteDataBase. May be you want to fix this.", str(e)
             
         """ proceed with update """
-        """
         if update_quaterly == 1:
-            print "calling quaterlyUpdate"
-            self.quaterlyUpdate(c)
-        """
+            self.quaterlyUpdate()
         if update_yearly == 1:
             self.yearlyUpdate()
-
         
     def getBalanceSheetData(self):
         #First will try to get data from data base if not fetch from website
