@@ -127,15 +127,16 @@ def print_selected(selected_stock_list, stock_dict_allDetails):
         print "Total Assets     = ", each_dict['totAss']
         print "Report Type      = ", each_dict['reportType']
 
-def _get_qtrTTM_EBIT(stockSymbol, c):
-    #conn =sqlite3.connect(common_code.sqlite_file)
-    #c = conn.cursor()
+def _get_qtrTTM_EBIT(stockSymbol):
+    conn =sqlite3.connect(common_code.sqliteFile)
+    c = conn.cursor()
     sql_cmd = "SELECT * FROM QUATERLYSTOCKDATA WHERE symbol=?"
     c.execute(sql_cmd, [(stockSymbol)])
     row = c.fetchone()
     total =  row[common_code.QuaterlyIndex_EBIT_Q1] + row[common_code.QuaterlyIndex_EBIT_Q2] + \
                 row[common_code.QuaterlyIndex_EBIT_Q3] + row[common_code.QuaterlyIndex_EBIT_Q4]
     print "TTM QTR EBIT ", total
+    conn.close()
     return total
 
 def filterStocksDB_Beat(min_eV = 0, max_ev = 100000000):
@@ -160,7 +161,7 @@ def filterStocksDB_Beat(min_eV = 0, max_ev = 100000000):
         }
     """
     stock_dict_allDetails = {}
-    
+        
     for row in cursor_yearly:
         total_stocks +=1
                 
@@ -175,9 +176,11 @@ def filterStocksDB_Beat(min_eV = 0, max_ev = 100000000):
         stock_dict_perDetails['symbol'] = row[common_code.YearlyIndex_symbol]
         stock_dict_perDetails['currLiab'] = row[common_code.YearlyIndex_CurLiability]
         stock_dict_perDetails['totAss'] = row[common_code.YearlyIndex_TotAssest]
-        if use_qtr_EBIT == True:
-            stock_dict_perDetails['opProfit'] = _get_qtrTTM_EBIT(row[common_code.YearlyIndex_symbol], c)
-        else:
+        """
+        if EBIT is quaterly, we can read it now. If we did it will break this for loop.
+        If use_qtr_EBIT is true, opProfit will be filled after this for loop.
+        """
+        if use_qtr_EBIT == False:
             stock_dict_perDetails['opProfit'] = row[common_code.YearlyIndex_EBIT]
         stock_dict_perDetails['RoC'] = row[common_code.YearlyIndex_RoC]
         stock_dict_perDetails['marCap'] = row[common_code.YearlyIndex_MarketCap]
@@ -194,6 +197,14 @@ def filterStocksDB_Beat(min_eV = 0, max_ev = 100000000):
                     [(v,k) for k,v in stock_dict_RoC.items()], reverse=True)]
         sort_list_eY = [(k,v) for v,k in sorted(
                     [(v,k) for k,v in stock_dict_eYield.items()], reverse=True)]
+                    
+    conn.close()
+    print "printitn item...."
+    if use_qtr_EBIT == True:
+        for item in stock_dict_allDetails:
+            stock_dict_perDetails = stock_dict_allDetails[item]
+            stock_dict_perDetails['opProfit'] = _get_qtrTTM_EBIT(item)
+    
     """
     we need to create a dict of ranks
     sotck_dict_ranks = {
@@ -225,7 +236,7 @@ def filterStocksDB_Beat(min_eV = 0, max_ev = 100000000):
     print "======================="
     print sort_list_netRank[:30]
     print_selected(sort_list_netRank[:30], stock_dict_allDetails)
-    conn.close()
+    
     return
     
 def YearlyDBDetails():

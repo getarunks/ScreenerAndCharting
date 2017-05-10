@@ -142,10 +142,6 @@ class getData_bussinesStd(object):
             finacialPL_src_buffered = 0
         except Exception,e:
             print 'failed when spliting finacialoverview link trying finacialPL link',str(e)
-            print 'step ', step
-            import time
-            print "sleep 3secs"
-            time.sleep(3)
             self.finacialPL_source = myUrlopen(self.finacialPL_link[reportType])
             step = 6
             result = self.splitString(self.finacialPL_source, '<td class="tdL" colspan="0">Earning Per Share (Rs.)</td>',

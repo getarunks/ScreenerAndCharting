@@ -565,8 +565,8 @@ def updateAllDB():
         
     for stockSymbol in dataFrame['SYMBOL']:
         print("Processing stock %s, index = %d out of %d" %  (stockSymbol, index, totalSymbols))
-        import time
-        time.sleep(2)
+        #import time
+        #time.sleep(2)
         if stockSymbol == 0:
             continue        
         cf = BS_json_extract.compFormat_bussinesStd(stockSymbol)
