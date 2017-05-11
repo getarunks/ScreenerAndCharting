@@ -339,6 +339,7 @@ class getData_bussinesStd(object):
                 return
             if common_code.current_qtr == qtr_row[common_code.QuaterlyIndex_Q1Name]:
                 update_quaterly = 0
+                self.qtr_reportType = qtr_row[common_code.QuaterlyIndex_reportType]
             if common_code.current_year == yearly_row[common_code.YearlyIndex_Y1Name]:
                 update_yearly = 0
         except Exception,e:
