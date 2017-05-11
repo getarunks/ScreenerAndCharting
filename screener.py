@@ -572,7 +572,8 @@ def updateAllDB():
             continue
         if common_code.is_stock_blacklisted(stockSymbol):
             print stockSymbol, " Blacklisted stock"
-            return
+            index +=1
+            continue
 
         cf = BS_json_extract.compFormat_bussinesStd(stockSymbol)
         cf.get_compFormat()
@@ -597,7 +598,8 @@ Function written to test the updateAllDB().
 This funciton allows to use updateCompleteDataBase for a particular stock.
 """
 def test_updateAllDB():
-    stockSymbol = 'ABFRL'
+    
+    stockSymbol = 'ADHUNIK'
     cf = BS_json_extract.compFormat_bussinesStd(stockSymbol)
     cf.get_compFormat()
     if cf.result == 'NODATA':

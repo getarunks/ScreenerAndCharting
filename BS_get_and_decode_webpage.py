@@ -7,7 +7,8 @@ def myUrlopen(link):
     try:
         source = urlopen(link).read()
         common_code.webPageAcessed +=1
-        print 'web page access count = ', common_code.webPageAcessed
+        if common_code.webPageAcessed % 10 == 0:
+            print 'web page access count = ', common_code.webPageAcessed
     except Exception,e:
         #Sometime server might ot respond, try once again
         print 'open failed. try again after 2 seconds', str(e)
@@ -113,7 +114,6 @@ class getData_bussinesStd(object):
         except Exception:
             print "exception in consolidated"
             reportType = 'Standalone'
-            step = -1
             self.balanceSheet_source = myUrlopen(self.balance_sheet_link[reportType])
             currentLiabilites = self.balanceSheet_source.split('Current Liabilities</td>')[1].split('<td class="">')[1].split('</td>')[0]
 
@@ -123,16 +123,13 @@ class getData_bussinesStd(object):
         it is listed in P&L link. To solve this we need the below try except,
         """
         try:
-            step = 0
             self.finacialOverview_source = myUrlopen(self.finacialOverview_link[reportType])
             result = self.splitString(self.finacialOverview_source, 'Earning Per Share (Rs)</td>', '<td class="">', '</td>', 1, 3)
             Y1EPS, Y2EPS, Y3EPS = result['output']            
             
-            step = 1
             result = self.splitString(self.finacialOverview_source, 'Particulars ', '<td class="tdh">', '</td>', 1, 3)
             Y1Name, Y2Name, Y3Name = result['output']
             
-            step =2
             self.finacialOverview_source1 = myUrlopen(self.finacialOverview_link1[reportType])
             result = self.splitString(self.finacialOverview_source1, 'Earning Per Share (Rs)</td>', '<td class="">', '</td>', 1, 1)
             Y4EPS = result['output'][0]      
@@ -143,18 +140,14 @@ class getData_bussinesStd(object):
         except Exception,e:
             print 'failed when spliting finacialoverview link trying finacialPL link',str(e)
             self.finacialPL_source = myUrlopen(self.finacialPL_link[reportType])
-            step = 6
             result = self.splitString(self.finacialPL_source, '<td class="tdL" colspan="0">Earning Per Share (Rs.)</td>',
                                      '<td class="amount">', '</td>', 1, 3)
             Y1EPS, Y2EPS, Y3EPS = result['output']
             
-            step = 7
             result = self.splitString(self.finacialPL_source, 'Figures in Rs crore</td>', '<td class="tdh">' ,'</td>', 1, 3)
             Y1Name, Y2Name, Y3Name = result['output']
             
-            step = 8
             self.finacialPL_source1 = myUrlopen(self.finacialPL_link1[reportType])
-            step = 9               
             result = self.splitString(self.finacialPL_source1, '<td class="tdL" colspan="0">Earning Per Share (Rs.)</td>', 
                                         '<td class="amount">', '</td>', 1, 1)
             Y4EPS = result['output'][0]
@@ -163,15 +156,12 @@ class getData_bussinesStd(object):
             print 'second link succesfull'
             finacialPL_src_buffered = 1
 
-        step = 11
         result = self.splitString(self.balanceSheet_source, 'Total Assets</b></td>', '<td class="">', '</td>', 1, 1 )
         totalAssets = result['output'][0]
         
-        step = 12
         result = self.splitString(self.balanceSheet_source, 'Total Debt</td>', '<td class="">', '</td>', 1, 1)
         totalDebt = result['output'][0]
         
-        step = 13
         """
         As per the program flow, finacialPL_src is buffered for finacial stocks.
         These finacial stocks has operating profit represented in different way. Handling this seperatly
@@ -185,21 +175,18 @@ class getData_bussinesStd(object):
             operatingProfit = result['output'][0]
             print "operatingProfit ", operatingProfit
         
-        step = 14
         result = self.splitString(self.finacialPL_source, 'Figures in Rs crore</td>', '<td class="tdh">', '</td>', 1, 1)
         currentYear = result['output'][0]
         
-        step = 15
         self.summary_source = myUrlopen(self.summary_link)
         result = self.splitString(self.summary_source, 'Market Cap </td>', '<td class="bL1 tdR">', '</td>', 1, 1)
         marketCap = result['output'][0]
         marketCap = marketCap.replace(",", "")
         
-        step = 16
+
         RoC = float(operatingProfit)/(float(totalAssets) - float(currentLiabilites))
         RoC *=100 #convert to percentage
         
-        step = 17
         enterpriseValue = float(marketCap) + float(totalDebt)
         earningsYield = float(operatingProfit)/enterpriseValue*100
             
@@ -210,7 +197,7 @@ class getData_bussinesStd(object):
         Y2EPS = 0.1 if float(Y2EPS) == 0.00 else Y2EPS
         Y3EPS = 0.1 if float(Y3EPS) == 0.00 else Y3EPS
         Y4EPS = 0.1 if float(Y4EPS) == 0.00 else Y4EPS
-        step = 18
+
         EPSY1Change = ((float(Y1EPS) - float(Y2EPS))/float(Y2EPS))*100
         EPSY2Change = ((float(Y2EPS) - float(Y3EPS))/float(Y3EPS))*100            
         EPSY3Change = ((float(Y3EPS) - float(Y4EPS))/float(Y4EPS))*100
@@ -225,9 +212,7 @@ class getData_bussinesStd(object):
             EBIT, TotAssest, CurLiability, MarketCap,\
             TotDebt, CurrYear, EarningsYield, RoC, \
             reportType)")
-        step = 19
         c.execute('''DELETE FROM YEARLYSTOCKDATA WHERE symbol = ?''', (self.stockSymbol,))
-        step = 20
         c.execute('''INSERT INTO YEARLYSTOCKDATA(symbol, Y1EPS, Y2EPS, Y3EPS, Y4EPS, \
             Y1Name, Y2Name, Y3Name, Y4Name,\
             EPSY1Change, EPSY2Change, EPSY3Change,\
@@ -243,48 +228,45 @@ class getData_bussinesStd(object):
         conn.commit()
         conn.close()
                 
-    def quaterlyUpdate(self):            
+    def quaterlyUpdate(self):
         try:
             """ Lets start with consolidated and fallback to standalone if not available"""
             reportType = 'Consolidated'
             self.Quaterly_1_Source = myUrlopen(self.EPS_Quaterly_1[reportType])
             """ Try to decipher the report, if there is exception we have to try standalone"""
-            Q1 = float(self.Quaterly_1_Source.split('EPS (Rs)</td>')[1].split('<td class="">')[1].split('</td>')[0])
+            result = self.splitString(self.Quaterly_1_Source, 'Figures in Rs crore</td>', '<td class="tdh">', '</td>', 1, 4)
+            Q1Name, Q2Name, Q3Name, Q4Name = result['output']
+            """ Sometimes consolidated data is present but not updated, in such scenarios
+                we have to use standalone data
+            """
+            if Q1Name !=common_code.current_qtr and Q1Name != common_code.previous_qtr:
+                print self.stockSymbol, " -- consolidated data is not updated. trying standalone by raising an exception"
+                raise
         except Exception:
-            print "exception in consolidated"
             reportType = 'Standalone'
             self.Quaterly_1_Source = myUrlopen(self.EPS_Quaterly_1[reportType])
-            Q1 = float(self.Quaterly_1_Source.split('EPS (Rs)</td>')[1].split('<td class="">')[1].split('</td>')[0])
+            result = self.splitString(self.Quaterly_1_Source, 'Figures in Rs crore</td>', '<td class="tdh">', '</td>', 1, 4)
+            Q1Name, Q2Name, Q3Name, Q4Name = result['output']
             
-        self.Quaterly_2_Source = myUrlopen(self.EPS_Quaterly_2[reportType])
-        print "report type: ", reportType
-
-        result = self.splitString(self.Quaterly_1_Source, 'EPS (Rs)</td>', '<td class="">', '</td>', 2, 4)
-        """
-        if result['success'] == 0:
-            return False
-        """
-        output = result['output']
-        Q2, Q3, Q4, Q1YoY = output
-        
-        result = self.splitString(self.Quaterly_2_Source, 'EPS (Rs)</td>', '<td class="">', '</td>', 1, 3)            
-        Q2YoY, Q3YoY, Q4YoY = result['output']
-            
-        result = self.splitString(self.Quaterly_1_Source, 'Figures in Rs crore</td>', '<td class="tdh">', '</td>', 1, 4)
-        Q1Name, Q2Name, Q3Name, Q4Name = result['output']
+        print "Report Type: ", reportType
         
         """ Do not proceed if latest qtr data is not any of (current or previous qtr) """
         if Q1Name != common_code.current_qtr and Q1Name != common_code.previous_qtr:
             print "Quite old data in server ", Q1Name
-            return False        
+            return False
+
+        result = self.splitString(self.Quaterly_1_Source, 'EPS (Rs)</td>', '<td class="">', '</td>', 1, 5)
+        Q1, Q2, Q3, Q4, Q1YoY = result['output']
+        
+        self.Quaterly_2_Source = myUrlopen(self.EPS_Quaterly_2[reportType])
+        result = self.splitString(self.Quaterly_2_Source, 'EPS (Rs)</td>', '<td class="">', '</td>', 1, 3)            
+        Q2YoY, Q3YoY, Q4YoY = result['output']                        
  
         result = self.splitString(self.Quaterly_1_Source, 'Operating Profit</td>', '<td class="">', '</td>', 1, 4)
         EBIT_Q1, EBIT_Q2, EBIT_Q3, EBIT_Q4 = result['output']
         
         """ We make all denomiaor 0 to 0.1 to avoid divison by zero
         """
-        print Q1YoY,Q2YoY,Q3YoY,Q4YoY
-
         Q1YoY = float(Q1YoY)
         Q2YoY = float(Q2YoY)
         Q3YoY = float(Q3YoY)
