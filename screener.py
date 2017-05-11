@@ -565,6 +565,7 @@ def updateAllDB():
         dataFrame = googleSceernerData.result_df 
         
     for stockSymbol in dataFrame['SYMBOL']:
+        print "======================================"
         print("Processing stock %s, index = %d out of %d" %  (stockSymbol, index, totalSymbols))
         #import time
         #time.sleep(2)
@@ -599,7 +600,7 @@ This funciton allows to use updateCompleteDataBase for a particular stock.
 """
 def test_updateAllDB():
     
-    stockSymbol = 'ADHUNIK'
+    stockSymbol = '3IINFOTECH'
     cf = BS_json_extract.compFormat_bussinesStd(stockSymbol)
     cf.get_compFormat()
     if cf.result == 'NODATA':
