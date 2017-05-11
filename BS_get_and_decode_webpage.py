@@ -247,90 +247,89 @@ class getData_bussinesStd(object):
         try:
             """ Lets start with consolidated and fallback to standalone if not available"""
             reportType = 'Consolidated'
-            step = -2
             self.Quaterly_1_Source = myUrlopen(self.EPS_Quaterly_1[reportType])
             """ Try to decipher the report, if there is exception we have to try standalone"""
             Q1 = float(self.Quaterly_1_Source.split('EPS (Rs)</td>')[1].split('<td class="">')[1].split('</td>')[0])
-        except Exception,e:
+        except Exception:
             print "exception in consolidated"
             reportType = 'Standalone'
-            step = -1
             self.Quaterly_1_Source = myUrlopen(self.EPS_Quaterly_1[reportType])
             Q1 = float(self.Quaterly_1_Source.split('EPS (Rs)</td>')[1].split('<td class="">')[1].split('</td>')[0])
             
         self.Quaterly_2_Source = myUrlopen(self.EPS_Quaterly_2[reportType])
         print "report type: ", reportType
-        try:
-            step = 1
-            result = self.splitString(self.Quaterly_1_Source, 'EPS (Rs)</td>', '<td class="">', '</td>', 2, 4)
-            if result['success'] == 0:
-                return False
-            output = result['output']
-            Q2, Q3, Q4, Q1YoY = output
-                
-            step = 2
-            result = self.splitString(self.Quaterly_2_Source, 'EPS (Rs)</td>', '<td class="">', '</td>', 1, 3)            
-            Q2YoY, Q3YoY, Q4YoY = result['output']          
-    
-            step = 3
-            result = self.splitString(self.Quaterly_1_Source, 'Figures in Rs crore</td>', '<td class="tdh">', '</td>', 1, 4)
-            Q1Name, Q2Name, Q3Name, Q4Name = result['output']
-            
-            step = 4
-            result = self.splitString(self.Quaterly_1_Source, 'Operating Profit</td>', '<td class="">', '</td>', 1, 4)
-            EBIT_Q1, EBIT_Q2, EBIT_Q3, EBIT_Q4 = result['output']
-            
-            step = 4
-            """ We make all 0 to 0.1
-            """
-            Q1YoY = 0.1 if Q1YoY == 0 else float(Q1YoY)
-            Q2YoY = 0.1 if Q2YoY == 0 else float(Q2YoY)
-            Q3YoY = 0.1 if Q3YoY == 0 else float(Q3YoY)
-            Q4YoY = 0.1 if Q4YoY == 0 else float(Q4YoY)
-    
-            EPSQ1Change = (float(Q1) - Q1YoY)/Q1YoY*100
-            EPSQ2Change = (float(Q2) - Q2YoY)/Q2YoY*100
-            EPSQ3Change = (float(Q3) - Q3YoY)/Q3YoY*100
-            EPSQ4Change = (float(Q4) - Q4YoY)/Q4YoY*100
 
-            conn = sqlite3.connect(self.sqlite_file)
-            c = conn.cursor()
-                            
-            c.execute("CREATE TABLE IF NOT EXISTS QUATERLYSTOCKDATA \
-                (symbol, EPS_Q1, EPS_Q2, EPS_Q3, EPS_Q4, \
-                EPS_Q1YoY, EPS_Q2YoY, EPS_Q3YoY, EPS_Q4YoY,\
-                Q1Name, Q2Name, Q3Name, Q4Name,\
-                EPSQ1Change, EPSQ2Change, EPSQ3Change, EPSQ4Change,\
-                EBIT_Q1, EBIT_Q2, EBIT_Q3, EBIT_Q4,\
-                reportType)")
-            step = 13
-            c.execute('''DELETE FROM QUATERLYSTOCKDATA WHERE symbol = ?''', (self.stockSymbol,))
-            step = 14
-            c.execute('''INSERT INTO QUATERLYSTOCKDATA(symbol, EPS_Q1, EPS_Q2, EPS_Q3, EPS_Q4, \
-              EPS_Q1YoY, EPS_Q2YoY, EPS_Q3YoY, EPS_Q4YoY,\
-              Q1Name, Q2Name, Q3Name, Q4Name,\
-              EPSQ1Change, EPSQ2Change, EPSQ3Change, EPSQ4Change,\
-              EBIT_Q1, EBIT_Q2, EBIT_Q3, EBIT_Q4,\
-              reportType)\
-              values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
-              (self.stockSymbol, float(Q1), float(Q2), float(Q3), float(Q4), float(Q1YoY), float(Q2YoY), float(Q3YoY), float(Q4YoY),
-              Q1Name, Q2Name, Q3Name, Q4Name, EPSQ1Change, EPSQ2Change, EPSQ3Change, EPSQ4Change,
-              float(EBIT_Q1), float(EBIT_Q2), float(EBIT_Q3), float(EBIT_Q4),
-              reportType))
-            print "Qtr data updated for", self.stockSymbol, Q1Name
-            conn.commit()
-            conn.close()
-        except Exception,e:
-            print "Exception reading DB for quaterlyUpdate. May be you want to fix this.", str(e)
-            print "setp = ", step
-            return False            
+        result = self.splitString(self.Quaterly_1_Source, 'EPS (Rs)</td>', '<td class="">', '</td>', 2, 4)
+        """
+        if result['success'] == 0:
+            return False
+        """
+        output = result['output']
+        Q2, Q3, Q4, Q1YoY = output
+        
+        result = self.splitString(self.Quaterly_2_Source, 'EPS (Rs)</td>', '<td class="">', '</td>', 1, 3)            
+        Q2YoY, Q3YoY, Q4YoY = result['output']
+            
+        result = self.splitString(self.Quaterly_1_Source, 'Figures in Rs crore</td>', '<td class="tdh">', '</td>', 1, 4)
+        Q1Name, Q2Name, Q3Name, Q4Name = result['output']
+        
+        """ Do not proceed if latest qtr data is not any of (current or previous qtr) """
+        if Q1Name != common_code.current_qtr and Q1Name != common_code.previous_qtr:
+            print "Quite old data in server ", Q1Name
+            return False        
+ 
+        result = self.splitString(self.Quaterly_1_Source, 'Operating Profit</td>', '<td class="">', '</td>', 1, 4)
+        EBIT_Q1, EBIT_Q2, EBIT_Q3, EBIT_Q4 = result['output']
+        
+        """ We make all denomiaor 0 to 0.1 to avoid divison by zero
+        """
+        print Q1YoY,Q2YoY,Q3YoY,Q4YoY
+
+        Q1YoY = float(Q1YoY)
+        Q2YoY = float(Q2YoY)
+        Q3YoY = float(Q3YoY)
+        Q4YoY = float(Q4YoY)
+
+        Q1YoY = 0.1 if Q1YoY == 0.00 else float(Q1YoY)
+        Q2YoY = 0.1 if Q2YoY == 0.00 else float(Q2YoY)
+        Q3YoY = 0.1 if Q3YoY == 0.00 else float(Q3YoY)
+        Q4YoY = 0.1 if Q4YoY == 0.00 else float(Q4YoY)
+    
+        EPSQ1Change = (float(Q1) - Q1YoY)/Q1YoY*100
+        EPSQ2Change = (float(Q2) - Q2YoY)/Q2YoY*100
+        EPSQ3Change = (float(Q3) - Q3YoY)/Q3YoY*100
+        EPSQ4Change = (float(Q4) - Q4YoY)/Q4YoY*100
+
+        conn = sqlite3.connect(self.sqlite_file)
+        c = conn.cursor()
+                        
+        c.execute("CREATE TABLE IF NOT EXISTS QUATERLYSTOCKDATA \
+            (symbol, EPS_Q1, EPS_Q2, EPS_Q3, EPS_Q4, \
+            EPS_Q1YoY, EPS_Q2YoY, EPS_Q3YoY, EPS_Q4YoY,\
+            Q1Name, Q2Name, Q3Name, Q4Name,\
+            EPSQ1Change, EPSQ2Change, EPSQ3Change, EPSQ4Change,\
+            EBIT_Q1, EBIT_Q2, EBIT_Q3, EBIT_Q4,\
+            reportType)")
+        c.execute('''DELETE FROM QUATERLYSTOCKDATA WHERE symbol = ?''', (self.stockSymbol,))
+        c.execute('''INSERT INTO QUATERLYSTOCKDATA(symbol, EPS_Q1, EPS_Q2, EPS_Q3, EPS_Q4, \
+          EPS_Q1YoY, EPS_Q2YoY, EPS_Q3YoY, EPS_Q4YoY,\
+          Q1Name, Q2Name, Q3Name, Q4Name,\
+          EPSQ1Change, EPSQ2Change, EPSQ3Change, EPSQ4Change,\
+          EBIT_Q1, EBIT_Q2, EBIT_Q3, EBIT_Q4,\
+          reportType)\
+          values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
+          (self.stockSymbol, float(Q1), float(Q2), float(Q3), float(Q4), float(Q1YoY), float(Q2YoY), float(Q3YoY), float(Q4YoY),
+          Q1Name, Q2Name, Q3Name, Q4Name, EPSQ1Change, EPSQ2Change, EPSQ3Change, EPSQ4Change,
+          float(EBIT_Q1), float(EBIT_Q2), float(EBIT_Q3), float(EBIT_Q4),
+          reportType))
+        print "Qtr data updated for", self.stockSymbol, Q1Name
+        conn.commit()
+        conn.close()
+        return True        
 
     def updateCompleteDataBase(self):
         update_quaterly = 1
         update_yearly = 1
-        
-        if common_code.is_stock_blacklisted(self.stockSymbol):
-            return False
         try:
             conn = sqlite3.connect(self.sqlite_file)
             c = conn.cursor()
@@ -355,7 +354,8 @@ class getData_bussinesStd(object):
         """ proceed with update """
         if update_quaterly == 1:
             print "call quaterlyUpdate ...."
-            self.quaterlyUpdate()
+            if self.quaterlyUpdate() == False:
+                return False
         if update_yearly == 1:
             print "call yearly Update...."
             self.yearlyUpdate()

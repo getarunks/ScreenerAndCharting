@@ -556,6 +556,7 @@ def updateAllDB():
     index = continue_from_here
 
     totalSymbols = len(googleSceernerData.result_df['SYMBOL'])
+    failed_stocks = []
     
     if continue_from_here != 0:
         googleSceernerData.result_df['SYMBOL'] = googleSceernerData.result_df['SYMBOL'].tail(totalSymbols - continue_from_here)
@@ -568,32 +569,44 @@ def updateAllDB():
         #import time
         #time.sleep(2)
         if stockSymbol == 0:
-            continue        
+            continue
+        if common_code.is_stock_blacklisted(stockSymbol):
+            print stockSymbol, " Blacklisted stock"
+            return
+
         cf = BS_json_extract.compFormat_bussinesStd(stockSymbol)
         cf.get_compFormat()
         if cf.result == 'NODATA':
             print 'No Data for: ' + stockSymbol
+            index +=1
             continue
 
         report = BS_get_and_decode_webpage.getData_bussinesStd(cf.result, stockSymbol)
         if report.updateCompleteDataBase() == False:
             print stockSymbol + ' error fetching data'
+            failed_stocks.append(stockSymbol)
         index +=1
         del cf
         if index == 50:
             break
+        
+    print "Failed stocks..... few can be blacklisted"
+    print failed_stocks
 """
 Function written to test the updateAllDB().
 This funciton allows to use updateCompleteDataBase for a particular stock.
 """
 def test_updateAllDB():
-    stockSymbol = 'FAIRCHEM'
+    stockSymbol = 'ABFRL'
     cf = BS_json_extract.compFormat_bussinesStd(stockSymbol)
     cf.get_compFormat()
     if cf.result == 'NODATA':
         print 'No Data for: ' + stockSymbol
         return
     print "processing stock...", stockSymbol
+    if common_code.is_stock_blacklisted(stockSymbol):
+        print stockSymbol, " Blacklisted stock"
+        return
     report = BS_get_and_decode_webpage.getData_bussinesStd(cf.result, stockSymbol)
     if report.updateCompleteDataBase() == False:
         print stockSymbol + ' error fetching data'
