@@ -101,22 +101,32 @@ class getData_bussinesStd(object):
         return {'success':success, 'output':output, 'itemsReturned':noItems }
 
     def yearlyUpdate(self):
+        
         """
-        This try-except loop is to figure out the reportType(conslidate/standalone)
+        We need matching data. ie. if quaterly data is standalone, we dont need to try consolidated here
         """
-        try:
-            reportType = 'Consolidated'
-            self.balanceSheet_source = myUrlopen(self.balance_sheet_link[reportType])                        
+        if self.qtr_reportType == 'Consolidated':
             """
-            We can't use splitString. We have to get exception here to switch to standalone
+            This try-except loop is to figure out the reportType(conslidate/standalone)
             """
-            currentLiabilites = self.balanceSheet_source.split('Current Liabilities</td>')[1].split('<td class="">')[1].split('</td>')[0]            
-        except Exception:
-            print "exception in consolidated"
+            try:
+                reportType = 'Consolidated'
+                self.balanceSheet_source = myUrlopen(self.balance_sheet_link[reportType])                        
+                """
+                We can't use splitString. We have to get exception here to switch to standalone
+                """
+                currentLiabilites = self.balanceSheet_source.split('Current Liabilities</td>')[1].split('<td class="">')[1].split('</td>')[0]            
+            except Exception:
+                print "exception in consolidated"
+                reportType = 'Standalone'
+                self.balanceSheet_source = myUrlopen(self.balance_sheet_link[reportType])
+                currentLiabilites = self.balanceSheet_source.split('Current Liabilities</td>')[1].split('<td class="">')[1].split('</td>')[0]
+        else:
+            print "we directly moving to standalone in yearly"
             reportType = 'Standalone'
             self.balanceSheet_source = myUrlopen(self.balance_sheet_link[reportType])
             currentLiabilites = self.balanceSheet_source.split('Current Liabilities</td>')[1].split('<td class="">')[1].split('</td>')[0]
-
+            
         print "report type: ", reportType       
         """
         Some stocks Anuual EPS is listed in finacial overview link, for other
@@ -249,6 +259,7 @@ class getData_bussinesStd(object):
             Q1Name, Q2Name, Q3Name, Q4Name = result['output']
             
         print "Report Type: ", reportType
+        self.qtr_reportType = reportType
         
         """ Do not proceed if latest qtr data is not any of (current or previous qtr) """
         if Q1Name != common_code.current_qtr and Q1Name != common_code.previous_qtr:
@@ -272,10 +283,10 @@ class getData_bussinesStd(object):
         Q3YoY = float(Q3YoY)
         Q4YoY = float(Q4YoY)
 
-        Q1YoY = 0.1 if Q1YoY == 0.00 else float(Q1YoY)
-        Q2YoY = 0.1 if Q2YoY == 0.00 else float(Q2YoY)
-        Q3YoY = 0.1 if Q3YoY == 0.00 else float(Q3YoY)
-        Q4YoY = 0.1 if Q4YoY == 0.00 else float(Q4YoY)
+        Q1YoY = 0.1 if Q1YoY == 0.00 else Q1YoY
+        Q2YoY = 0.1 if Q2YoY == 0.00 else Q2YoY
+        Q3YoY = 0.1 if Q3YoY == 0.00 else Q3YoY
+        Q4YoY = 0.1 if Q4YoY == 0.00 else Q4YoY
     
         EPSQ1Change = (float(Q1) - Q1YoY)/Q1YoY*100
         EPSQ2Change = (float(Q2) - Q2YoY)/Q2YoY*100
