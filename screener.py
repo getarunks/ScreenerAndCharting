@@ -289,6 +289,9 @@ def getCashFlow(stockSymbol, consolidated):
         return
     del cf, report
 
+"""
+FixMe this function for recent chagnes in Data base structure
+"""
 def getBalanceSheet(stockSymbol):
     cf = BS_json_extract.compFormat_bussinesStd(stockSymbol)
     cf.get_compFormat()
@@ -324,7 +327,6 @@ def getBalanceSheet(stockSymbol):
             print("EBIT/EV earning yield              %.2f" % (report.result_dict['EarningsYield']) )  
             
     del cf, report
-
 
 def getPH(stockSymbol):
     cf = BS_json_extract.compFormat_bussinesStd(stockSymbol)
@@ -589,18 +591,17 @@ def updateAllDB():
             failed_stocks.append(stockSymbol)
         index +=1
         del cf
-        if index == 50:
-            break
         
     print "Failed stocks..... few can be blacklisted"
     print failed_stocks
+    del googleSceernerData
 """
 Function written to test the updateAllDB().
 This funciton allows to use updateCompleteDataBase for a particular stock.
 """
 def test_updateAllDB():
     
-    stockSymbol = '3IINFOTECH'
+    stockSymbol = 'BFINVEST'
     cf = BS_json_extract.compFormat_bussinesStd(stockSymbol)
     cf.get_compFormat()
     if cf.result == 'NODATA':
@@ -615,52 +616,6 @@ def test_updateAllDB():
         print stockSymbol + ' error fetching data'
     del cf
         
-def updateDB(reqType = 'EPS'):
-    googleSceernerData = google_json_extract.google_sceerner_json_DataExtract()
-    googleSceernerData.retrieve_stock_data()
-    googleSceernerData.result_df.to_csv(r'google-data.csv', index=False)
-
-    textFile = open("FirstReport.txt", "w")
-
-    failedStocks = []
-    
-    common_code.DB_updateRunning = 1    
-    continue_from_here = common_code.update_start_index
-    index = continue_from_here
-
-    totalSymbols = len(googleSceernerData.result_df['SYMBOL'])
-    
-    if continue_from_here != 0:
-        googleSceernerData.result_df['SYMBOL'] = googleSceernerData.result_df['SYMBOL'].tail(totalSymbols - continue_from_here)
-        dataFrame = googleSceernerData.result_df[pandas.notnull(googleSceernerData.result_df['SYMBOL'])]
-    else:
-        dataFrame = googleSceernerData.result_df    
-   
-    for stockSymbol in dataFrame['SYMBOL']:
-        print("Processing stock %s, index = %d out of %d" %  (stockSymbol, index, totalSymbols))
-        if stockSymbol == 0:
-            continue
-        if reqType == 'EPS':
-            report = getEPSG(stockSymbol)
-        else:
-            report = getBalanceSheet(stockSymbol)
-        if report == False:
-            print "failed to update ", stockSymbol
-            failedStocks.append(stockSymbol)
-            index +=1
-            continue
-
-        index += 1
-
-    print ("dataBase out of outdated stocks = %d, updated = %d\n" % (common_code.dataBase_outdate_stocks, common_code.dataBase_updated_stocks))
-    textFile.write("dataBase out of outdated stocks = %d, updated = %d\n" % (common_code.dataBase_outdate_stocks, common_code.dataBase_updated_stocks))
-    textFile.close()
-    common_code.DB_updateRunning = 0
-    
-    print "Failed stocsk... Better check and blacklist them if not needed"
-    print failedStocks
-    del googleSceernerData
-
 from Tkinter import Tk, Label, Button, Entry
 class readInputParams:
     def __init__(self, master):
