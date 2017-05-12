@@ -2,6 +2,7 @@ import re
 from urllib2 import urlopen
 import sqlite3
 import common_code
+import time
 
 def myUrlopen(link):
     try:
@@ -11,8 +12,8 @@ def myUrlopen(link):
             print 'web page access count = ', common_code.webPageAcessed
     except Exception,e:
         #Sometime server might ot respond, try once again
-        print 'open failed. try again after 2 seconds', str(e)
-        common_code.mySleep(2)
+        print 'open failed. try again after 5 seconds', str(e)
+        time.sleep(5)
         source = urlopen(link).read()
         common_code.ebPageAcessed +=1
     return source
