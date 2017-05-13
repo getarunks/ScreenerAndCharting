@@ -15,6 +15,7 @@ Enter the lable show in BS website for latest quater
 current_qtr = 'Mar-2017'
 previous_qtr = 'Dec-2016'
 current_year = '2017'
+previous_year = '2016'
 
 
 """
