@@ -330,7 +330,7 @@ class getData_bussinesStd(object):
             sql_cmd = "SELECT * FROM QUATERLYSTOCKDATA WHERE symbol=?"
             c.execute(sql_cmd, [(self.stockSymbol)])
             qtr_row = c.fetchone()
-            c.execute("SELECT * FROM QUATERLYSTOCKDATA WHERE symbol=?", [(self.stockSymbol)])
+            c.execute("SELECT * FROM YEARLYSTOCKDATA WHERE symbol=?", [(self.stockSymbol)])
             yearly_row = c.fetchone()
             conn.close()
             """ if data is uptodate return """
