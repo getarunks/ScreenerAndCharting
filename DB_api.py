@@ -1,7 +1,10 @@
 """
 Set of apis to read the derails of DB.
 """
-import sqlite3
+import pandas, sqlite3
+import google_json_extract
+import BS_json_extract
+import BS_get_and_decode_webpage
 import common_code
 #http://pythoncentral.io/introduction-to-sqlite-in-python/
 def deleteDB():
@@ -14,7 +17,10 @@ def deleteDB():
     conn.commit()
     conn.close()
 
-def updateDB(stock, eps):
+"""
+Template showing how to upate a stock. Not realy used. Kept for reference.
+"""
+def update_DB(stock, eps):
     sqlite_file = common_code.sqliteFile
     conn =sqlite3.connect(sqlite_file)
     c = conn.cursor()
@@ -244,3 +250,76 @@ def filterStocksDB_Beat(min_eV = 0, max_ev = 100000000):
     print_selected(sort_list_netRank[:30], stock_dict_allDetails)
     #print_selected(sort_list_roc[:30], stock_dict_allDetails)
     return
+
+"""
+This function updates both yearly and quarterly results from bussiness standard website.
+Stocks who has matching Yearly and quarterly with common_code(current_year, current_qtr) will not be fetched.
+"""
+def updateDB():
+    googleSceernerData = google_json_extract.google_sceerner_json_DataExtract()
+    googleSceernerData.retrieve_stock_data()
+    googleSceernerData.result_df.to_csv(r'google-data.csv', index=False)
+    
+    common_code.DB_updateRunning = 1
+    continue_from_here = common_code.update_start_index
+    index = continue_from_here
+
+    totalSymbols = len(googleSceernerData.result_df['SYMBOL'])
+    failed_stocks = []
+    
+    if continue_from_here != 0:
+        googleSceernerData.result_df['SYMBOL'] = googleSceernerData.result_df['SYMBOL'].tail(totalSymbols - continue_from_here)
+        dataFrame = googleSceernerData.result_df[pandas.notnull(googleSceernerData.result_df['SYMBOL'])]
+    else:
+        dataFrame = googleSceernerData.result_df 
+        
+    for stockSymbol in dataFrame['SYMBOL']:
+        print "======================================"
+        print("Processing stock %s, index = %d out of %d" %  (stockSymbol, index, totalSymbols))
+        #import time
+        #time.sleep(2)
+        if stockSymbol == 0:
+            continue
+        if common_code.is_stock_blacklisted(stockSymbol):
+            print stockSymbol, " Blacklisted stock"
+            index +=1
+            continue
+
+        cf = BS_json_extract.compFormat_bussinesStd(stockSymbol)
+        cf.get_compFormat()
+        if cf.result == 'NODATA':
+            print 'No Data for: ' + stockSymbol
+            index +=1
+            continue
+
+        report = BS_get_and_decode_webpage.getData_bussinesStd(cf.result, stockSymbol)
+        if report.updateCompleteDataBase() == False:
+            print stockSymbol + ' error fetching data'
+            failed_stocks.append(stockSymbol)
+        index +=1
+        del cf
+        
+    print "Failed stocks..... few can be blacklisted"
+    print failed_stocks
+    del googleSceernerData
+
+"""
+Function written to test the updateAllDB().
+This funciton allows to use updateCompleteDataBase for a particular stock.
+"""
+def updateSingleStockDB():
+    
+    stockSymbol = 'BFINVEST'
+    cf = BS_json_extract.compFormat_bussinesStd(stockSymbol)
+    cf.get_compFormat()
+    if cf.result == 'NODATA':
+        print 'No Data for: ' + stockSymbol
+        return
+    print "processing stock...", stockSymbol
+    if common_code.is_stock_blacklisted(stockSymbol):
+        print stockSymbol, " Blacklisted stock"
+        return
+    report = BS_get_and_decode_webpage.getData_bussinesStd(cf.result, stockSymbol)
+    if report.updateCompleteDataBase() == False:
+        print stockSymbol + ' error fetching data'
+    del cf

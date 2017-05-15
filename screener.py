@@ -289,44 +289,44 @@ def getCashFlow(stockSymbol, consolidated):
         return
     del cf, report
 
-"""
-FixMe this function for recent chagnes in Data base structure
-"""
-def getBalanceSheet(stockSymbol):
-    cf = BS_json_extract.compFormat_bussinesStd(stockSymbol)
-    cf.get_compFormat()
-    if cf.result == 'NODATA':
-        print 'No Data for: ' + stockSymbol
-        cf.result = compFormatFailed(stockSymbol)
-        if cf.result == False:
-            del cf
-            return False
-
-    report = BS_get_and_decode_webpage.getData_bussinesStd(cf.result, stockSymbol)
-    if report.getBalanceSheetData() == False:
-        print stockSymbol + ' error fetching data'
-        del cf
-        return
+def getBalanceSheet(stockSymbol, EBIT_qtrly = False):
+    conn =sqlite3.connect(common_code.sqliteFile)
+    c = conn.cursor()
+    sql_cmd = "SELECT * FROM QUATERLYSTOCKDATA WHERE symbol=?"
+    c.execute(sql_cmd, [(stockSymbol)])
+    qtr_row = c.fetchone()
+    conn.close()
+    
+    conn =sqlite3.connect(common_code.sqliteFile)
+    c = conn.cursor()
+    sql_cmd = "SELECT * FROM YEARLYSTOCKDATA WHERE symbol=?"
+    c.execute(sql_cmd, [(stockSymbol)])
+    yearly_row = c.fetchone()
+    conn.close()
+    
+    print("Current year                        %s" %(yearly_row[common_code.YearlyIndex_CurrYear]))
+    print("Calculate RoC")
+    print("RoC = EBIT/ (Total assests - current liablities)\n")
+    if EBIT_qtrly == False:
+        print("Operating Profit(EBIT)             %s" % (yearly_row[common_code.YearlyIndex_EBIT]))
     else:
-        if common_code.DB_updateRunning == 0:
-            print("Current year                        %s" %(report.result_dict['CurrentYear']))
-            print("Calculate RoC")
-            print("RoC = EBIT/ (Total assests - current liablities)\n")
-            print("Operating Profit(EBIT)             %s" % (report.result_dict['OperatingProfit']))
-            print("Total Assets                       %s" % (report.result_dict['TotalAssets']))
-            print("Current Liabilities                %s" % (report.result_dict['CurrentLiabilites']))
-            print("RoC                                %.2f\n" % (report.result_dict['RoC']))
-
+        total = qtr_row[common_code.QuaterlyIndex_EBIT_Q1] + qtr_row[common_code.QuaterlyIndex_EBIT_Q2] + \
+                qtr_row[common_code.QuaterlyIndex_EBIT_Q3] + qtr_row[common_code.QuaterlyIndex_EBIT_Q4]
+        print("Operating Profit(EBIT)             %s" % (total))
+    print("Total Assets                       %s" % (yearly_row[common_code.YearlyIndex_TotAssest]))
+    print("Current Liabilities                %s" % (yearly_row[common_code.YearlyIndex_CurLiability]))
+    print("RoC                                %.2f\n" % (yearly_row[common_code.YearlyIndex_RoC]))
             
-            print("Operating Profit(EBIT)             %s" % (report.result_dict['OperatingProfit']))
-            print("Market value of Equity             %s" % (report.result_dict['MarketCap']))
-            print("Total Debt                         %s" % (report.result_dict['TotalDebt']))            
-            print("EV = market value of equity + total debt")
-            EV = float(report.result_dict['MarketCap']) + float(report.result_dict['TotalDebt'])
-            print("EV                                 %.2f" % (EV))
-            print("EBIT/EV earning yield              %.2f" % (report.result_dict['EarningsYield']) )  
-            
-    del cf, report
+    if EBIT_qtrly == False:
+        print("Operating Profit(EBIT)             %s" % (yearly_row[common_code.YearlyIndex_EBIT]))
+    else :
+        print("Operating Profit(EBIT)             %s" % (total))
+    print("Market value of Equity             %s" % (yearly_row[common_code.YearlyIndex_MarketCap]))
+    print("Total Debt                         %s" % (yearly_row[common_code.YearlyIndex_TotDebt]))            
+    print("EV = market value of equity + total debt")
+    EV = float(yearly_row[common_code.YearlyIndex_MarketCap]) + float(yearly_row[common_code.YearlyIndex_TotDebt])
+    print("EV                                 %.2f" % (EV))
+    print("EBIT/EV earning yield              %.2f" % (yearly_row[common_code.YearlyIndex_EarningsYield]) )
 
 def getPH(stockSymbol):
     cf = BS_json_extract.compFormat_bussinesStd(stockSymbol)
@@ -361,58 +361,55 @@ def getRatios(stockSymbol):
         del cf
     #del cf, report
 
-def getEPSG(stockSymbol):    
-    cf = BS_json_extract.compFormat_bussinesStd(stockSymbol)
-    cf.get_compFormat()
-    if cf.result == 'NODATA':
-        print 'No Data for: ' + stockSymbol
-        cf.result = compFormatFailed(stockSymbol)
-        if cf.result == False:
-            del cf
-            return False
-
-    report = BS_get_and_decode_webpage.getData_bussinesStd(cf.result, stockSymbol)
-    if report.getEPSdata() == False:
-        print stockSymbol + ' error fetching data'
-        del cf
-        return False
+def getEPSG(stockSymbol):
+    conn =sqlite3.connect(common_code.sqliteFile)
+    c = conn.cursor()
+    sql_cmd = "SELECT * FROM QUATERLYSTOCKDATA WHERE symbol=?"
+    c.execute(sql_cmd, [(stockSymbol)])
+    qtr_row = c.fetchone()
+    conn.close()
+    
+    conn =sqlite3.connect(common_code.sqliteFile)
+    c = conn.cursor()
+    sql_cmd = "SELECT * FROM YEARLYSTOCKDATA WHERE symbol=?"
+    c.execute(sql_cmd, [(stockSymbol)])
+    yearly_row = c.fetchone()
+    conn.close()
 
     if common_code.DB_updateRunning == 0:
-        print 'Annual EPS Data: '+ report.result_dict['reportType']
-        print("                      %15s%15s%15s%15s" % (report.result_dict['Y1Name'],
-                                               report.result_dict['Y2Name'],
-                                                report.result_dict['Y3Name'],
-                                                report.result_dict['Y4Name'] ))
-        print("EPS Data       :      %15s%15s%15s%15s" % (report.result_dict['EPS_Y1'],
-                                                    report.result_dict['EPS_Y2'],
-                                                    report.result_dict['EPS_Y3'],
-                                                    report.result_dict['EPS_Y4']))
-        print("Change percent :      %15d%15d%15d" %(report.result_dict['EPSY1Change'],
-                                                    report.result_dict['EPSY2Change'],
-                                                    report.result_dict['EPSY3Change']))
-        print 'Quaterly EPS Data: ' + report.result_dict['reportType']
-        print("                      %15s%15s%15s%15s" % (report.result_dict['Q1Name'],
-                                               report.result_dict['Q2Name'],
-                                                report.result_dict['Q3Name'],
-                                                report.result_dict['Q4Name']))
-        print("Current Year   :      %15s%15s%15s%15s" % (report.result_dict['EPS_Q1'],
-                                                    report.result_dict['EPS_Q2'],
-                                                    report.result_dict['EPS_Q3'],
-                                                    report.result_dict['EPS_Q4']))
-        print("Previous Year  :      %15s%15s%15s%15s" % (report.result_dict['EPS_Q1YoY'],
-                                                     report.result_dict['EPS_Q2YoY'],
-                                                     report.result_dict['EPS_Q3YoY'],
-                                                     report.result_dict['EPS_Q4YoY']))
-        print("Change percent :      %15d%15d%15d%15d" %(report.result_dict['EPSQ1Change'],
-                                                     report.result_dict['EPSQ2Change'],
-                                                     report.result_dict['EPSQ3Change'],
-                                                     report.result_dict['EPSQ4Change']))
-    if common_code.DB_updateRunning == 0:
-        onGoingAnnualEPS = float(report.result_dict['EPS_Q1']) + float(report.result_dict['EPS_Q2']) +\
-                           float(report.result_dict['EPS_Q3']) +  float(report.result_dict['EPS_Q4'])
-        print("On going Annual EPS: %0.2f" % (onGoingAnnualEPS))
-
-    return report
+        print 'Annual EPS Data: '+ yearly_row[common_code.YearlyIndex_reportType]
+        print("                      %15s%15s%15s%15s" % (yearly_row[common_code.YearlyIndex_Y1Name],
+                                               yearly_row[common_code.YearlyIndex_Y2Name],
+                                                yearly_row[common_code.YearlyIndex_Y3Name],
+                                                yearly_row[common_code.YearlyIndex_Y4Name] ))
+        print("EPS Data       :      %15s%15s%15s%15s" % (yearly_row[common_code.YearlyIndex_Y1EPS],
+                                                    yearly_row[common_code.YearlyIndex_Y2EPS],
+                                                    yearly_row[common_code.YearlyIndex_Y3EPS],
+                                                    yearly_row[common_code.YearlyIndex_Y4EPS]))
+        print("Change percent :      %15d%15d%15d" %(yearly_row[common_code.YearlyIndex_EPSY1Change],
+                                                    yearly_row[common_code.YearlyIndex_EPSY2Change],
+                                                    yearly_row[common_code.YearlyIndex_EPSY3Change]))
+        print 'Quaterly EPS Data: ' + qtr_row[common_code.QuaterlyIndex_reportType]
+        print("                      %15s%15s%15s%15s" % (qtr_row[common_code.QuaterlyIndex_Q1Name],
+                                               qtr_row[common_code.QuaterlyIndex_Q2Name],
+                                                qtr_row[common_code.QuaterlyIndex_Q3Name],
+                                                qtr_row[common_code.QuaterlyIndex_Q4Name]))
+        print("Current Year   :      %15s%15s%15s%15s" % (qtr_row[common_code.QuaterlyIndex_EPS_Q1],
+                                                    qtr_row[common_code.QuaterlyIndex_EPS_Q2],
+                                                    qtr_row[common_code.QuaterlyIndex_EPS_Q3],
+                                                    qtr_row[common_code.QuaterlyIndex_EPS_Q4]))
+        print("Previous Year  :      %15s%15s%15s%15s" % (qtr_row[common_code.QuaterlyIndex_EPS_Q1YoY],
+                                                     qtr_row[common_code.QuaterlyIndex_EPS_Q2YoY],
+                                                     qtr_row[common_code.QuaterlyIndex_EPS_Q3YoY],
+                                                     qtr_row[common_code.QuaterlyIndex_EPS_Q4YoY]))
+        print("Change percent :      %15d%15d%15d%15d" %(qtr_row[common_code.QuaterlyIndex_EPSQ1Change],
+                                                     qtr_row[common_code.QuaterlyIndex_EPSQ2Change],
+                                                     qtr_row[common_code.QuaterlyIndex_EPSQ3Change],
+                                                     qtr_row[common_code.QuaterlyIndex_EPSQ4Change]))
+    
+    onGoingAnnualEPS = float(qtr_row[common_code.QuaterlyIndex_EPS_Q1]) + float(qtr_row[common_code.QuaterlyIndex_EPS_Q2]) +\
+                           float(qtr_row[common_code.QuaterlyIndex_EPS_Q3]) +  float(qtr_row[common_code.QuaterlyIndex_EPS_Q4])
+    print("On going Annual EPS: %0.2f" % (onGoingAnnualEPS))
 
 def getAll(stockSymbol):
     print("=============================")
@@ -547,74 +544,6 @@ def getCompleteReport(EPSY1, EPSY2, EPSY3, EPSCurrQtr, EPSQtrAlone):
     textFile.write("dataBase out of outdated stocks = %d, updated = %d\n" % (common_code.dataBase_outdate_stocks, common_code.dataBase_updated_stocks))
     textFile.close()    
     del googleSceernerData
-    
-def updateAllDB():
-    googleSceernerData = google_json_extract.google_sceerner_json_DataExtract()
-    googleSceernerData.retrieve_stock_data()
-    googleSceernerData.result_df.to_csv(r'google-data.csv', index=False)
-    
-    common_code.DB_updateRunning = 1
-    continue_from_here = common_code.update_start_index
-    index = continue_from_here
-
-    totalSymbols = len(googleSceernerData.result_df['SYMBOL'])
-    failed_stocks = []
-    
-    if continue_from_here != 0:
-        googleSceernerData.result_df['SYMBOL'] = googleSceernerData.result_df['SYMBOL'].tail(totalSymbols - continue_from_here)
-        dataFrame = googleSceernerData.result_df[pandas.notnull(googleSceernerData.result_df['SYMBOL'])]
-    else:
-        dataFrame = googleSceernerData.result_df 
-        
-    for stockSymbol in dataFrame['SYMBOL']:
-        print "======================================"
-        print("Processing stock %s, index = %d out of %d" %  (stockSymbol, index, totalSymbols))
-        #import time
-        #time.sleep(2)
-        if stockSymbol == 0:
-            continue
-        if common_code.is_stock_blacklisted(stockSymbol):
-            print stockSymbol, " Blacklisted stock"
-            index +=1
-            continue
-
-        cf = BS_json_extract.compFormat_bussinesStd(stockSymbol)
-        cf.get_compFormat()
-        if cf.result == 'NODATA':
-            print 'No Data for: ' + stockSymbol
-            index +=1
-            continue
-
-        report = BS_get_and_decode_webpage.getData_bussinesStd(cf.result, stockSymbol)
-        if report.updateCompleteDataBase() == False:
-            print stockSymbol + ' error fetching data'
-            failed_stocks.append(stockSymbol)
-        index +=1
-        del cf
-        
-    print "Failed stocks..... few can be blacklisted"
-    print failed_stocks
-    del googleSceernerData
-"""
-Function written to test the updateAllDB().
-This funciton allows to use updateCompleteDataBase for a particular stock.
-"""
-def test_updateAllDB():
-    
-    stockSymbol = 'BFINVEST'
-    cf = BS_json_extract.compFormat_bussinesStd(stockSymbol)
-    cf.get_compFormat()
-    if cf.result == 'NODATA':
-        print 'No Data for: ' + stockSymbol
-        return
-    print "processing stock...", stockSymbol
-    if common_code.is_stock_blacklisted(stockSymbol):
-        print stockSymbol, " Blacklisted stock"
-        return
-    report = BS_get_and_decode_webpage.getData_bussinesStd(cf.result, stockSymbol)
-    if report.updateCompleteDataBase() == False:
-        print stockSymbol + ' error fetching data'
-    del cf
         
 from Tkinter import Tk, Label, Button, Entry
 class readInputParams:
