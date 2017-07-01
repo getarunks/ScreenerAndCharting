@@ -28,7 +28,12 @@ def update_DB(stock, eps):
     c.execute('''UPDATE STOCKDATA SET Q1EPS = ? WHERE SYMBOL = ?''', (eps, stock))
     conn.commit()
     conn.close()
-    
+
+"""
+DB_Detais: 
+This function goes throught YEARLSTOCKDATA and QUATERLYSTOCKDATA
+data bases and print the statistical data.
+"""    
 def DB_Details():
     conn = sqlite3.connect(common_code.sqliteFile)
     c = conn.cursor()
@@ -72,6 +77,7 @@ def DB_Details():
         if row[common_code.YearlyIndex_reportType] == 'Consolidated':
             stmtConsolidated += 1
     
+    print("========================================\n");
     print("Yearly stock DB details: \n")
     print("Total stocks                                         = %d" % total_stocks)
     print("Stocks having data updated to year (%s)            = %d" % (common_code.current_year, yearlyUptodateStocks))
@@ -109,6 +115,7 @@ def DB_Details():
         if row[common_code.QuaterlyIndex_reportType] == 'Consolidated':
             stmtConsolidated += 1
     
+    print("========================================\n");
     print("Quaterly stock DB details: \n")
     print("Total stocks                                    = %d" % total_stocks)
     print("Stocks having data updated to Qtr (%s)    = %d" % (common_code.current_qtr, qtrlyUptodateStocks))
@@ -116,14 +123,14 @@ def DB_Details():
     print("Stocks with consolidated report                 = %d" % stmtConsolidated)
     conn.close()  
     
-def print_selected(selected_stock_list, stock_dict_allDetails):
+def __print_selected(selected_stock_list, stock_dict_allDetails):
     for each_stock in selected_stock_list:
         symbol , roc = each_stock
         each_dict = stock_dict_allDetails[symbol]
         print "=================="
         print "symbol           = ", each_dict['symbol']
         print "Report Type      = ", each_dict['reportType']
-        print "Quarter          = ", each_dict['qtrName']
+        #print "Quarter          = ", each_dict['qtrName']
         print "Yearly           = ", each_dict['curYear']
         print " "
         print "RoC              = ", each_dict['RoC']
@@ -133,24 +140,55 @@ def print_selected(selected_stock_list, stock_dict_allDetails):
         print "Operating Profit = ", each_dict['opProfit']
         print "current Liab     = ", each_dict['currLiab']
         print "Total Assets     = ", each_dict['totAss']
-
-
-def _get_qtrTTM_EBIT(stockSymbol, stock_dict_perDetails):
-    conn =sqlite3.connect(common_code.sqliteFile)
+    
+def __get_TTM_EBIT():
+    conn = sqlite3.connect(common_code.sqliteFile)
     c = conn.cursor()
-    sql_cmd = "SELECT * FROM QUATERLYSTOCKDATA WHERE symbol=?"
-    c.execute(sql_cmd, [(stockSymbol)])
-    row = c.fetchone()
-    total =  row[common_code.QuaterlyIndex_EBIT_Q1] + row[common_code.QuaterlyIndex_EBIT_Q2] + \
+    cursor = c.execute("SELECT symbol, EPS_Q1, EPS_Q2, EPS_Q3, EPS_Q4, \
+              EPS_Q1YoY, EPS_Q2YoY, EPS_Q3YoY, EPS_Q4YoY,\
+              Q1Name, Q2Name, Q3Name, Q4Name,\
+              EPSQ1Change, EPSQ2Change, EPSQ3Change, EPSQ4Change,\
+              EBIT_Q1, EBIT_Q2, EBIT_Q3, EBIT_Q4,\
+              reportType from QUATERLYSTOCKDATA")
+    stock_dict_TTM_EBIT = {}
+    
+    for row in cursor:
+        total =  row[common_code.QuaterlyIndex_EBIT_Q1] + row[common_code.QuaterlyIndex_EBIT_Q2] + \
                 row[common_code.QuaterlyIndex_EBIT_Q3] + row[common_code.QuaterlyIndex_EBIT_Q4]
-    #print "TTM QTR EBIT ", stockSymbol, total
-    stock_dict_perDetails['qtrName'] = row[common_code.QuaterlyIndex_Q1Name]
-    stock_dict_perDetails['opProfit'] = total
+        stock_dict_TTM_EBIT[row[common_code.QuaterlyIndex_symbol]] = total
     conn.close()
-    return total
+    return stock_dict_TTM_EBIT
+    
+def __recalculate_RoC_EY(row, operatingProfit):
+    
+    totalAssets = row[common_code.YearlyIndex_TotAssest]
+    currentLia = row[common_code.YearlyIndex_CurLiability]
+    RoC = float(operatingProfit)/(float(totalAssets) - float(currentLia))
+    RoC *=100 #convert to percentage
+    
+    marketCap = row[common_code.YearlyIndex_MarketCap]
+    totalDebt = row[common_code.YearlyIndex_TotDebt]
+    enterpriseValue = float(marketCap) + float(totalDebt)
+    earningsYield = float(operatingProfit)/enterpriseValue*100
+    
+    return float("{0:.2f}".format(RoC)), float("{0:.2f}".format(earningsYield))
+    
+"""
+filterStockDB_Beat():
+This functions parses both yearly and quaterly DB and filter stocks w.r.t
+earnings Yield and RoC
 
+if use_qtr_EBIT is set to True, TTM12 months values are used to recaluclate RoC, EY values.
+Otherwise RoC, EY values from yeary DB will be used.
+"""
 def filterStocksDB_Beat(min_eV = 0, max_ev = 100000000):
     use_qtr_EBIT = True
+    
+    if use_qtr_EBIT == True:
+        stock_dict_TTM_EBIT = {}
+        stock_dict_TTM_EBIT = __get_TTM_EBIT()
+        print "len of TTM dict", len(stock_dict_TTM_EBIT)
+        
     conn = sqlite3.connect(common_code.sqliteFile)
     c = conn.cursor()
     cursor_yearly = c.execute("SELECT symbol,Y1EPS, Y2EPS, Y3EPS, Y4EPS, \
@@ -179,41 +217,52 @@ def filterStocksDB_Beat(min_eV = 0, max_ev = 100000000):
         eV = float(row[common_code.YearlyIndex_MarketCap]) + float(row[common_code.YearlyIndex_TotDebt])
         if (eV < min_eV) or (eV > max_ev):
             continue
-       
-        stock_dict_RoC[row[common_code.YearlyIndex_symbol]] = row[common_code.YearlyIndex_RoC]
-        stock_dict_eYield[row[common_code.YearlyIndex_symbol]] = row[common_code.YearlyIndex_EarningsYield]
         """ This declartion should be inside the for loop to create different instance of stock_dict_perDetais"""
         stock_dict_perDetails = {}
-        stock_dict_perDetails['symbol'] = row[common_code.YearlyIndex_symbol]
+        stock_symbol = row[common_code.YearlyIndex_symbol]
+        print "==============="
+        print "symbol ", stock_symbol
+        print " RoC ", row[common_code.YearlyIndex_RoC]
+        print " EY ", row[common_code.YearlyIndex_EarningsYield]
+        print "EBIT ", row[common_code.YearlyIndex_EBIT]
+        import time
+        time.sleep(5)
+       
+        if use_qtr_EBIT == True:
+            RoC, eY = __recalculate_RoC_EY(row, stock_dict_TTM_EBIT[stock_symbol])
+            stock_dict_RoC[stock_symbol] = RoC
+            stock_dict_eYield[stock_symbol] = eY
+            stock_dict_perDetails['opProfit'] = stock_dict_TTM_EBIT[stock_symbol]
+            print "RoC" , RoC
+            print "eY ", eY
+            print "EBIT ", stock_dict_perDetails['opProfit']
+            time.sleep(5)
+        else :
+            stock_dict_RoC[stock_symbol] = row[common_code.YearlyIndex_RoC]
+            stock_dict_eYield[stock_symbol] = row[common_code.YearlyIndex_EarningsYield]
+            stock_dict_perDetails['opProfit'] = row[common_code.YearlyIndex_EBIT]
+        
+        stock_dict_perDetails['symbol'] = stock_symbol
         stock_dict_perDetails['currLiab'] = row[common_code.YearlyIndex_CurLiability]
         stock_dict_perDetails['totAss'] = row[common_code.YearlyIndex_TotAssest]
-        """
-        if EBIT is quaterly, we can read it now. If we did it will break this for loop.
-        If use_qtr_EBIT is true, opProfit will be filled after this for loop.
-        """
-        if use_qtr_EBIT == False:
-            stock_dict_perDetails['opProfit'] = row[common_code.YearlyIndex_EBIT]
-        stock_dict_perDetails['RoC'] = row[common_code.YearlyIndex_RoC]
         stock_dict_perDetails['marCap'] = row[common_code.YearlyIndex_MarketCap]
         stock_dict_perDetails['totDebt'] = row[common_code.YearlyIndex_TotDebt]
         stock_dict_perDetails['curYear'] = row[common_code.YearlyIndex_CurrYear]
-        stock_dict_perDetails['eYield'] = row[common_code.YearlyIndex_EarningsYield]
+        stock_dict_perDetails['RoC'] = stock_dict_RoC[stock_symbol]
+        stock_dict_perDetails['eYield'] = stock_dict_eYield[stock_symbol]
         stock_dict_perDetails['reportType'] = row[common_code.YearlyIndex_reportType]
         
-        stock_dict_allDetails[row[common_code.YearlyIndex_symbol]] = stock_dict_perDetails
+        stock_dict_allDetails[stock_symbol] = stock_dict_perDetails
         
         sort_list_roc = [(k,v) for v,k in sorted(
                     [(v,k) for k,v in stock_dict_RoC.items()], reverse=True)]
         sort_list_eY = [(k,v) for v,k in sorted(
                     [(v,k) for k,v in stock_dict_eYield.items()], reverse=True)]
                     
-    conn.close()
+        if (total_stocks % 5) == 0:
+            break
 
-    if use_qtr_EBIT == True:
-        print "Parsing Quarterly database and populating dictionary...."
-        for item in stock_dict_allDetails:
-            stock_dict_perDetails = stock_dict_allDetails[item]
-            stock_dict_perDetails['opProfit'] = _get_qtrTTM_EBIT(item, stock_dict_perDetails)
+    conn.close()
     
     """
     we need to create a dict of ranks
@@ -247,7 +296,7 @@ def filterStocksDB_Beat(min_eV = 0, max_ev = 100000000):
     #print allStock_dict_ranks
     print "======================="
     #print sort_list_netRank[:30]
-    print_selected(sort_list_netRank[:30], stock_dict_allDetails)
+    __print_selected(sort_list_netRank[:30], stock_dict_allDetails)
     #print_selected(sort_list_roc[:30], stock_dict_allDetails)
     return
 

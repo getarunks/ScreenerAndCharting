@@ -1,3 +1,29 @@
+This screener maninly works around DB stored in stock_db.sqlite. This has to be updated.
+
+Files:
+======
+Lets get acquantied with files,
+
+	Source Code files
+	-----------------
+		1. BS_get_and_decode_webpage.py : contains fetching and decoding data from business std website.
+		2. BS_json_extract.py : Decodes data_BS.json to get SYMBOL, CompanyName, CompId, compFormat, linkId
+		3. common_code.py : Contains most of the variables like current_qtr name, DB indexes, start index for DB update etc.
+		4. DB_api.py: APIs for reading and updating DB. Actual DB update happens in BS_get_and_decode_webpage.py
+					  DB_api.py initiates the update using  BS_get_and_decode_webpage.updateCompleteDataBase()
+					  DB_Details() is used to print statistical info of DBs
+		5. google_json_extract.py : extracts json data saved from google screener to panda data frame.
+		6. screener.py : has a GUI to enter EPS growth parameters to filter stocks. Also has functions to 
+						 to read cash flow, promotor holdings etc. some of them get it from website and some apis get
+						 data from DB. Needs imporvement for this.
+	
+	Data files
+	----------
+		1. data_BS.json : contains SYMBOL, CompanyName, CompId, compFormat, linkId.
+		2. NIFTYAllStocks.txt : json file having all the nifty stocks downloaded from google screener.
+		3. stock_db.sqlite : Data base for yearly and quarterly figures.
+
+getCompleteReport functino is obselete, but some exlanations of internal funcion are valid. Will revisit later.
 def getCompleteReport(EPSY1, EPSY2, EPSY3, EPSCurrQtr, EPSQtrAlone):
 	-> uses class google_sceerner_json_DataExtract to convert JSON data(eg: NIFTYAllStocks.txt) to list of stocks symbols
 	-> it is then written to a 'google-data.csv file.
@@ -19,8 +45,7 @@ def getCompleteReport(EPSY1, EPSY2, EPSY3, EPSCurrQtr, EPSQtrAlone):
 			failedStocks = []
 			All this data can be find in FirstReport.txt
 
-How to update new data_BS.json file?
-
+How to update data_BS.json file?
 Answer:
 	1. Go to setting in google chrome and open developer options.
 	2. Go to Network tab. Search "json" in search box available.
@@ -30,14 +55,7 @@ Answer:
 	6. Also remember to close the } bracket.
 	7. cat get-company-json | json_pp > data_BS_new.json
 
-How to update DB from website?
-Answer:
-
-	run command updateDB(), by default it updates EPS DB, for beat DB pass some string eg: updateDB('sdf')
-	Error messages related to update of Beat DB are stored in file errormsg.txt
-
 How to update new NIFTYALLStocks.txt ?
-
 Answer:
 	1. go to google screener.
 	2. If you are looged in, log out. And if you are logged out, log int to google account. Otherwise indian markets won't work. Strange!!!
@@ -47,3 +65,7 @@ Answer:
 		original:  https://www.google.com/finance?output=json&start=0&num=20&noIL=1&q=[cur
 		modified:  https://www.google.com/finance?output=json&start=0&num=1850&noIL=1&q=[cur
 	6. Save and replace NIFTYALLSTocks.txt
+
+How to update yearly and quarterly data base from website?
+Answer:
+	run command updateDB() in DB_api.py.

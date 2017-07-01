@@ -397,10 +397,10 @@ class readInputDates:
         self.entry_stock.insert(0, 'ASHOKLEY.NS')
         self.entry_d1.insert(0, 20)
         self.entry_m1.insert(0, 5)
-        self.entry_y1.insert(0, 2013)
+        self.entry_y1.insert(0, 2016)
         self.entry_d2.insert(0, 19)
         self.entry_m2.insert(0, 6)
-        self.entry_y2.insert(0, 2016)
+        self.entry_y2.insert(0, 2017)
         self.entry_slowMA.insert(0, 30)
         self.entry_fastMA.insert(0, 150)
 
@@ -535,8 +535,8 @@ def pullData(stock, duration):
 def pullFIIData():
     try:
         startYear = 2007
-        endYear = 2016
-        endMonth = 1
+        endYear = 2017
+        endMonth = 5
         monthLinkList = []
         
         """ create list of months like sel_month=200811 """
