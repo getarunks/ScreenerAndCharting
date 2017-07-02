@@ -12,10 +12,11 @@ def myUrlopen(link):
             print 'web page access count = ', common_code.webPageAcessed
     except Exception,e:
         #Sometime server might ot respond, try once again
-        print 'open failed. try again after 5 seconds', str(e)
-        time.sleep(5)
+        print 'open failed. try again after 30 seconds: ', str(e)
+        time.sleep(30)
+        print 'reading after 30 seconds sleep'
         source = urlopen(link).read()
-        common_code.ebPageAcessed +=1
+        common_code.webPageAcessed +=1
     return source
 
 class getData_bussinesStd(object):
