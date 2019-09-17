@@ -603,7 +603,7 @@ class readInputParams:
         print("CompleteReport Done..\n")
 
 if __name__ == '__main__':
-    skip_main = 0
+    skip_main = 1
 
     if skip_main != 1:
         print 'main'

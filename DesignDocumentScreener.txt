@@ -53,9 +53,9 @@ Answer:
 	4. Do a wget and link address in linux shell prompt.
 		here is the link https://www.business-standard.com/api-handler/article/get-company-json .
 		If this link is not working it might have got depricated.
-	5. copy the initial portion from the old .json file and prepend it with the downloaded file.
-	6. Also remember to close the } bracket.
-	7. cat get-company-json | json_pp > data_BS_new.json
+	5. cat get-company-json | json_pp > data_BS_new.json
+	6. copy the initial portion from the old .json file and prepend it with the downloaded file.
+	7. Also remember to close the } bracket.
 
 How to update new NIFTYALLStocks.txt ?
 Answer:
