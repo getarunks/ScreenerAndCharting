@@ -8,14 +8,14 @@ def mySleep(t):
 """
 continue DB update from here
 """
-update_start_index = 0
+update_start_index = 414
 """
 Enter the lable show in BS website for latest quater
 """
-current_qtr = 'Mar-2017'
-previous_qtr = 'Dec-2016'
-current_year = '2017'
-previous_year = '2016'
+current_qtr = 'Sep-2019'
+previous_qtr = 'Jun-2019'
+current_year = '2019'
+previous_year = '2018'
 
 
 """

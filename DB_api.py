@@ -300,6 +300,7 @@ def filterStocksDB_Beat(min_eV = 0, max_ev = 100000000):
     #print_selected(sort_list_roc[:30], stock_dict_allDetails)
     return
 
+
 """
 This function updates both yearly and quarterly results from bussiness standard website.
 Stocks who has matching Yearly and quarterly with common_code(current_year, current_qtr) will not be fetched.
@@ -356,14 +357,16 @@ def updateDB():
 Function written to test the updateAllDB().
 This funciton allows to use updateCompleteDataBase for a particular stock.
 """
-def updateSingleStockDB():
-    
-    stockSymbol = 'BFINVEST'
+def updateOneDB(stockSymbol):
     cf = BS_json_extract.compFormat_bussinesStd(stockSymbol)
     cf.get_compFormat()
     if cf.result == 'NODATA':
         print 'No Data for: ' + stockSymbol
-        return
+        cf.result = cf.compFormatFailed(stockSymbol)
+        if cf.result == False:
+            del cf
+            return False
+
     print "processing stock...", stockSymbol
     if common_code.is_stock_blacklisted(stockSymbol):
         print stockSymbol, " Blacklisted stock"

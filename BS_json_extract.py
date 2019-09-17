@@ -87,3 +87,9 @@ class compFormat_bussinesStd(object):
         else:
             self.result = 'NODATA'
 
+    def compFormatFailed(self, stockSymbol):
+        if common_code.DB_updateRunning == 0:
+            return input('Please enter Bussiness std stock ID for %s \' \': ' % (stockSymbol))
+        else:
+            return False
+
