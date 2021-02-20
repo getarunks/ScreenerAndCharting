@@ -127,19 +127,19 @@ def __print_selected(selected_stock_list, stock_dict_allDetails):
     for each_stock in selected_stock_list:
         symbol , roc = each_stock
         each_dict = stock_dict_allDetails[symbol]
-        print "=================="
-        print "symbol           = ", each_dict['symbol']
-        print "Report Type      = ", each_dict['reportType']
-        #print "Quarter          = ", each_dict['qtrName']
-        print "Yearly           = ", each_dict['curYear']
-        print " "
-        print "RoC              = ", each_dict['RoC']
-        print "Earnings Yield   = ", each_dict['eYield']
-        print "Market Cap       = ", each_dict['marCap']
-        print "Total Debt       = ", each_dict['totDebt']
-        print "Operating Profit = ", each_dict['opProfit']
-        print "current Liab     = ", each_dict['currLiab']
-        print "Total Assets     = ", each_dict['totAss']
+        print ("==================")
+        print ("symbol           = ", each_dict['symbol'])
+        print ("Report Type      = ", each_dict['reportType'])
+        #print ("Quarter          = ", each_dict['qtrName'])
+        print ("Yearly           = ", each_dict['curYear'])
+        print (" ")
+        print ("RoC              = ", each_dict['RoC'])
+        print ("Earnings Yield   = ", each_dict['eYield'])
+        print ("Market Cap       = ", each_dict['marCap'])
+        print ("Total Debt       = ", each_dict['totDebt'])
+        print ("Operating Profit = ", each_dict['opProfit'])
+        print ("current Liab     = ", each_dict['currLiab'])
+        print ("Total Assets     = ", each_dict['totAss'])
     
 def __get_TTM_EBIT():
     conn = sqlite3.connect(common_code.sqliteFile)
@@ -187,7 +187,7 @@ def filterStocksDB_Beat(min_eV = 0, max_ev = 100000000):
     if use_qtr_EBIT == True:
         stock_dict_TTM_EBIT = {}
         stock_dict_TTM_EBIT = __get_TTM_EBIT()
-        print "len of TTM dict", len(stock_dict_TTM_EBIT)
+        print ("len of TTM dict", len(stock_dict_TTM_EBIT))
         
     conn = sqlite3.connect(common_code.sqliteFile)
     c = conn.cursor()
@@ -210,7 +210,7 @@ def filterStocksDB_Beat(min_eV = 0, max_ev = 100000000):
     """
     stock_dict_allDetails = {}
         
-    print "Parsing Yearly database and populating dictionary...."
+    print ("Parsing Yearly database and populating dictionary....")
     for row in cursor_yearly:
         total_stocks +=1
                 
@@ -220,11 +220,11 @@ def filterStocksDB_Beat(min_eV = 0, max_ev = 100000000):
         """ This declartion should be inside the for loop to create different instance of stock_dict_perDetais"""
         stock_dict_perDetails = {}
         stock_symbol = row[common_code.YearlyIndex_symbol]
-        print "==============="
-        print "symbol ", stock_symbol
-        print " RoC ", row[common_code.YearlyIndex_RoC]
-        print " EY ", row[common_code.YearlyIndex_EarningsYield]
-        print "EBIT ", row[common_code.YearlyIndex_EBIT]
+        print ("===============")
+        print ("symbol ", stock_symbol)
+        print (" RoC ", row[common_code.YearlyIndex_RoC])
+        print (" EY ", row[common_code.YearlyIndex_EarningsYield])
+        print ("EBIT ", row[common_code.YearlyIndex_EBIT])
         import time
         time.sleep(5)
        
@@ -233,9 +233,9 @@ def filterStocksDB_Beat(min_eV = 0, max_ev = 100000000):
             stock_dict_RoC[stock_symbol] = RoC
             stock_dict_eYield[stock_symbol] = eY
             stock_dict_perDetails['opProfit'] = stock_dict_TTM_EBIT[stock_symbol]
-            print "RoC" , RoC
-            print "eY ", eY
-            print "EBIT ", stock_dict_perDetails['opProfit']
+            print ("RoC" , RoC)
+            print ("eY ", eY)
+            print ("EBIT ", stock_dict_perDetails['opProfit'])
             time.sleep(5)
         else :
             stock_dict_RoC[stock_symbol] = row[common_code.YearlyIndex_RoC]
@@ -272,7 +272,7 @@ def filterStocksDB_Beat(min_eV = 0, max_ev = 100000000):
         }
     """
   
-    print "Ranking stocks w.r.t RoC..."
+    print ("Ranking stocks w.r.t RoC...")
     allStock_dict_ranks = {}
     index = 0
     for stock in sort_list_roc:
@@ -281,7 +281,7 @@ def filterStocksDB_Beat(min_eV = 0, max_ev = 100000000):
         allStock_dict_ranks[stock[0]] = stock_dict_ranks
         index += 1
     
-    print "Ranking stocks w.r.t EarningsYield..."
+    print ("Ranking stocks w.r.t EarningsYield...")
     index = 0
     stock_dict_netRank = {}
     for stock in sort_list_eY:
@@ -294,7 +294,7 @@ def filterStocksDB_Beat(min_eV = 0, max_ev = 100000000):
         index += 1 
         
     #print allStock_dict_ranks
-    print "======================="
+    print ("=======================")
     #print sort_list_netRank[:30]
     __print_selected(sort_list_netRank[:30], stock_dict_allDetails)
     #print_selected(sort_list_roc[:30], stock_dict_allDetails)
@@ -324,33 +324,33 @@ def updateDB():
         dataFrame = googleSceernerData.result_df 
         
     for stockSymbol in dataFrame['SYMBOL']:
-        print "======================================"
+        print ("======================================")
         print("Processing stock %s, index = %d out of %d" %  (stockSymbol, index, totalSymbols))
         #import time
         #time.sleep(2)
         if stockSymbol == 0:
             continue
         if common_code.is_stock_blacklisted(stockSymbol):
-            print stockSymbol, " Blacklisted stock"
+            print (stockSymbol, " Blacklisted stock")
             index +=1
             continue
 
         cf = BS_json_extract.compFormat_bussinesStd(stockSymbol)
         cf.get_compFormat()
         if cf.result == 'NODATA':
-            print 'No Data for: ' + stockSymbol
+            print ('No Data for: ' + stockSymbol)
             index +=1
             continue
 
         report = BS_get_and_decode_webpage.getData_bussinesStd(cf.result, stockSymbol)
         if report.updateCompleteDataBase() == False:
-            print stockSymbol + ' error fetching data'
+            print (stockSymbol + ' error fetching data')
             failed_stocks.append(stockSymbol)
         index +=1
         del cf
         
-    print "Failed stocks..... few can be blacklisted"
-    print failed_stocks
+    print ("Failed stocks..... few can be blacklisted")
+    print (failed_stocks)
     del googleSceernerData
 
 """
@@ -361,17 +361,19 @@ def updateOneDB(stockSymbol):
     cf = BS_json_extract.compFormat_bussinesStd(stockSymbol)
     cf.get_compFormat()
     if cf.result == 'NODATA':
-        print 'No Data for: ' + stockSymbol
+        print ('No Data for: ' + stockSymbol)
         cf.result = cf.compFormatFailed(stockSymbol)
         if cf.result == False:
             del cf
             return False
 
-    print "processing stock...", stockSymbol
+    print ("processing stock...", stockSymbol)
     if common_code.is_stock_blacklisted(stockSymbol):
-        print stockSymbol, " Blacklisted stock"
+        print (stockSymbol, " Blacklisted stock")
         return
     report = BS_get_and_decode_webpage.getData_bussinesStd(cf.result, stockSymbol)
     if report.updateCompleteDataBase() == False:
-        print stockSymbol + ' error fetching data'
+        print (stockSymbol + ' error fetching data')
     del cf
+    
+#updateOneDB('ASHOKLEY')

@@ -43,7 +43,7 @@ Filter only if following 4 conditions are met
 def check_criteria(epsData_array, averageEPSgrowth, EPS, index):
     if (epsData_array[index].qtrChange[0] < epsData_array[index].qtrChange[1]) or (EPS < 5) or \
         (averageEPSgrowth < 40) or (epsData_array[index].yearChange[0] < 0):
-        print 'skipping ',epsData_array[index].qtrChange[0], ' < ', epsData_array[index].qtrChange[1]
+        print ('skipping ',epsData_array[index].qtrChange[0], ' < ', epsData_array[index].qtrChange[1])
         return 0
 
     return 1
@@ -56,7 +56,7 @@ def Beat(showFIIonly):
     stock_dict_EPSData = {}
 
     length = len(stockListBeat)
-    print 'Total no of stock: ', length
+    print ('Total no of stock: ', length)
     common_code.mySleep(1)
     epsData_array = [EPSData() for i in range(length+1)]
 
@@ -66,14 +66,14 @@ def Beat(showFIIonly):
         cf = BS_json_extract.compFormat_bussinesStd(stock)
         cf.get_compFormat()
         if cf.result == 'NODATA':
-            print 'No Data for: ' + stock
+            print ('No Data for: ' + stock)
             del cf
             return
 
         reportType = getReportType(0)
         BSdata = BS_get_and_decode_webpage.getData_bussinesStd(cf.result, stock, reportType)
         if BSdata.getEPSdata() == False:
-            print 'get_averageEPS returned False'
+            print ('get_averageEPS returned False')
             return
 
         """
@@ -123,9 +123,9 @@ def Beat(showFIIonly):
         """
         averageEPSgrowth = (BSdata.result_dict['EPSQ1Change'] + BSdata.result_dict['EPSQ2Change'])/2
 
-        print 'EPS: ' + str(EPS)
-        print BSdata.result_dict['EPSQ1Change'], BSdata.result_dict['EPSQ2Change']
-        print 'Av EPS ' + str(averageEPSgrowth)
+        print ('EPS: ' + str(EPS))
+        print (BSdata.result_dict['EPSQ1Change'], BSdata.result_dict['EPSQ2Change'])
+        print ('Av EPS ' + str(averageEPSgrowth))
         """
         Filter only if following 4 conditions are met
         1. current quater EPS growth > previous quater EPS growth
@@ -161,7 +161,7 @@ def Beat(showFIIonly):
         count += 1
         del cf, BSdata
 
-    print sort_list[0:30]
+    print (sort_list[0:30])
 
     textFile = open("BeatReport.txt", "w")
     index = 0
@@ -176,7 +176,7 @@ def Beat(showFIIonly):
         cf = BS_json_extract.compFormat_bussinesStd(n[0])
         cf.get_compFormat()
         if cf.result == 'NODATA':
-            print 'No Data for: ' + stock
+            print ('No Data for: ' + stock)
             cf.result = compFormatFailed(stock)
             if cf.result == False:
                 del cf
@@ -239,7 +239,7 @@ def Beat(showFIIonly):
         textFile.write("--------\n")
 
         if ratioError == 1:
-            print 'getRatios returned False'
+            print ('getRatios returned False')
             textFile.write("Raito fetch error. please look manually\n")
         else:
             textFile.write("Ratios                    %15s%15s%15s\n" % (BSdata.result_dict['RatioYearName1'], BSdata.result_dict['RatioYearName2'], BSdata.result_dict['RatioYearName3']))
@@ -254,7 +254,7 @@ def Beat(showFIIonly):
             textFile.write("Cash from Ops(in Cr)    : %15s%15s%15s\n" % (BSdata.result_dict['CFYear1'], BSdata.result_dict['CFYear2'], BSdata.result_dict['CFYear3']))
 
         if PHError == 1:
-            print 'getPromotorHoldings returned False'
+            print ('getPromotorHoldings returned False')
             textFile.write("PromotorHoldings fetch error. please look manually\n")
         else:
             textFile.write("--------\n")
@@ -275,7 +275,7 @@ def getCashFlow(stockSymbol, consolidated):
     cf = BS_json_extract.compFormat_bussinesStd(stockSymbol)
     cf.get_compFormat()
     if cf.result == 'NODATA':
-        print 'No Data for: ' + stockSymbol
+        print ('No Data for: ' + stockSymbol)
         cf.result = compFormatFailed(stockSymbol)
         if cf.result == False:
             del cf
@@ -284,7 +284,7 @@ def getCashFlow(stockSymbol, consolidated):
     reportType = getReportType(consolidated)
     report = BS_get_and_decode_webpage.getData_bussinesStd(cf.result, stockSymbol, reportType)
     if report.getCashFlowData() == False:
-        print stockSymbol + ' error fetching data'
+        print (stockSymbol + ' error fetching data')
         del cf
         return
     del cf, report
@@ -332,7 +332,7 @@ def getPH(stockSymbol):
     cf = BS_json_extract.compFormat_bussinesStd(stockSymbol)
     cf.get_compFormat()
     if cf.result == 'NODATA':
-        print 'No Data for: ' + stockSymbol
+        print ('No Data for: ' + stockSymbol)
         cf.result = compFormatFailed(stockSymbol)
         if cf.result == False:
             del cf
@@ -340,7 +340,7 @@ def getPH(stockSymbol):
 
     report = BS_get_and_decode_webpage.getData_bussinesStd(cf.result, stockSymbol)
     if report.getPromotorHoldings() == False:
-        print stockSymbol + ' error fetching data'
+        print (stockSymbol + ' error fetching data')
         del cf
         return
     del cf, report
@@ -349,7 +349,7 @@ def getRatios(stockSymbol):
     cf = BS_json_extract.compFormat_bussinesStd(stockSymbol)
     cf.get_compFormat()
     if cf.result == 'NODATA':
-        print 'No Data for: ' + stockSymbol
+        print ('No Data for: ' + stockSymbol)
         cf.result = compFormatFailed(stockSymbol)
         if cf.result == False:
             del cf
@@ -357,7 +357,7 @@ def getRatios(stockSymbol):
 
     report = BS_get_and_decode_webpage.getData_bussinesStd(cf.result, stockSymbol)
     if report.getRatios() == False:
-        print stockSymbol + ' error fetching data'
+        print (stockSymbol + ' error fetching data')
         del cf
     #del cf, report
 
@@ -377,7 +377,7 @@ def getEPSG(stockSymbol):
     conn.close()
 
     if common_code.DB_updateRunning == 0:
-        print 'Annual EPS Data: '+ yearly_row[common_code.YearlyIndex_reportType]
+        print ('Annual EPS Data: '+ yearly_row[common_code.YearlyIndex_reportType])
         print("                      %15s%15s%15s%15s" % (yearly_row[common_code.YearlyIndex_Y1Name],
                                                yearly_row[common_code.YearlyIndex_Y2Name],
                                                 yearly_row[common_code.YearlyIndex_Y3Name],
@@ -389,7 +389,7 @@ def getEPSG(stockSymbol):
         print("Change percent :      %15d%15d%15d" %(yearly_row[common_code.YearlyIndex_EPSY1Change],
                                                     yearly_row[common_code.YearlyIndex_EPSY2Change],
                                                     yearly_row[common_code.YearlyIndex_EPSY3Change]))
-        print 'Quaterly EPS Data: ' + qtr_row[common_code.QuaterlyIndex_reportType]
+        print ('Quaterly EPS Data: ' + qtr_row[common_code.QuaterlyIndex_reportType])
         print("                      %15s%15s%15s%15s" % (qtr_row[common_code.QuaterlyIndex_Q1Name],
                                                qtr_row[common_code.QuaterlyIndex_Q2Name],
                                                 qtr_row[common_code.QuaterlyIndex_Q3Name],
@@ -417,7 +417,7 @@ def getAll(stockSymbol):
     print("=============================")
     getRatios(stockSymbol)
     print("=============================")
-    getCashFlow(stockSymbol)
+    getCashFlow(stockSymbol, 1)
     print("=============================")
     print("Promoter Holding Pattern:")
     getPH(stockSymbol)
@@ -485,7 +485,7 @@ def getCompleteReport(EPSY1, EPSY2, EPSY3, EPSCurrQtr, EPSQtrAlone):
             EPSQ3Change >= float(EPSQtrAlone) and EPSQ4Change >= float(EPSQtrAlone):
             textFile.write("%s meets your stringent 4 qtr EPSG requirement\n" % (stockSymbol))
             textFile.flush()
-            print "meets requirement"
+            print ("meets requirement")
             condMetOnce = 1
         elif EPSQ1Change >= float(EPSQtrAlone) and EPSQ2Change >= float(EPSQtrAlone) and\
             EPSQ3Change >= float(EPSQtrAlone):
@@ -513,19 +513,19 @@ def getCompleteReport(EPSY1, EPSY2, EPSY3, EPSCurrQtr, EPSQtrAlone):
     
     print("%d stocks has latest data\n" % latestData)
     print("%d stocks meets 4 qtr criteria\n" % len(metStocks_4qtrs))
-    print metStocks_4qtrs, "\n"
+    print (metStocks_4qtrs, "\n")
     print("%d stocks meets 3 qtr criteria\n" % len(metStocks_3qtrs))
-    print metStocks_3qtrs, "\n"
+    print (metStocks_3qtrs, "\n")
     print("%d stocks meets 2 qtr criteria\n" % len(metStocks_2qtrs))
-    print metStocks_2qtrs, "\n"
+    print (metStocks_2qtrs, "\n")
     print("%d stocks meets CANSLIM criteria\n" % len(metStocks_CANSLIM))
-    print metStocks_CANSLIM, "\n"
+    print (metStocks_CANSLIM, "\n")
     print("%d stocks has negative current Qtr\n" % len(negative_currentQtr))
-    print negative_currentQtr, "\n"
+    print (negative_currentQtr, "\n")
     print("%d stocks has completely outdated Data\n" % len(outDatedData))
-    print outDatedData, "\n"
+    print( outDatedData, "\n")
     print("%d stocks has outdated data but prev Qtr, ie %s\n" % (len(outDatedData_butPrevQtr), common_code.previous_qtr))
-    print outDatedData_butPrevQtr, "\n"
+    print (outDatedData_butPrevQtr, "\n")
 
     textFile.write("Following stocks have %s growth for last 4 quaters:\n" % (EPSQtrAlone))
     json.dump(metStocks_4qtrs, textFile)
@@ -544,7 +544,8 @@ def getCompleteReport(EPSY1, EPSY2, EPSY3, EPSCurrQtr, EPSQtrAlone):
     textFile.write("dataBase out of outdated stocks = %d, updated = %d\n" % (common_code.dataBase_outdate_stocks, common_code.dataBase_updated_stocks))
     textFile.close()    
     del googleSceernerData
-        
+  
+"""      
 from Tkinter import Tk, Label, Button, Entry
 class readInputParams:
     def __init__(self, master):
@@ -606,7 +607,8 @@ if __name__ == '__main__':
     skip_main = 1
 
     if skip_main != 1:
-        print 'main'
+        print ('main')
         root = Tk()
         my_gui = readInputParams(root)
         root.mainloop()
+"""

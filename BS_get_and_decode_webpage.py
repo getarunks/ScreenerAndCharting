@@ -1,5 +1,5 @@
 import re
-from urllib2 import urlopen
+from urllib.request import urlopen
 import sqlite3
 import common_code
 import time
@@ -9,15 +9,15 @@ def myUrlopen(link):
         source = urlopen(link).read()
         common_code.webPageAcessed +=1
         if common_code.webPageAcessed % 10 == 0:
-            print 'web page access count = ', common_code.webPageAcessed
-    except Exception,e:
+            print ('web page access count = ', common_code.webPageAcessed)
+    except:
         #Sometime server might ot respond, try once again
-        print 'open failed. try again after 30 seconds: ', str(e)
+        print ('open failed. try again after 30 seconds: ')
         time.sleep(30)
-        print 'reading after 30 seconds sleep'
+        print ('reading after 30 seconds sleep')
         source = urlopen(link).read()
         common_code.webPageAcessed +=1
-    return source
+    return source.decode()
 
 class getData_bussinesStd(object):
     def __init__(self, stockLinkId, stockSymbol):
@@ -95,8 +95,8 @@ class getData_bussinesStd(object):
                     break
                 output[counter-firstElement] = (source.split(string1)[1].split(string2)[counter].split(string3)[0])
                         
-        except Exception,e:
-            print "exception in splitString when looking for", string1, str(e)
+        except:
+            print ("exception in splitString when looking for", string1)
             success = 0
             output[0] = 'error output'
             
@@ -118,18 +118,18 @@ class getData_bussinesStd(object):
                 We can't use splitString. We have to get exception here to switch to standalone
                 """
                 currentLiabilites = self.balanceSheet_source.split('Current Liabilities</td>')[1].split('<td class="">')[1].split('</td>')[0]            
-            except Exception:
-                print "exception in consolidated"
+            except:
+                print ("exception in consolidated")
                 reportType = 'Standalone'
                 self.balanceSheet_source = myUrlopen(self.balance_sheet_link[reportType])
                 currentLiabilites = self.balanceSheet_source.split('Current Liabilities</td>')[1].split('<td class="">')[1].split('</td>')[0]
         else:
-            print "we directly moving to standalone in yearly"
+            print ("we directly moving to standalone in yearly")
             reportType = 'Standalone'
             self.balanceSheet_source = myUrlopen(self.balance_sheet_link[reportType])
             currentLiabilites = self.balanceSheet_source.split('Current Liabilities</td>')[1].split('<td class="">')[1].split('</td>')[0]
             
-        print "report type: ", reportType       
+        print ("report type: ", reportType)
         """
         Some stocks Anuual EPS is listed in finacial overview link, for other
         it is listed in P&L link. To solve this we need the below try except,
@@ -149,8 +149,8 @@ class getData_bussinesStd(object):
             result = self.splitString(self.finacialOverview_source1, 'Particulars ',  '<td class="tdh">', '</td>', 1, 1)
             Y4Name = result['output'][0]
             finacialPL_src_buffered = 0
-        except Exception,e:
-            print 'failed when spliting finacialoverview link trying finacialPL link',str(e)
+        except :
+            print ('failed when spliting finacialoverview link trying finacialPL link')
             self.finacialPL_source = myUrlopen(self.finacialPL_link[reportType])
             result = self.splitString(self.finacialPL_source, '<td class="tdL" colspan="0">Earning Per Share (Rs.)</td>',
                                      '<td class="amount">', '</td>', 1, 3)
@@ -165,7 +165,7 @@ class getData_bussinesStd(object):
             Y4EPS = result['output'][0]
             result = self.splitString(self.finacialPL_source1, 'Figures in Rs crore</td>', '<td class="tdh">', '</td>', 1, 1 )
             Y4Name = result['output'][0]                
-            print 'second link succesfull'
+            print ('second link succesfull')
             finacialPL_src_buffered = 1
 
         result = self.splitString(self.balanceSheet_source, 'Total Assets</b></td>', '<td class="">', '</td>', 1, 1 )
@@ -185,7 +185,7 @@ class getData_bussinesStd(object):
         else :
             result = self.splitString(self.finacialPL_source, '<td class="tdL" colspan="0">Total</td>', '<td class="amount">', '</td>', 1, 1)
             operatingProfit = result['output'][0]
-            print "operatingProfit ", operatingProfit
+            print ("operatingProfit ", operatingProfit)
         
         result = self.splitString(self.finacialPL_source, 'Figures in Rs crore</td>', '<td class="tdh">', '</td>', 1, 1)
         currentYear = result['output'][0]
@@ -202,8 +202,8 @@ class getData_bussinesStd(object):
         enterpriseValue = float(marketCap) + float(totalDebt)
         earningsYield = float(operatingProfit)/enterpriseValue*100
             
-        print Y1Name, Y2Name, Y3Name, Y4Name
-        print Y1EPS, Y2EPS, Y3EPS, Y4EPS
+        print (Y1Name, Y2Name, Y3Name, Y4Name)
+        print (Y1EPS, Y2EPS, Y3EPS, Y4EPS)
         """ We make all 0 denomenators to 0.1 to avoid divide by zero
         """
         Y2EPS = 0.1 if float(Y2EPS) == 0.00 else Y2EPS
@@ -252,20 +252,22 @@ class getData_bussinesStd(object):
                 we have to use standalone data
             """
             if Q1Name !=common_code.current_qtr and Q1Name != common_code.previous_qtr:
-                print self.stockSymbol, " -- consolidated data is not updated. trying standalone by raising an exception"
+                print (self.stockSymbol, " -- consolidated data is not updated. trying standalone by raising an exception")
                 raise
         except Exception:
             reportType = 'Standalone'
             self.Quaterly_1_Source = myUrlopen(self.EPS_Quaterly_1[reportType])
             result = self.splitString(self.Quaterly_1_Source, 'Figures in Rs crore</td>', '<td class="tdh">', '</td>', 1, 4)
+            print(result['output'])
             Q1Name, Q2Name, Q3Name, Q4Name = result['output']
             
-        print "Report Type: ", reportType
+        print ("Report Type: ", reportType)
         self.qtr_reportType = reportType
         
         """ Do not proceed if latest qtr data is not any of (current or previous qtr) """
         if Q1Name != common_code.current_qtr and Q1Name != common_code.previous_qtr:
-            print "Quite old data in server ", Q1Name
+            print("Q1Name = ", Q1Name, common_code.current_qtr, common_code.previous_qtr)
+            print ("Quite old data in server ", Q1Name)
             return False
 
         result = self.splitString(self.Quaterly_1_Source, 'EPS (Rs)</td>', '<td class="">', '</td>', 1, 5)
@@ -317,7 +319,7 @@ class getData_bussinesStd(object):
           Q1Name, Q2Name, Q3Name, Q4Name, EPSQ1Change, EPSQ2Change, EPSQ3Change, EPSQ4Change,
           float(EBIT_Q1), float(EBIT_Q2), float(EBIT_Q3), float(EBIT_Q4),
           reportType))
-        print "Qtr data updated for", self.stockSymbol, Q1Name
+        print ("Qtr data updated for", self.stockSymbol, Q1Name)
         conn.commit()
         conn.close()
         return True        
@@ -344,16 +346,16 @@ class getData_bussinesStd(object):
                 self.qtr_reportType = qtr_row[common_code.QuaterlyIndex_reportType]
             if common_code.current_year == yearly_row[common_code.YearlyIndex_Y1Name]:
                 update_yearly = 0
-        except Exception,e:
-            print "Exception updateCompleteDataBase. May be you want to fix this.", str(e)
+        except :
+            print ("Exception updateCompleteDataBase. May be you want to fix this.")
             
         """ proceed with update """
         if update_quaterly == 1:
-            print "call quaterlyUpdate ...."
+            print ("call quaterlyUpdate ....")
             if self.quaterlyUpdate() == False:
                 return False
         if update_yearly == 1:
-            print "call yearly Update...."
+            print ("call yearly Update....")
             self.yearlyUpdate()
            
     def getPromotorHoldings(self):
@@ -397,8 +399,8 @@ class getData_bussinesStd(object):
             self.result_dict['MFQ3'], self.result_dict['MFQ4'], self.result_dict['MFQ5']))
             return True
 
-        except Exception,e:
-            print 'faild in getPromotorHoldings loop',str(e)
+        except :
+            print ('faild in getPromotorHoldings loop')
             return False
 
     def getCashFlowData(self):
@@ -414,7 +416,7 @@ class getData_bussinesStd(object):
             secondYear = cashFlow_source.split(string)[1].split('<td class="tdh">')[2].split('</td>')[0]
             thirdYear = cashFlow_source.split(string)[1].split('<td class="tdh">')[3].split('</td>')[0]
 
-            print 'Cash Flow from Operations: ' + self.reportType
+            print ('Cash Flow from Operations: ' + self.reportType)
             print("          %s\t%s\t%s" % (firstYear, secondYear, thirdYear))
             print("in Crs:   %s\t%s\t%s" % (CFyear1, CFyear2, CFyear3))
 
@@ -425,8 +427,8 @@ class getData_bussinesStd(object):
             self.result_dict['CFYear2'] = float(CFyear2)
             self.result_dict['CFYear3'] = float(CFyear3)
 
-        except Exception,e:
-            print 'faild in getCashFlowData loop',str(e)
+        except :
+            print ('faild in getCashFlowData loop')
             return False        
 
     def getEPSdata(self):
@@ -440,7 +442,7 @@ class getData_bussinesStd(object):
 
             # fetch from web if data is none or outdated
             if row != None and self.latestQtrName == row[common_code.DBindex_Q1Name]:
-                print "Latest Data found in DB for stock ", self.stockSymbol
+                print ("Latest Data found in DB for stock ", self.stockSymbol)
                 
                 """ The order of variables is important """
                 self.stockSymbol, self.result_dict['EPS_Q1'],  self.result_dict['EPS_Q2'],  self.result_dict['EPS_Q3'],\
@@ -460,15 +462,15 @@ class getData_bussinesStd(object):
                 if common_code.is_stock_blacklisted(self.stockSymbol) == True:
                     return False
 
-            print "Get data from web old data in DB ==============", self.stockSymbol, row[common_code.DBindex_Q1Name]
+            print ("Get data from web old data in DB ==============", self.stockSymbol, row[common_code.DBindex_Q1Name])
             common_code.dataBase_outdate_stocks += 1
 
-        except Exception,e:
-            print 'Exception while reading DB section. May be you wanna fix them.',str(e)
+        except :
+            print ('Exception while reading DB section. May be you wanna fix them.')
             import time
             time.sleep(5)
             
-        print "web access needed..."
+        print ("web access needed...")
 
         try:
             try:
@@ -478,8 +480,8 @@ class getData_bussinesStd(object):
                 self.EPS_Quaterly_1_Source = myUrlopen(self.EPS_Quaterly_1[reportType])
                 sourceCode = self.EPS_Quaterly_1_Source
                 Q1 = float(sourceCode.split('EPS (Rs)</td>')[1].split('<td class="">')[1].split('</td>')[0])                
-            except Exception,e:
-                print "exception in consolidated"
+            except :
+                print ("exception in consolidated")
                 step = -1
                 reportType = 'Standalone'
                 self.EPS_Quaterly_1_Source = myUrlopen(self.EPS_Quaterly_1[reportType])
@@ -546,9 +548,9 @@ class getData_bussinesStd(object):
                 
                 result = self.splitString(source, 'Particulars ',  '<td class="tdh">', '</td>', 1, 1)
                 self.result_dict['Y4Name'] = result['output'][0]
-            except Exception,e:
-                print 'failed when spliting finacialoverview link trying finacialPL link',str(e)
-                print 'failed link ', self.finacialOverview_link1[reportType]
+            except :
+                print ('failed when spliting finacialoverview link trying finacialPL link')
+                print ('failed link ', self.finacialOverview_link1[reportType])
                 source = myUrlopen(self.finacialPL_link[reportType])
                 step = 6
                 result = self.splitString(source, '<td class="tdL" colspan="0">Earning Per Share (Rs.)</td>',
@@ -567,7 +569,7 @@ class getData_bussinesStd(object):
                 Y4 = result['output'][0]
                 result = self.splitString(source, 'Figures in Rs crore</td>', '<td class="tdh">', '</td>', 1, 1 )
                 self.result_dict['Y4Name'] = result['output'][0]                
-                print 'second link succesfull'
+                print ('second link succesfull')
             step = 10
             self.result_dict['EPS_Y1'] = Y1
             self.result_dict['EPS_Y2'] = Y2
@@ -623,14 +625,14 @@ class getData_bussinesStd(object):
             print ("dataBase: out of outdated stocks = %d, updated = %d" % (common_code.dataBase_outdate_stocks, common_code.dataBase_updated_stocks))
             return True;
 
-        except Exception,e:
-            print 'failed in getEPSdata Report_bussinesStd loop',str(e)
-            print 'step = ', step
-            print 'report type ', reportType
+        except :
+            print ('failed in getEPSdata Report_bussinesStd loop')
+            print ('step = ', step)
+            print ('report type ', reportType)
             if step == 1:
-                print self.EPS_Quaterly_1[reportType]
+                print (self.EPS_Quaterly_1[reportType])
             if step == 2:
-                print self.EPS_Quaterly_2[reportType]
+                print (self.EPS_Quaterly_2[reportType])
                 
             return False
 
@@ -668,6 +670,6 @@ class getData_bussinesStd(object):
             self.result_dict['DEyear3'] = float(debtToEquity_year3)
             return True
 
-        except Exception,e:
-            print 'faild in getRatio bussinesSTD loop',str(e)
+        except :
+            print ('faild in getRatio bussinesSTD loop')
             return False
